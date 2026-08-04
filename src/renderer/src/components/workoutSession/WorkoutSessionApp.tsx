@@ -6,6 +6,7 @@ import { ExerciseGroupList } from "../workout/ExerciseGroupList";
 import { PhaseCountdown } from "./PhaseCountdown";
 import { ExerciseDetailCard } from "./ExerciseDetailCard";
 import { RestDurationControl } from "./RestDurationControl";
+import { SetLogInput } from "./SetLogInput";
 import {
   useCancelWorkoutSession,
   useCloseWorkoutSession,
@@ -206,9 +207,12 @@ export function WorkoutSessionApp({ onReturn }: { onReturn: () => void }) {
             </div>
 
             {!isTimed && (
-              <Button className="mt-5 w-full" size="lg" onClick={() => finishSet.mutate()} disabled={finishSet.isPending}>
-                <Check className="h-4 w-4" /> Finish set {state.currentSet} of {state.totalSets}
-              </Button>
+              <SetLogInput
+                exercises={currentGroup.exercises}
+                setNumber={state.currentSet}
+                onFinish={() => finishSet.mutate()}
+                disabled={finishSet.isPending}
+              />
             )}
           </div>
         )}
