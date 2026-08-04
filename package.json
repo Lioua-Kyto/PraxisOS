@@ -1,0 +1,52 @@
+{
+  "name": "life-os",
+  "productName": "Life OS",
+  "version": "1.0.0",
+  "description": "Personal dashboard: courses roadmap, calisthenics tracker, nutrition, water, deep-work timer, budget, and a todo command center.",
+  "main": "electron/main.js",
+  "author": "Lioua Zeddam",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k \"vite\" \"npm:electron:dev\"",
+    "electron:dev": "wait-on tcp:5173 && cross-env NODE_ENV=development electron .",
+    "build": "vite build",
+    "start": "npm run build && cross-env NODE_ENV=production electron .",
+    "dist": "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "sql.js": "^1.11.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^31.3.1",
+    "electron-builder": "^24.13.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^5.4.1",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.lioua.lifeos",
+    "productName": "Life OS",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
