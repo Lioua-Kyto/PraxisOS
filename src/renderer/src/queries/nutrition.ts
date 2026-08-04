@@ -5,6 +5,7 @@ const TODAY_KEY = ["nutrition", "today"] as const;
 const WEEKLY_KEY = ["nutrition", "weekly"] as const;
 const HYDRATION_TODAY_KEY = ["hydration", "today"] as const;
 const HYDRATION_TOTAL_KEY = ["hydration", "total"] as const;
+const HYDRATION_WEEKLY_KEY = ["hydration", "weekly"] as const;
 
 export function useNutritionToday() {
   return useQuery({ queryKey: TODAY_KEY, queryFn: () => window.api.nutrition.listToday() });
@@ -44,6 +45,10 @@ export function useHydrationTotalToday() {
   return useQuery({ queryKey: HYDRATION_TOTAL_KEY, queryFn: () => window.api.hydration.totalToday() });
 }
 
+export function useHydrationWeekly() {
+  return useQuery({ queryKey: HYDRATION_WEEKLY_KEY, queryFn: () => window.api.hydration.weeklyTotals() });
+}
+
 export function useAddHydration() {
   const qc = useQueryClient();
   return useMutation({
@@ -51,6 +56,7 @@ export function useAddHydration() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: HYDRATION_TODAY_KEY });
       qc.invalidateQueries({ queryKey: HYDRATION_TOTAL_KEY });
+      qc.invalidateQueries({ queryKey: HYDRATION_WEEKLY_KEY });
     }
   });
 }
@@ -62,6 +68,7 @@ export function useRemoveHydration() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: HYDRATION_TODAY_KEY });
       qc.invalidateQueries({ queryKey: HYDRATION_TOTAL_KEY });
+      qc.invalidateQueries({ queryKey: HYDRATION_WEEKLY_KEY });
     }
   });
 }

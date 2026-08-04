@@ -6,8 +6,16 @@ import { Input } from "../ui/input";
 import { Progress } from "../ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { HydrationWidget } from "./HydrationWidget";
+import { FoodAutocomplete } from "./FoodAutocomplete";
+import { FoodLibraryDialog } from "./FoodLibraryDialog";
 import { MacroTrendChart } from "../viz/MacroTrendChart";
-import { useAddNutrition, useNutritionToday, useNutritionWeekly, useRemoveNutrition } from "../../queries/nutrition";
+import {
+  useAddNutrition,
+  useHydrationWeekly,
+  useNutritionToday,
+  useNutritionWeekly,
+  useRemoveNutrition
+} from "../../queries/nutrition";
 import { useSettings } from "../../queries/settings";
 
 const MEALS = ["Breakfast", "Lunch", "Dinner", "Snack"];
@@ -15,6 +23,7 @@ const MEALS = ["Breakfast", "Lunch", "Dinner", "Snack"];
 export function NutritionPanel() {
   const { data: entries = [] } = useNutritionToday();
   const { data: weekly = [] } = useNutritionWeekly();
+  const { data: hydrationWeekly = [] } = useHydrationWeekly();
   const { data: settings } = useSettings();
   const addEntry = useAddNutrition();
   const removeEntry = useRemoveNutrition();
@@ -22,6 +31,7 @@ export function NutritionPanel() {
   const [form, setForm] = useState({ meal: "Breakfast", food: "", calories: "", proteinG: "" });
 
   const goal = settings?.calorieGoal ?? 2400;
+  const proteinGoal = settings?.proteinGoal ?? 150;
   const totalCalories = entries.reduce((a, e) => a + e.calories, 0);
   const totalProtein = entries.reduce((a, e) => a + (e.proteinG || 0), 0);
   const pct = Math.min(100, Math.round((totalCalories / goal) * 100));
@@ -35,7 +45,7 @@ export function NutritionPanel() {
 
   return (
     <div>
-      <PageHeader kicker="Fuel & fluids" title="Nutrition" />
+      <PageHeader kicker="Fuel & fluids" title="Nutrition" action={<FoodLibraryDialog />} />
 
       <div className="mb-5 grid grid-cols-2 gap-4">
         <Card>
@@ -45,7 +55,14 @@ export function NutritionPanel() {
               {totalCalories} <span className="text-sm text-muted-foreground">/ {goal}</span>
             </div>
             <Progress value={pct} className="mt-2" />
-            <div className="mt-3 text-xs text-muted-foreground">{totalProtein.toFixed(0)}g protein today</div>
+            <div className="mt-3 text-xs text-muted-foreground">
+              {totalProtein.toFixed(0)}g / {proteinGoal}g protein today
+            </div>
+            <Progress
+              value={Math.min(100, Math.round((totalProtein / proteinGoal) * 100))}
+              className="mt-1.5"
+              indicatorClassName="bg-success"
+            />
           </CardContent>
         </Card>
         <Card>
@@ -57,8 +74,8 @@ export function NutritionPanel() {
 
       <Card className="mb-5">
         <CardContent className="pt-5">
-          <h3 className="mb-3 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Calories & protein this week</h3>
-          <MacroTrendChart data={weekly} />
+          <h3 className="mb-3 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Calories, protein & hydration this week</h3>
+          <MacroTrendChart data={weekly} hydration={hydrationWeekly} />
         </CardContent>
       </Card>
 
@@ -78,7 +95,15 @@ export function NutritionPanel() {
                 ))}
               </SelectContent>
             </Select>
-            <Input placeholder="Food" value={form.food} onChange={(e) => setForm({ ...form, food: e.target.value })} className="min-w-40 flex-1" />
+            <FoodAutocomplete
+              value={form.food}
+              meal={form.meal}
+              onChange={(food) => setForm({ ...form, food })}
+              onPick={(food) =>
+                setForm({ ...form, food: food.name, calories: String(food.calories), proteinG: String(food.proteinG) })
+              }
+              className="min-w-40 flex-1"
+            />
             <Input type="number" placeholder="Calories" value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} className="w-28" />
             <Input type="number" placeholder="Protein g" value={form.proteinG} onChange={(e) => setForm({ ...form, proteinG: e.target.value })} className="w-24" />
             <Button type="submit">Add</Button>
