@@ -35,8 +35,21 @@ export default defineConfig({
       }
     },
     build: {
+      // Panels are code-split via React.lazy; these manual chunks keep the
+      // heavy shared libraries out of the entry bundle so startup only parses
+      // the shell plus the Overview panel.
+      chunkSizeWarningLimit: 900,
       rollupOptions: {
-        input: resolve(__dirname, "src/renderer/index.html")
+        input: resolve(__dirname, "src/renderer/index.html"),
+        output: {
+          manualChunks: {
+            // React itself stays in the entry — it's needed for first paint,
+            // so splitting it only adds a request.
+            charts: ["recharts"],
+            markdown: ["react-markdown", "remark-gfm"],
+            motion: ["framer-motion"]
+          }
+        }
       }
     },
     plugins: [react()]

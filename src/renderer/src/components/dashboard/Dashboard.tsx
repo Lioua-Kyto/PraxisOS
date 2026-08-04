@@ -1,10 +1,15 @@
+import { Suspense, lazy } from "react";
 import { PageHeader } from "../layout/PageHeader";
 import { Card, CardContent } from "../ui/card";
 import { FocusWidget } from "./FocusWidget";
 import { TopTodosWidget } from "./TopTodosWidget";
 import { BudgetWidget } from "./BudgetWidget";
 import { NutritionHydrationWidget } from "./NutritionHydrationWidget";
-import { WeeklyFocusChart } from "../viz/WeeklyFocusChart";
+// Recharts is the single heaviest dependency; deferring it lets the rest of
+// the Overview paint immediately and streams the chart in behind it.
+const WeeklyFocusChart = lazy(() =>
+  import("../viz/WeeklyFocusChart").then((m) => ({ default: m.WeeklyFocusChart }))
+);
 import { useDashboardData } from "../../queries/system";
 import { useSettings } from "../../queries/settings";
 import { useFocusWeeklyTotals } from "../../queries/focusTimer";
@@ -42,7 +47,9 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: PageKey) => void 
       <Card>
         <CardContent className="pt-5">
           <h3 className="mb-3 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Focus hours this week</h3>
-          <WeeklyFocusChart data={weekly} />
+          <Suspense fallback={<div className="flex h-[180px] items-center justify-center text-sm text-muted-foreground">Loading chart…</div>}>
+            <WeeklyFocusChart data={weekly} />
+          </Suspense>
         </CardContent>
       </Card>
     </div>
