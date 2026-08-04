@@ -5,11 +5,16 @@ export const THEMES: Array<{ key: ThemeKey; label: string; dots: [string, string
   { key: "dark", label: "Dark", dots: ["#17140f", "#cf7a3d", "#ece6d8"] },
   { key: "solarized", label: "Solarized", dots: ["#002b36", "#268bd2", "#eee8d5"] },
   { key: "midnight", label: "Midnight", dots: ["#0a0c14", "#7784e8", "#e6e8f5"] },
-  { key: "cyberpunk", label: "Cyberpunk", dots: ["#0c0616", "#ff3ec8", "#26e6d6"] }
+  { key: "cyberpunk", label: "Cyberpunk", dots: ["#0c0616", "#ff3ec8", "#26e6d6"] },
+  { key: "forest", label: "Forest", dots: ["#0f1710", "#6fae5c", "#e4ecdf"] },
+  { key: "nord", label: "Nord", dots: ["#242933", "#88c0d0", "#e5e9f0"] },
+  { key: "rose", label: "Rose", dots: ["#1c1216", "#e8879f", "#f3e3e8"] }
 ];
 
 export const FONTS: Array<{ key: FontKey; label: string; sample: string }> = [
   { key: "sans", label: "Inter (Sans)", sample: "Inter, system-ui, sans-serif" },
   { key: "display", label: "Fraunces (Serif)", sample: "Fraunces, Georgia, serif" },
-  { key: "mono", label: "IBM Plex Mono", sample: "'IBM Plex Mono', ui-monospace, monospace" }
+  { key: "mono", label: "IBM Plex Mono", sample: "'IBM Plex Mono', ui-monospace, monospace" },
+  { key: "grotesk", label: "Space Grotesk", sample: "'Space Grotesk', system-ui, sans-serif" },
+  { key: "newsreader", label: "Newsreader (Serif)", sample: "Newsreader, Georgia, serif" }
 ];

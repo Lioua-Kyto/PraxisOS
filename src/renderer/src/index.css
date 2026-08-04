@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,340..600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,340..600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -152,6 +152,93 @@
     --radius: 0.3rem;
   }
 
+  [data-theme="forest"] {
+    --background: 130 22% 8%;
+    --foreground: 90 20% 92%;
+    --card: 130 18% 11%;
+    --card-foreground: 90 20% 92%;
+    --popover: 130 18% 11%;
+    --popover-foreground: 90 20% 92%;
+    --primary: 100 35% 52%;
+    --primary-foreground: 130 22% 8%;
+    --secondary: 130 14% 16%;
+    --secondary-foreground: 90 20% 92%;
+    --muted: 130 12% 16%;
+    --muted-foreground: 100 10% 62%;
+    --accent: 130 14% 18%;
+    --accent-foreground: 90 20% 92%;
+    --destructive: 6 55% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 100 35% 52%;
+    --success-foreground: 130 22% 8%;
+    --warning: 45 60% 55%;
+    --warning-foreground: 130 22% 8%;
+    --border: 130 16% 20%;
+    --border-soft: 130 14% 15%;
+    --input: 130 16% 20%;
+    --ring: 100 35% 52%;
+    --sunken: 130 22% 6%;
+    --radius: 0.6rem;
+  }
+
+  [data-theme="nord"] {
+    --background: 220 16% 16%;
+    --foreground: 218 27% 92%;
+    --card: 222 16% 20%;
+    --card-foreground: 218 27% 92%;
+    --popover: 222 16% 20%;
+    --popover-foreground: 218 27% 92%;
+    --primary: 193 43% 67%;
+    --primary-foreground: 220 16% 14%;
+    --secondary: 220 16% 24%;
+    --secondary-foreground: 218 27% 92%;
+    --muted: 220 14% 22%;
+    --muted-foreground: 219 15% 65%;
+    --accent: 220 16% 24%;
+    --accent-foreground: 218 27% 92%;
+    --destructive: 354 42% 56%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 92 28% 65%;
+    --success-foreground: 220 16% 14%;
+    --warning: 40 71% 73%;
+    --warning-foreground: 220 16% 14%;
+    --border: 220 16% 28%;
+    --border-soft: 220 16% 22%;
+    --input: 220 16% 28%;
+    --ring: 193 43% 67%;
+    --sunken: 220 18% 12%;
+    --radius: 0.5rem;
+  }
+
+  [data-theme="rose"] {
+    --background: 340 20% 9%;
+    --foreground: 20 25% 93%;
+    --card: 340 18% 12%;
+    --card-foreground: 20 25% 93%;
+    --popover: 340 18% 12%;
+    --popover-foreground: 20 25% 93%;
+    --primary: 340 65% 72%;
+    --primary-foreground: 340 20% 10%;
+    --secondary: 340 14% 17%;
+    --secondary-foreground: 20 25% 93%;
+    --muted: 340 12% 17%;
+    --muted-foreground: 20 12% 64%;
+    --accent: 340 14% 19%;
+    --accent-foreground: 20 25% 93%;
+    --destructive: 5 65% 58%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 150 30% 55%;
+    --success-foreground: 340 20% 10%;
+    --warning: 35 70% 62%;
+    --warning-foreground: 340 20% 10%;
+    --border: 340 16% 22%;
+    --border-soft: 340 14% 16%;
+    --input: 340 16% 22%;
+    --ring: 340 65% 72%;
+    --sunken: 340 22% 6%;
+    --radius: 0.7rem;
+  }
+
   /* Font family choices — swap the primary UI typeface, headings stay display. */
   :root,
   [data-font="sans"] {
@@ -162,6 +249,12 @@
   }
   [data-font="mono"] {
     --font-sans: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  [data-font="grotesk"] {
+    --font-sans: "Space Grotesk", system-ui, sans-serif;
+  }
+  [data-font="newsreader"] {
+    --font-sans: "Newsreader", Georgia, serif;
   }
 
   :root {
