@@ -7,8 +7,23 @@ export const tasks = sqliteTable("tasks", {
   priority: text("priority").notNull().default("not_urgent_not_important"),
   status: text("status").notNull().default("todo"),
   dueDate: text("due_date"),
+  /** Stamped when the task first moves to in_progress; cleared on return to todo. */
+  startedAt: text("started_at"),
+  /** Stamped when the task moves to completed; cleared on return to todo/in_progress. */
+  finishedAt: text("finished_at"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   completedAt: text("completed_at")
+});
+
+export const foods = sqliteTable("foods", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  /** Meal this food is usually eaten at, or "Any" so it shows for every meal. */
+  category: text("category").notNull().default("Any"),
+  calories: real("calories").notNull().default(0),
+  proteinG: real("protein_g").notNull().default(0),
+  servingLabel: text("serving_label").notNull().default("1 serving"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`)
 });
 
 export const courses = sqliteTable("courses", {
@@ -115,9 +130,13 @@ export const habits = sqliteTable("habits", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   cadence: text("cadence").notNull().default("daily"),
+  /** JSON array of weekday numbers (0=Sun..6=Sat). Used by "weekly" (one day) and "custom" (several). */
+  weekdays: text("weekdays"),
   color: text("color").notNull().default("primary"),
   orderIndex: integer("order_index").notNull().default(0),
   archived: integer("archived", { mode: "boolean" }).notNull().default(false),
+  /** Set when this habit is auto-managed by the Settings workout schedule. */
+  managedBy: text("managed_by"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`)
 });
 

@@ -89,13 +89,15 @@ export function registerBudgetHandlers(): void {
     const rows = db()
       .select({ type: budgetTransactions.type, total: sql<number>`SUM(${budgetTransactions.amount})` })
       .from(budgetTransactions)
-      .where(inArray(budgetTransactions.type, ["income", "expense", "transfer"]))
+      .where(inArray(budgetTransactions.type, ["income", "expense", "transfer", "debt"]))
       .groupBy(budgetTransactions.type)
       .all();
     const income = rows.find((r) => r.type === "income")?.total ?? 0;
     const expense = rows.find((r) => r.type === "expense")?.total ?? 0;
     const transferTotal = rows.find((r) => r.type === "transfer")?.total ?? 0;
-    return { income, expense, balance: income - expense, transferTotal };
+    const debt = rows.find((r) => r.type === "debt")?.total ?? 0;
+    // Debt is money owed, so it reduces what's actually yours.
+    return { income, expense, transferTotal, debt, balance: income - expense - debt };
   });
 
   ipcMain.handle("budget:todaySpend", (): number => {

@@ -2,7 +2,7 @@ import { ipcMain } from "electron";
 import { desc, eq, gte, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { hydrationLogs, nutritionLogs } from "../db/schema";
-import type { HydrationLog, NewNutritionLog, NutritionDayTotal, NutritionLog } from "../../shared/types";
+import type { HydrationDayTotal, HydrationLog, NewNutritionLog, NutritionDayTotal, NutritionLog } from "../../shared/types";
 
 export function registerNutritionHandlers(): void {
   ipcMain.handle("nutrition:listToday", (): NutritionLog[] =>
@@ -67,6 +67,16 @@ export function registerNutritionHandlers(): void {
   ipcMain.handle("hydration:remove", (_e, id: number): void => {
     db().delete(hydrationLogs).where(eq(hydrationLogs.id, id)).run();
   });
+
+  ipcMain.handle("hydration:weeklyTotals", (): HydrationDayTotal[] =>
+    db()
+      .select({ date: hydrationLogs.date, ml: sql<number>`SUM(${hydrationLogs.amountMl})` })
+      .from(hydrationLogs)
+      .where(gte(hydrationLogs.date, sql`date('now','-6 days')`))
+      .groupBy(hydrationLogs.date)
+      .orderBy(hydrationLogs.date)
+      .all()
+  );
 
   ipcMain.handle("hydration:totalToday", (): number => {
     const row = db()

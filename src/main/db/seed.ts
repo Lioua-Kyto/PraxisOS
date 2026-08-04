@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import type { AppDb } from "./client";
-import { budgetCategories, courses, habits, settings, workoutExercises } from "./schema";
+import { budgetCategories, courses, foods, habits, settings, workoutExercises } from "./schema";
 
 export const WORKOUT_HABIT_NAME = "Workout";
 
@@ -36,24 +36,89 @@ const WORKOUT_SEED = [
   ["Legs", "Captain's Chair Leg Raises", 3, "10–20", "Keep legs perfectly straight. Add a 1-second hold at the top.", "Use the backrest and arm pads on your machine. Do not use momentum; use your core to lift your legs.", 4]
 ] as const;
 
-const BUDGET_CATEGORY_SEED: Array<{ name: string; type: "expense" | "income" | "transfer" }> = [
+const BUDGET_CATEGORY_SEED: Array<{ name: string; type: "expense" | "income" | "transfer" | "debt" }> = [
   { name: "Groceries", type: "expense" },
   { name: "Rent", type: "expense" },
   { name: "Utilities", type: "expense" },
   { name: "Transport", type: "expense" },
+  { name: "Fuel", type: "expense" },
   { name: "Dining Out", type: "expense" },
+  { name: "Coffee", type: "expense" },
   { name: "Subscriptions", type: "expense" },
   { name: "Health", type: "expense" },
+  { name: "Pharmacy", type: "expense" },
+  { name: "Fitness", type: "expense" },
   { name: "Shopping", type: "expense" },
+  { name: "Clothing", type: "expense" },
+  { name: "Electronics", type: "expense" },
+  { name: "Education", type: "expense" },
+  { name: "Entertainment", type: "expense" },
+  { name: "Travel", type: "expense" },
+  { name: "Gifts & Donations", type: "expense" },
+  { name: "Household", type: "expense" },
+  { name: "Insurance", type: "expense" },
+  { name: "Taxes & Fees", type: "expense" },
+  { name: "Pets", type: "expense" },
   { name: "Other Expense", type: "expense" },
   { name: "Salary", type: "income" },
+  { name: "Bonus", type: "income" },
   { name: "Freelance", type: "income" },
+  { name: "Side Project", type: "income" },
   { name: "Investment", type: "income" },
+  { name: "Dividends", type: "income" },
+  { name: "Refund", type: "income" },
+  { name: "Reimbursement", type: "income" },
   { name: "Gift", type: "income" },
   { name: "Other Income", type: "income" },
   { name: "Savings Transfer", type: "transfer" },
-  { name: "Debt Payment", type: "transfer" },
-  { name: "Account Transfer", type: "transfer" }
+  { name: "Investment Transfer", type: "transfer" },
+  { name: "Emergency Fund", type: "transfer" },
+  { name: "Account Transfer", type: "transfer" },
+  { name: "Loan Taken", type: "debt" },
+  { name: "Credit Card", type: "debt" },
+  { name: "Borrowed From Friend", type: "debt" },
+  { name: "Installment Plan", type: "debt" },
+  { name: "Student Loan", type: "debt" },
+  { name: "Other Debt", type: "debt" }
+];
+
+// Rough per-serving values — a practical starting list the user can edit or
+// extend from the Nutrition panel's food-library modal.
+const FOOD_SEED: Array<[string, string, number, number, string]> = [
+  ["Oatmeal", "Breakfast", 150, 5, "1 cup cooked"],
+  ["Scrambled Eggs", "Breakfast", 180, 13, "2 eggs"],
+  ["Greek Yogurt", "Breakfast", 130, 17, "170g"],
+  ["Banana", "Breakfast", 105, 1, "1 medium"],
+  ["Whole Wheat Toast", "Breakfast", 80, 4, "1 slice"],
+  ["Peanut Butter", "Breakfast", 190, 8, "2 tbsp"],
+  ["Protein Shake", "Breakfast", 160, 30, "1 scoop + water"],
+  ["Orange Juice", "Breakfast", 110, 2, "1 cup"],
+  ["Grilled Chicken Breast", "Lunch", 165, 31, "100g"],
+  ["Brown Rice", "Lunch", 215, 5, "1 cup cooked"],
+  ["Tuna Salad", "Lunch", 190, 20, "1 bowl"],
+  ["Turkey Sandwich", "Lunch", 320, 22, "1 sandwich"],
+  ["Lentil Soup", "Lunch", 180, 12, "1 bowl"],
+  ["Caesar Salad", "Lunch", 250, 10, "1 bowl"],
+  ["Couscous", "Lunch", 175, 6, "1 cup cooked"],
+  ["Salmon Fillet", "Dinner", 230, 25, "120g"],
+  ["Beef Steak", "Dinner", 270, 26, "120g"],
+  ["Pasta Bolognese", "Dinner", 400, 20, "1 plate"],
+  ["Roast Vegetables", "Dinner", 120, 3, "1 cup"],
+  ["Baked Potato", "Dinner", 160, 4, "1 medium"],
+  ["Chicken Tagine", "Dinner", 350, 28, "1 plate"],
+  ["Quinoa Bowl", "Dinner", 280, 11, "1 bowl"],
+  ["Almonds", "Snack", 160, 6, "28g"],
+  ["Apple", "Snack", 95, 0, "1 medium"],
+  ["Protein Bar", "Snack", 200, 20, "1 bar"],
+  ["Cottage Cheese", "Snack", 110, 12, "100g"],
+  ["Dark Chocolate", "Snack", 170, 2, "30g"],
+  ["Hummus & Carrots", "Snack", 150, 5, "1 serving"],
+  ["Mixed Nuts", "Snack", 175, 5, "30g"],
+  ["Boiled Egg", "Any", 78, 6, "1 egg"],
+  ["Olive Oil", "Any", 120, 0, "1 tbsp"],
+  ["Avocado", "Any", 240, 3, "1 medium"],
+  ["Milk", "Any", 105, 8, "1 cup"],
+  ["Honey", "Any", 64, 0, "1 tbsp"]
 ];
 
 const DEFAULT_SETTINGS: Record<string, string> = {
@@ -61,7 +126,13 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   font: "sans",
   waterGoalMl: "2500",
   calorieGoal: "2400",
-  dailyBudgetLimit: "60"
+  proteinGoal: "150",
+  dailyBudgetLimit: "60",
+  weekStartsOn: "1",
+  defaultRestSeconds: "60",
+  defaultFocusCategory: "deep_work",
+  currencySymbol: "",
+  confirmBeforeEndingWorkout: "true"
 };
 
 export function seedCourses(dbi: AppDb) {
@@ -85,12 +156,41 @@ export function seedBudgetCategories(dbi: AppDb) {
   }
 }
 
+/**
+ * Adds any seed category the database doesn't have yet, keyed on name+type.
+ * A plain "seed only when empty" check would leave existing installs without
+ * the newly-added types (debt) and extra categories, so their dropdowns would
+ * come up empty. User-created categories are never touched.
+ */
+export function topUpBudgetCategories(dbi: AppDb) {
+  const existing = new Set(
+    dbi
+      .select({ name: budgetCategories.name, type: budgetCategories.type })
+      .from(budgetCategories)
+      .all()
+      .map((c) => `${c.type}:${c.name}`)
+  );
+  for (const c of BUDGET_CATEGORY_SEED) {
+    if (!existing.has(`${c.type}:${c.name}`)) dbi.insert(budgetCategories).values(c).run();
+  }
+}
+
+export function seedFoods(dbi: AppDb) {
+  for (const [name, category, calories, proteinG, servingLabel] of FOOD_SEED) {
+    dbi.insert(foods).values({ name, category, calories, proteinG, servingLabel }).run();
+  }
+}
+
 export function seedIfEmpty(dbi: AppDb): void {
   if (dbi.select().from(courses).all().length === 0) seedCourses(dbi);
   if (dbi.select().from(workoutExercises).all().length === 0) seedWorkoutExercises(dbi);
-  if (dbi.select().from(budgetCategories).all().length === 0) seedBudgetCategories(dbi);
+  topUpBudgetCategories(dbi);
+  if (dbi.select().from(foods).all().length === 0) seedFoods(dbi);
   if (dbi.select().from(habits).all().length === 0) {
-    dbi.insert(habits).values({ name: WORKOUT_HABIT_NAME, cadence: "daily", color: "primary", orderIndex: 0 }).run();
+    dbi
+      .insert(habits)
+      .values({ name: WORKOUT_HABIT_NAME, cadence: "daily", weekdays: "[]", color: "primary", orderIndex: 0 })
+      .run();
   }
 
   const existingSettings = new Set(dbi.select({ key: settings.key }).from(settings).all().map((s) => s.key));

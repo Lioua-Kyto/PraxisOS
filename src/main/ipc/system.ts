@@ -6,6 +6,7 @@ import {
   budgetTransactions,
   courses,
   focusSessions,
+  foods,
   habitLogs,
   habits,
   hydrationLogs,
@@ -32,11 +33,21 @@ export function registerSystemHandlers(): void {
       focus_sessions: dbi.select().from(focusSessions).all() as DataExport["focus_sessions"],
       budget_transactions: dbi.select().from(budgetTransactions).all() as DataExport["budget_transactions"],
       budget_categories: dbi.select().from(budgetCategories).all() as DataExport["budget_categories"],
-      habits: dbi.select().from(habits).all() as DataExport["habits"],
+      habits: dbi
+        .select()
+        .from(habits)
+        .all()
+        .map((h) => ({
+          ...h,
+          cadence: h.cadence as DataExport["habits"][number]["cadence"],
+          weekdays: h.weekdays ? (JSON.parse(h.weekdays) as number[]) : [],
+          archived: Boolean(h.archived)
+        })),
       habit_logs: dbi.select().from(habitLogs).all() as DataExport["habit_logs"],
       journal_entries: dbi.select().from(journalEntries).all() as DataExport["journal_entries"],
       brain_dumps: dbi.select().from(brainDumps).all() as DataExport["brain_dumps"],
-      notes: dbi.select().from(notes).all().map(rowToNote)
+      notes: dbi.select().from(notes).all().map(rowToNote),
+      foods: dbi.select().from(foods).all()
     };
   });
 }

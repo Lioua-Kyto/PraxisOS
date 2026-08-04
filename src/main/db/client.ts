@@ -13,8 +13,20 @@ CREATE TABLE IF NOT EXISTS tasks (
   priority TEXT NOT NULL DEFAULT 'not_urgent_not_important',
   status TEXT NOT NULL DEFAULT 'todo',
   due_date TEXT,
+  started_at TEXT,
+  finished_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   completed_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS foods (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'Any',
+  calories REAL NOT NULL DEFAULT 0,
+  protein_g REAL NOT NULL DEFAULT 0,
+  serving_label TEXT NOT NULL DEFAULT '1 serving',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS courses (
@@ -119,9 +131,11 @@ CREATE TABLE IF NOT EXISTS habits (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   cadence TEXT NOT NULL DEFAULT 'daily',
+  weekdays TEXT,
   color TEXT NOT NULL DEFAULT 'primary',
   order_index INTEGER NOT NULL DEFAULT 0,
   archived INTEGER NOT NULL DEFAULT 0,
+  managed_by TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -205,6 +219,22 @@ function migrateLegacyColumns(sqlite: Database.Database): void {
   }
   if (!workoutCols.some((c) => c.name === "duration_seconds")) {
     sqlite.exec("ALTER TABLE workout_exercises ADD COLUMN duration_seconds INTEGER");
+  }
+
+  const habitCols = sqlite.prepare("PRAGMA table_info(habits)").all() as Array<{ name: string }>;
+  if (habitCols.length && !habitCols.some((c) => c.name === "weekdays")) {
+    sqlite.exec("ALTER TABLE habits ADD COLUMN weekdays TEXT");
+  }
+  if (habitCols.length && !habitCols.some((c) => c.name === "managed_by")) {
+    sqlite.exec("ALTER TABLE habits ADD COLUMN managed_by TEXT");
+  }
+
+  const taskCols = sqlite.prepare("PRAGMA table_info(tasks)").all() as Array<{ name: string }>;
+  if (taskCols.length && !taskCols.some((c) => c.name === "started_at")) {
+    sqlite.exec("ALTER TABLE tasks ADD COLUMN started_at TEXT");
+  }
+  if (taskCols.length && !taskCols.some((c) => c.name === "finished_at")) {
+    sqlite.exec("ALTER TABLE tasks ADD COLUMN finished_at TEXT");
   }
 }
 

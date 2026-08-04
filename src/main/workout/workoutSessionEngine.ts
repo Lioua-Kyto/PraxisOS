@@ -1,7 +1,8 @@
 import type { BrowserWindow } from "electron";
 import { randomUUID } from "node:crypto";
 import { startFocusSession, stopFocusSession } from "../ipc/focusTimer";
-import { completeHabitToday } from "../ipc/habits";
+import { completeWorkoutHabitToday } from "../ipc/habits";
+import { getSettings } from "../ipc/settings";
 import { WORKOUT_HABIT_NAME } from "../db/seed";
 import { getExerciseGroupsForDay } from "../ipc/workoutHelpers";
 import type { WorkoutExerciseGroup, WorkoutSessionState } from "../../shared/types";
@@ -124,7 +125,7 @@ function completeSession(): void {
   clearPhaseTimer();
   restResumeAction = null;
   if (state.focusSessionId) stopFocusSession(state.focusSessionId);
-  completeHabitToday(WORKOUT_HABIT_NAME);
+  completeWorkoutHabitToday(WORKOUT_HABIT_NAME);
   state.phase = "complete";
   state.phaseEndsAt = null;
   state.restRunning = false;
@@ -156,7 +157,7 @@ export function startSession(day: string): WorkoutSessionState {
     totalSets: totalSetsFor(groups[0]),
     phase: "preview",
     phaseEndsAt: null,
-    restSeconds: DEFAULT_REST_SECONDS,
+    restSeconds: getSettings().defaultRestSeconds || DEFAULT_REST_SECONDS,
     restElapsedSeconds: 0,
     restRunning: false,
     restStartedAt: null,

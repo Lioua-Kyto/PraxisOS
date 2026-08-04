@@ -1,6 +1,7 @@
 import { registerBudgetHandlers } from "./budget";
 import { registerCourseHandlers } from "./courses";
 import { registerFocusTimerHandlers } from "./focusTimer";
+import { registerFoodHandlers } from "./foods";
 import { registerHabitHandlers } from "./habits";
 import { registerJournalHandlers } from "./journal";
 import { registerNoteHandlers } from "./notes";
@@ -23,6 +24,7 @@ export function registerAllIpcHandlers(): void {
   registerSettingsHandlers();
   registerSystemHandlers();
   registerHabitHandlers();
+  registerFoodHandlers();
   registerJournalHandlers();
   registerNoteHandlers();
   registerThemePresetHandlers();

@@ -12,12 +12,15 @@ import type {
   FocusCategoryTotal,
   FocusDayCategoryTotal,
   FocusSession,
+  Food,
   HabitWithLogs,
+  HydrationDayTotal,
   HydrationLog,
   JournalEntry,
   ManualFocusEntry,
   NewBudgetTransaction,
   NewCourse,
+  NewFood,
   NewHabit,
   NewNote,
   NewNutritionLog,
@@ -107,7 +110,8 @@ const api = {
     listToday: () => invoke<HydrationLog[]>("hydration:listToday"),
     add: (amountMl: number) => invoke<HydrationLog>("hydration:add", amountMl),
     remove: (id: number) => invoke<void>("hydration:remove", id),
-    totalToday: () => invoke<number>("hydration:totalToday")
+    totalToday: () => invoke<number>("hydration:totalToday"),
+    weeklyTotals: () => invoke<HydrationDayTotal[]>("hydration:weeklyTotals")
   },
   focusTimer: {
     getActive: () => invoke<FocusSession | null>("focusTimer:getActive"),
@@ -147,12 +151,19 @@ const api = {
     remove: (id: number) => invoke<void>("themePresets:remove", id)
   },
   habits: {
-    list: () => invoke<HabitWithLogs[]>("habits:list"),
+    list: (month?: string) => invoke<HabitWithLogs[]>("habits:list", month),
     add: (input: NewHabit) => invoke<HabitWithLogs>("habits:add", input),
     update: (id: number, fields: Partial<NewHabit>) => invoke<HabitWithLogs>("habits:update", id, fields),
     archive: (id: number) => invoke<void>("habits:archive", id),
     remove: (id: number) => invoke<void>("habits:remove", id),
-    toggleDate: (id: number, date: string) => invoke<HabitWithLogs>("habits:toggleDate", id, date)
+    toggleDate: (id: number, date: string, month?: string) =>
+      invoke<HabitWithLogs>("habits:toggleDate", id, date, month)
+  },
+  foods: {
+    list: () => invoke<Food[]>("foods:list"),
+    add: (input: NewFood) => invoke<Food>("foods:add", input),
+    update: (id: number, fields: Partial<NewFood>) => invoke<Food>("foods:update", id, fields),
+    remove: (id: number) => invoke<void>("foods:remove", id)
   },
   journal: {
     getByDate: (date: string) => invoke<JournalEntry | null>("journal:getByDate", date),
@@ -167,7 +178,8 @@ const api = {
     list: () => invoke<Note[]>("notes:list"),
     add: (input: NewNote) => invoke<Note>("notes:add", input),
     update: (id: number, fields: Partial<NewNote>) => invoke<Note>("notes:update", id, fields),
-    remove: (id: number) => invoke<void>("notes:remove", id)
+    remove: (id: number) => invoke<void>("notes:remove", id),
+    saveImage: (dataUrl: string, suggestedName?: string) => invoke<string>("notes:saveImage", dataUrl, suggestedName)
   },
   system: {
     exportAll: () => invoke<DataExport>("system:exportAll")

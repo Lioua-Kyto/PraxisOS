@@ -15,6 +15,8 @@ export interface Task {
   priority: TaskPriority;
   status: TaskStatus;
   dueDate: string | null;
+  startedAt: string | null;
+  finishedAt: string | null;
   createdAt: string;
   completedAt: string | null;
 }
@@ -175,7 +177,7 @@ export interface ManualFocusEntry {
   endClock: string;
 }
 
-export type BudgetTransactionType = "expense" | "income" | "transfer";
+export type BudgetTransactionType = "expense" | "income" | "transfer" | "debt";
 
 export interface BudgetCategory {
   id: number;
@@ -206,6 +208,30 @@ export interface BudgetSummary {
   expense: number;
   balance: number;
   transferTotal: number;
+  debt: number;
+}
+
+export interface Food {
+  id: number;
+  name: string;
+  category: string;
+  calories: number;
+  proteinG: number;
+  servingLabel: string;
+  createdAt: string;
+}
+
+export interface NewFood {
+  name: string;
+  category: string;
+  calories: number;
+  proteinG: number;
+  servingLabel?: string;
+}
+
+export interface HydrationDayTotal {
+  date: string;
+  ml: number;
 }
 
 export type ThemeKey = "light" | "dark" | "solarized" | "midnight" | "cyberpunk" | "forest" | "nord" | "rose";
@@ -219,6 +245,14 @@ export interface AppSettings {
   dailyBudgetLimit: number;
   activePresetId: number | null;
   workoutDays: string[];
+  /** Weekday index (0=Sun..6=Sat) -> workout day name, or "" for a rest day. */
+  workoutSchedule: Record<string, string>;
+  proteinGoal: number;
+  weekStartsOn: number;
+  defaultRestSeconds: number;
+  defaultFocusCategory: string;
+  currencySymbol: string;
+  confirmBeforeEndingWorkout: boolean;
 }
 
 export interface ThemePreset {
@@ -237,21 +271,25 @@ export interface NewThemePreset {
   accent: string;
 }
 
-export type HabitCadence = "daily" | "weekly";
+export type HabitCadence = "daily" | "weekly" | "custom";
 
 export interface Habit {
   id: number;
   name: string;
   cadence: HabitCadence;
+  /** Weekday numbers (0=Sun..6=Sat). One entry for "weekly", several for "custom", empty for "daily". */
+  weekdays: number[];
   color: string;
   orderIndex: number;
   archived: boolean;
+  managedBy: string | null;
   createdAt: string;
 }
 
 export interface NewHabit {
   name: string;
   cadence: HabitCadence;
+  weekdays?: number[];
   color?: string;
 }
 
@@ -265,6 +303,8 @@ export interface HabitLog {
 export interface HabitWithLogs extends Habit {
   completedDates: string[];
   streak: number;
+  /** Dates in the viewed month this habit is actually scheduled for. */
+  scheduledDates: string[];
 }
 
 export interface JournalEntry {
@@ -312,4 +352,5 @@ export interface DataExport {
   journal_entries: JournalEntry[];
   brain_dumps: BrainDump[];
   notes: Note[];
+  foods: Food[];
 }

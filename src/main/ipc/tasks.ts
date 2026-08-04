@@ -2,6 +2,7 @@ import { ipcMain } from "electron";
 import { desc, eq } from "drizzle-orm";
 import { db } from "../db/client";
 import { tasks } from "../db/schema";
+import { localDateTimeString } from "../../shared/datetime";
 import type { NewTask, Task, TaskStatus } from "../../shared/types";
 
 function rowToTask(row: typeof tasks.$inferSelect): Task {
@@ -11,9 +12,25 @@ function rowToTask(row: typeof tasks.$inferSelect): Task {
     priority: row.priority as Task["priority"],
     status: row.status as TaskStatus,
     dueDate: row.dueDate,
+    startedAt: row.startedAt,
+    finishedAt: row.finishedAt,
     createdAt: row.createdAt,
     completedAt: row.completedAt
   };
+}
+
+/**
+ * Status drives the lifecycle stamps:
+ *   todo        -> both cleared (a task pulled back is genuinely restarted)
+ *   in_progress -> startedAt stamped once, finishedAt cleared
+ *   completed   -> finishedAt stamped, startedAt backfilled if the task
+ *                  jumped straight from todo to done
+ */
+function lifecycleFields(status: TaskStatus, current: typeof tasks.$inferSelect) {
+  const now = localDateTimeString();
+  if (status === "todo") return { startedAt: null, finishedAt: null, completedAt: null };
+  if (status === "in_progress") return { startedAt: current.startedAt ?? now, finishedAt: null, completedAt: null };
+  return { startedAt: current.startedAt ?? now, finishedAt: now, completedAt: now };
 }
 
 export function registerTaskHandlers(): void {
@@ -32,9 +49,11 @@ export function registerTaskHandlers(): void {
   });
 
   ipcMain.handle("tasks:setStatus", (_e, id: number, status: TaskStatus): Task => {
+    const current = db().select().from(tasks).where(eq(tasks.id, id)).get();
+    if (!current) throw new Error(`Task ${id} not found`);
     const row = db()
       .update(tasks)
-      .set({ status, completedAt: status === "completed" ? new Date().toISOString() : null })
+      .set({ status, ...lifecycleFields(status, current) })
       .where(eq(tasks.id, id))
       .returning()
       .get();
