@@ -105,6 +105,18 @@ export function useRemoveVideo() {
   });
 }
 
+export function useReorderExercises() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (orderedIds: number[]) => window.api.workouts.reorder(orderedIds),
+    onSuccess: () => qc.invalidateQueries({ queryKey: EXERCISES_KEY })
+  });
+}
+
+export function usePickVideoFile() {
+  return useMutation({ mutationFn: () => window.api.workouts.pickVideoFile() });
+}
+
 export function useRestoreDefaultWorkout() {
   const qc = useQueryClient();
   return useMutation({

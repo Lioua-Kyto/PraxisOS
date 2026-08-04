@@ -2,6 +2,14 @@ import { app, BrowserWindow, shell } from "electron";
 import { join } from "path";
 import { initDb, closeDb } from "./db/client";
 import { registerAllIpcHandlers } from "./ipc/registerAll";
+import { registerMainWindow } from "./workout/workoutSessionEngine";
+
+// In dev this resolves to <root>/build/icon.png (out/main -> up two levels
+// -> project root -> build/icon.png). Packaged builds don't ship the
+// build/ directory (it's electron-builder's own icon source), so there we
+// read the copy electron-builder places under resources/ via extraResources
+// (see package.json's build.extraResources).
+const iconPath = app.isPackaged ? join(process.resourcesPath, "icon.png") : join(__dirname, "../../build/icon.png");
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -12,6 +20,7 @@ function createWindow(): void {
     show: false,
     backgroundColor: "#0b0d10",
     autoHideMenuBar: true,
+    icon: iconPath,
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       contextIsolation: true,
@@ -32,6 +41,8 @@ function createWindow(): void {
   } else {
     win.loadFile(join(__dirname, "../renderer/index.html"));
   }
+
+  registerMainWindow(win);
 }
 
 app.whenReady().then(() => {
