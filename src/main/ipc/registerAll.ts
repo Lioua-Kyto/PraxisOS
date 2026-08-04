@@ -1,3 +1,4 @@
+import { registerBackupHandlers } from "./backup";
 import { registerBudgetHandlers } from "./budget";
 import { registerCourseHandlers } from "./courses";
 import { registerFocusTimerHandlers } from "./focusTimer";
@@ -23,6 +24,7 @@ export function registerAllIpcHandlers(): void {
   registerBudgetHandlers();
   registerSettingsHandlers();
   registerSystemHandlers();
+  registerBackupHandlers();
   registerHabitHandlers();
   registerFoodHandlers();
   registerJournalHandlers();

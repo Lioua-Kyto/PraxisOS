@@ -253,6 +253,9 @@ export interface AppSettings {
   defaultFocusCategory: string;
   currencySymbol: string;
   confirmBeforeEndingWorkout: boolean;
+  habitRemindersEnabled: boolean;
+  /** 24h "HH:MM" — when to nudge about habits still open today. */
+  habitReminderTime: string;
 }
 
 export interface ThemePreset {
@@ -337,20 +340,47 @@ export interface NewNote {
   tags?: string[];
 }
 
-export interface DataExport {
-  tasks: Task[];
-  courses: Course[];
-  workout_exercises: WorkoutExercise[];
-  workout_logs: WorkoutLog[];
-  nutrition_logs: NutritionLog[];
-  hydration_logs: HydrationLog[];
-  focus_sessions: FocusSession[];
-  budget_transactions: BudgetTransaction[];
-  budget_categories: BudgetCategory[];
-  habits: Habit[];
-  habit_logs: HabitLog[];
-  journal_entries: JournalEntry[];
-  brain_dumps: BrainDump[];
-  notes: Note[];
-  foods: Food[];
+/**
+ * The single dependable backup format. Every table is exported as raw rows
+ * (snake_case, exactly as stored) rather than the camelCase view models, so
+ * an import is a faithful restore and doesn't depend on UI-layer mapping.
+ * `formatVersion` is bumped whenever the shape changes so imports can refuse
+ * files they don't understand.
+ */
+export const BACKUP_FORMAT_VERSION = 1;
+
+export type BackupTableName =
+  | "tasks"
+  | "courses"
+  | "workout_exercises"
+  | "workout_logs"
+  | "nutrition_logs"
+  | "hydration_logs"
+  | "focus_sessions"
+  | "budget_categories"
+  | "budget_transactions"
+  | "settings"
+  | "theme_presets"
+  | "habits"
+  | "habit_logs"
+  | "journal_entries"
+  | "brain_dumps"
+  | "notes"
+  | "foods";
+
+export interface BackupFile {
+  format: "praxisos-backup";
+  formatVersion: number;
+  appVersion: string;
+  exportedAt: string;
+  /** Raw rows keyed by table name. */
+  tables: Record<BackupTableName, Array<Record<string, unknown>>>;
+  /** Media filenames referenced by exercises/notes, so a restore can report what's missing. */
+  mediaFiles: string[];
+}
+
+export interface ImportSummary {
+  restored: Record<string, number>;
+  totalRows: number;
+  missingMedia: string[];
 }

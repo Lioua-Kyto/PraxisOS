@@ -6,8 +6,8 @@ import type {
   BudgetSummary,
   BudgetTransaction,
   BudgetTransactionType,
+  BackupFile,
   Course,
-  DataExport,
   ExerciseVolumePoint,
   FocusCategoryTotal,
   FocusDayCategoryTotal,
@@ -15,6 +15,7 @@ import type {
   Food,
   HabitWithLogs,
   HydrationDayTotal,
+  ImportSummary,
   HydrationLog,
   JournalEntry,
   ManualFocusEntry,
@@ -179,10 +180,17 @@ const api = {
     add: (input: NewNote) => invoke<Note>("notes:add", input),
     update: (id: number, fields: Partial<NewNote>) => invoke<Note>("notes:update", id, fields),
     remove: (id: number) => invoke<void>("notes:remove", id),
-    saveImage: (dataUrl: string, suggestedName?: string) => invoke<string>("notes:saveImage", dataUrl, suggestedName)
+    saveImage: (dataUrl: string, suggestedName?: string) => invoke<string>("notes:saveImage", dataUrl, suggestedName),
+    search: (query: string) => invoke<Note[]>("notes:search", query)
   },
   system: {
-    exportAll: () => invoke<DataExport>("system:exportAll")
+    exportAll: () => invoke<BackupFile>("system:exportAll")
+  },
+  backup: {
+    /** Opens a save dialog; resolves to the written path, or null if cancelled. */
+    exportToFile: () => invoke<string | null>("backup:export"),
+    /** Opens an open dialog; resolves to a restore summary, or null if cancelled. */
+    importFromFile: () => invoke<ImportSummary | null>("backup:import")
   }
 };
 
