@@ -9,10 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useBudgetCategoriesByType } from "../../queries/budget";
 import type { BudgetTransactionType } from "@shared/types";
 
-const TYPES: BudgetTransactionType[] = ["expense", "income", "transfer"];
+const TYPES: BudgetTransactionType[] = ["expense", "income", "transfer", "debt"];
 
 const transactionSchema = z.object({
-  type: z.enum(["expense", "income", "transfer"]),
+  type: z.enum(["expense", "income", "transfer", "debt"]),
   amount: z.coerce.number({ invalid_type_error: "Enter an amount" }).positive("Amount must be greater than 0"),
   categoryId: z.coerce.number({ invalid_type_error: "Pick a category" }).int().positive("Pick a category"),
   description: z.string().optional(),

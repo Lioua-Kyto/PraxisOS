@@ -6,15 +6,25 @@ import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { TransactionForm, type TransactionFormValues } from "./TransactionForm";
 import { SpendByCategoryChart } from "../viz/SpendByCategoryChart";
 import { useAddTransaction, useBudgetSummary, useBudgetTransactions, useRemoveTransaction } from "../../queries/budget";
+import { useSettings } from "../../queries/settings";
 import type { BudgetTransactionType } from "@shared/types";
 
-const FILTERS: Array<"all" | BudgetTransactionType> = ["all", "expense", "income", "transfer"];
+const FILTERS: Array<"all" | BudgetTransactionType> = ["all", "expense", "income", "transfer", "debt"];
+
+const AMOUNT_COLOR: Record<string, string> = {
+  income: "hsl(var(--success))",
+  expense: "hsl(var(--destructive))",
+  debt: "hsl(var(--warning))",
+  transfer: "hsl(var(--muted-foreground))"
+};
 
 export function BudgetPanel() {
   const { data: txs = [] } = useBudgetTransactions();
   const { data: summary } = useBudgetSummary();
   const addTx = useAddTransaction();
   const removeTx = useRemoveTransaction();
+  const { data: settings } = useSettings();
+  const currency = settings?.currencySymbol ?? "";
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
 
   const submit = (values: TransactionFormValues) => {
@@ -27,23 +37,42 @@ export function BudgetPanel() {
     <div>
       <PageHeader kicker="Cash flow" title="Budget" />
 
-      <div className="mb-5 grid grid-cols-3 gap-4">
+      <div className="mb-5 grid grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-5">
             <h3 className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Income</h3>
-            <div className="font-display mt-1.5 text-[28px] text-success">{(summary?.income ?? 0).toFixed(2)}</div>
+            <div className="font-display mt-1.5 text-[28px] text-success">
+              {currency}
+              {(summary?.income ?? 0).toFixed(2)}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-5">
             <h3 className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Expenses</h3>
-            <div className="font-display mt-1.5 text-[28px] text-destructive">{(summary?.expense ?? 0).toFixed(2)}</div>
+            <div className="font-display mt-1.5 text-[28px] text-destructive">
+              {currency}
+              {(summary?.expense ?? 0).toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <h3 className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Debt</h3>
+            <div className="font-display mt-1.5 text-[28px] text-warning">
+              {currency}
+              {(summary?.debt ?? 0).toFixed(2)}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-5">
             <h3 className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Balance</h3>
-            <div className="font-display mt-1.5 text-[28px]">{(summary?.balance ?? 0).toFixed(2)}</div>
+            <div className="font-display mt-1.5 text-[28px]">
+              {currency}
+              {(summary?.balance ?? 0).toFixed(2)}
+            </div>
+            <div className="mt-1 text-[10.5px] text-muted-foreground">income − expenses − debt</div>
           </CardContent>
         </Card>
       </div>
@@ -95,10 +124,9 @@ export function BudgetPanel() {
                   <td className="py-2 capitalize">{t.type}</td>
                   <td className="py-2">{t.categoryName ?? "—"}</td>
                   <td className="py-2">{t.description}</td>
-                  <td
-                    className="py-2"
-                    style={{ color: t.type === "income" ? "hsl(var(--success))" : t.type === "expense" ? "hsl(var(--destructive))" : "hsl(var(--warning))" }}
-                  >
+                  <td className="py-2" style={{ color: AMOUNT_COLOR[t.type] ?? "hsl(var(--muted-foreground))" }}>
+                    {t.type === "income" ? "+" : t.type === "expense" ? "−" : ""}
+                    {currency}
                     {t.amount.toFixed(2)}
                   </td>
                   <td className="py-2">
