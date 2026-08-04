@@ -1,9 +1,12 @@
 import {
   Banknote,
+  BookOpen,
   Dumbbell,
+  Flame,
   GraduationCap,
   LayoutDashboard,
   ListChecks,
+  NotebookText,
   Salad,
   Settings as SettingsIcon,
   Timer
@@ -14,26 +17,32 @@ import { cn } from "../../lib/utils";
 export type PageKey =
   | "dashboard"
   | "todo"
+  | "habits"
   | "courses"
   | "workout"
   | "nutrition"
   | "timer"
   | "budget"
+  | "journal"
+  | "notes"
   | "settings";
 
 const NAV: Array<{ key: PageKey; label: string; icon: typeof LayoutDashboard }> = [
   { key: "dashboard", label: "Overview", icon: LayoutDashboard },
   { key: "todo", label: "Tasks", icon: ListChecks },
+  { key: "habits", label: "Habit Matrix", icon: Flame },
   { key: "courses", label: "Courses", icon: GraduationCap },
   { key: "workout", label: "Workout", icon: Dumbbell },
   { key: "nutrition", label: "Nutrition", icon: Salad },
   { key: "timer", label: "Focus Timer", icon: Timer },
-  { key: "budget", label: "Budget", icon: Banknote }
+  { key: "budget", label: "Budget", icon: Banknote },
+  { key: "journal", label: "Daily Log", icon: BookOpen },
+  { key: "notes", label: "Knowledge Base", icon: NotebookText }
 ];
 
 export function Sidebar({ page, onNavigate }: { page: PageKey; onNavigate: (page: PageKey) => void }) {
   return (
-    <div className="flex h-full w-[220px] shrink-0 flex-col gap-0.5 border-r border-border-soft bg-sunken px-3 pb-4 pt-7">
+    <div className="flex h-full w-[220px] shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border-soft bg-sunken px-3 pb-4 pt-7">
       <div className="mb-6 flex items-baseline gap-1.5 px-2.5 font-display text-xl">
         Praxis<em className="not-italic text-primary">OS</em>
       </div>
