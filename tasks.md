@@ -79,36 +79,55 @@ order they were requested.
       expand/collapse — collapsed hides the app title and panel labels,
       leaving only the logo and panel icons.
 
-## 11. Suggestions
+## 11. Suggestions — all applied
 
-Recommendations noted while working through the above. None are implemented.
+- [x] **(bug-risk / data)** Backfill migration converting legacy UTC-ISO focus
+      sessions to local wall-clock, including their `date` column, so old rows
+      group correctly in the daily/weekly rollups. Idempotent — detects the
+      "T" separator only the legacy format has.
+- [x] **(performance)** Route-level `React.lazy` on the panels plus manual
+      chunks for Recharts / markdown / framer-motion. Entry bundle went from
+      **2.65 MB → 258 kB**; Recharts (1.17 MB) now loads only when a chart is
+      shown, and the Overview chart is deferred behind its own Suspense
+      boundary so the dashboard paints first.
+- [x] **(feature)** Single dependable backup format covering every table,
+      with restore. See "Backup format" below.
+- [x] **(feature)** Inline set logging during a live workout — reps/weight are
+      entered on the "Finish set" control and feed the volume history
+      directly. Logging is optional and never blocks advancing.
+- [x] **(feature)** Habit reminders via Electron's native notifications, with
+      an enable toggle and time picker in Settings. Polls once a minute so it
+      still fires if the machine slept through the target time, and notifies
+      at most once per day.
+- [x] **(a11y)** `aria-label`s on icon-only controls across Tasks, Habits,
+      Settings, Notes, Journal, Nutrition and Workout; habit squares gained
+      `aria-pressed`, descriptive labels and a visible focus ring.
+- [x] **(feature)** SQLite FTS5 full-text search over notes (title/content/
+      tags), relevance-ranked with bm25 and kept in sync by triggers. Prefix
+      matching means results narrow as you type. Falls back to a LIKE scan if
+      the FTS extension is ever unavailable.
+- [x] **(tech-debt)** `npm audit` is now **0 vulnerabilities**, via Vite 5→7 +
+      electron-vite 2→5, and removing `drizzle-kit` (see note below).
 
-- **(bug-risk / data)** Legacy focus sessions written before the datetime fix
-  are stored as UTC ISO strings, and their `date` column came from SQLite's
-  UTC `date('now')`. Display now tolerates both formats, but a one-off
-  backfill migration would make old rows group correctly in the daily/weekly
-  rollups near midnight.
-- **(performance)** The renderer bundle is ~2.6 MB in one chunk. Route-level
-  `React.lazy` on the ten panels, plus a manual chunk for Recharts, would cut
-  the initial parse noticeably.
-- **(feature)** Export is JSON-only and there's no import. A restore-from-
-  backup path (and CSV export for budget/nutrition) would make the data
-  genuinely portable.
-- **(feature)** Workout logging during a live session: the session view is
-  read-only, so reps/weight still have to be logged afterwards from the
-  exercise detail view. Logging a set inline at "Finish set" would close that
-  loop and feed the volume sparkline automatically.
-- **(feature)** Habit reminders/notifications for days a habit is scheduled
-  but not yet checked in — Electron has a native notification API already.
-- **(a11y)** Several icon-only controls rely on `title` alone; adding
-  `aria-label` throughout and a visible focus ring on the habit squares would
-  make keyboard navigation viable.
-- **(feature)** Knowledge Base notes have no backlinks or full-text index.
-  SQLite FTS5 over `notes.content` would scale search past a few hundred
-  notes.
-- **(tech-debt)** `npm audit` still reports moderate advisories from
-  dev-only tooling (esbuild via vite/electron-vite/drizzle-kit). Clearing
-  them needs vite 8, which electron-vite 2.x isn't validated against yet.
+## Backup format
+
+`Settings → Backup & restore` writes a single `.praxisos.json` file that is
+the one supported format for both directions.
+
+- Covers all 17 tables, including settings and theme presets.
+- Rows are exported raw (snake_case, exactly as stored) rather than as the
+  camelCase view models, so a restore is a faithful copy and doesn't depend
+  on UI-layer mapping.
+- Carries `formatVersion`; a backup from a newer app version is refused with
+  a clear message instead of importing partially.
+- Restores inside a transaction — parents before children, children deleted
+  first — so a failure can't leave the database half-written.
+- Import only writes columns the running build actually has, so a backup from
+  a slightly different version still restores instead of hard-failing.
+- Media (videos, note images) stay in the media folder rather than being
+  inlined as base64. The file records which media it references, restore
+  repoints paths at the local media folder by filename, and anything missing
+  is reported after the restore.
 
 ---
 
@@ -143,3 +162,16 @@ Recommendations noted while working through the above. None are implemented.
   flagged `managed_by = "workout-schedule"`. It's shown with a lock icon in
   the Habit Matrix and can't be deleted there; clearing every day in the
   schedule archives it.
+- **`drizzle-kit` removed** — it was the last source of audit advisories (it
+  pulls a deprecated `@esbuild-kit` chain) and wasn't referenced by any npm
+  script: the app creates its schema idempotently at launch in
+  `src/main/db/client.ts`, so no migration tooling runs at build or runtime.
+  `drizzle-orm` itself is untouched. If you ever want the schema explorer
+  back, `npx drizzle-kit studio` still works without it being a project
+  dependency — it just needs a `drizzle.config.ts` recreated.
+- **Verification of this round** — beyond typecheck/build/launch, the two
+  riskiest pieces were exercised directly against SQLite: the FTS index was
+  confirmed to create its triggers, match on prefixes, and drop entries on
+  delete; and the backup export→wipe→restore cycle was run on a *copy* of the
+  real database, confirming every table's row count matched, values survived
+  intact, and `PRAGMA foreign_key_check` came back empty.
