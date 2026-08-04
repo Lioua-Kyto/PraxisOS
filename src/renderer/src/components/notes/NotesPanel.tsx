@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
 import { NoteEditor } from "./NoteEditor";
-import { useAddNote, useNotes } from "../../queries/notes";
+import { useAddNote, useNoteSearch, useNotes } from "../../queries/notes";
 
 export function NotesPanel() {
   const { data: notes = [] } = useNotes();
@@ -15,14 +15,14 @@ export function NotesPanel() {
   const [search, setSearch] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
+  // Tag chips come from the full set so they don't vanish while searching.
   const allTags = useMemo(() => [...new Set(notes.flatMap((n) => n.tags))].sort(), [notes]);
 
-  const filtered = notes.filter((n) => {
-    const matchesTag = !activeTag || n.tags.includes(activeTag);
-    const q = search.trim().toLowerCase();
-    const matchesSearch = !q || n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q) || n.tags.some((t) => t.includes(q));
-    return matchesTag && matchesSearch;
-  });
+  // Search runs in SQLite (FTS5, relevance-ranked); tag filtering stays local
+  // since it's a cheap set membership test on the already-fetched rows.
+  const { data: searchResults } = useNoteSearch(search.trim());
+  const base = search.trim() ? (searchResults ?? []) : notes;
+  const filtered = activeTag ? base.filter((n) => n.tags.includes(activeTag)) : base;
 
   const selected = notes.find((n) => n.id === selectedId) ?? null;
 

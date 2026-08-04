@@ -2,7 +2,7 @@ import { ipcMain } from "electron";
 import fs from "node:fs";
 import path from "node:path";
 import { desc, eq } from "drizzle-orm";
-import { db, getMediaDir } from "../db/client";
+import { db, getMediaDir, getRawDb, isNotesFtsAvailable } from "../db/client";
 import { notes } from "../db/schema";
 import type { NewNote, Note } from "../../shared/types";
 
@@ -49,6 +49,44 @@ export function registerNoteHandlers(): void {
 
   ipcMain.handle("notes:remove", (_e, id: number): void => {
     db().delete(notes).where(eq(notes.id, id)).run();
+  });
+
+  // Full-text search, ranked by relevance. Falls back to a LIKE scan if the
+  // FTS index couldn't be created, so search always returns something useful.
+  ipcMain.handle("notes:search", (_e, query: string): Note[] => {
+    const trimmed = query.trim();
+    if (!trimmed) return db().select().from(notes).orderBy(desc(notes.updatedAt)).all().map(rowToNote);
+
+    const sqlite = getRawDb();
+    if (isNotesFtsAvailable()) {
+      try {
+        // Prefix-match each term so partial words match as you type, and
+        // quote them so FTS5 operators in user input can't break the query.
+        const ftsQuery = trimmed
+          .split(/\s+/)
+          .map((term) => `"${term.replace(/"/g, '""')}"*`)
+          .join(" AND ");
+        const rows = sqlite
+          .prepare(
+            `SELECT n.* FROM notes_fts f JOIN notes n ON n.id = f.rowid
+             WHERE notes_fts MATCH ? ORDER BY bm25(notes_fts, 3.0, 1.0, 2.0)`
+          )
+          .all(ftsQuery) as Array<typeof notes.$inferSelect>;
+        return rows.map(rowToNote);
+      } catch {
+        // Malformed query — fall through to LIKE.
+      }
+    }
+
+    const like = `%${trimmed.toLowerCase()}%`;
+    const rows = sqlite
+      .prepare(
+        `SELECT * FROM notes
+         WHERE lower(title) LIKE ? OR lower(content) LIKE ? OR lower(tags) LIKE ?
+         ORDER BY updated_at DESC`
+      )
+      .all(like, like, like) as Array<typeof notes.$inferSelect>;
+    return rows.map(rowToNote);
   });
 
   // Persists a pasted/dropped image into the media dir and hands back the
