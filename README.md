@@ -1,8 +1,18 @@
-# Life OS
+# PraxisOS
 
-A personal desktop app (Electron + React + SQLite) bundling: Dashboard, Todo (mother panel), Courses roadmap, Workout tracker (your bodyweight/30kg-bag PPL routine), Nutrition, Water, Focus Timer, and Budget.
+A local-first personal command center (Electron + React + TypeScript + SQLite) bundling: an Overview dashboard, Tasks (Kanban), Courses roadmap, Workout tracker, Nutrition & Hydration, a background-persistent Focus Timer, and Budget.
 
-All data is stored locally in a SQLite file under your OS's app-data folder (`app.getPath('userData')/life-os.sqlite3`) — nothing leaves your machine.
+All data is stored locally in a SQLite database under your OS's app-data folder (`app.getPath('userData')/praxisos.sqlite3`) — nothing leaves your machine.
+
+## Stack
+
+- **TypeScript** end to end — main process, preload bridge, and renderer.
+- **Electron + electron-vite** for the desktop shell and build tooling.
+- **Tailwind CSS + shadcn/ui (Radix primitives) + lucide-react + Framer Motion** for the UI.
+- **better-sqlite3 + Drizzle ORM** for local storage, wrapped in typed IPC channels.
+- **TanStack Query** for data fetching/caching over IPC.
+- **React Hook Form + Zod** for form state and validation.
+- **Recharts** for the analytics visualizations (budget spend, focus hours, macro trend).
 
 ## Run it (development)
 
@@ -11,7 +21,7 @@ npm install
 npm run dev
 ```
 
-This starts Vite (the React UI) and Electron together, with hot reload.
+This starts `electron-vite` in dev mode — the renderer hot-reloads and the Electron window auto-reloads on main/preload changes.
 
 ## Build a Windows installer
 
@@ -22,19 +32,19 @@ npm run dist
 
 This produces an installer in the `release/` folder (NSIS `.exe` on Windows, `.dmg` on Mac, `.AppImage` on Linux — whichever OS you build on).
 
-> The SQLite engine (`sql.js`) is a pure JavaScript/WebAssembly build — no native compiler, no Visual Studio Build Tools, no `node-gyp` required. `npm install` should always work out of the box regardless of your Node version.
+> `better-sqlite3` is a native module. `npm install` triggers `electron-builder install-app-deps` via `postinstall`, which rebuilds it against Electron's ABI automatically. On Windows this needs either a prebuilt binary for your Electron version (the default) or, if none exists, the "Desktop development with C++" workload for Visual Studio Build Tools.
 
 ## What's inside
 
-- **Dashboard** — top-level view: tasks done, focus time today, course progress, sets logged, calories, water, budget balance. Click any card to jump to that panel.
-- **Todo (mother panel)** — Eisenhower-style quadrants (urgent/important). This is the panel the dashboard is built around.
-- **Courses** — your Coursera roadmap, pre-seeded with a prioritized plan (Cloud & DevOps → System Design & DSA → Frontend depth → Full software engineering → AI engineering). Fully editable: add courses, change status (planned / in progress / completed).
-- **Workout** — your 3-day bodyweight + 30kg-bag Push/Pull/Legs routine, pre-loaded from your spreadsheet. Log sets (reps/weight/notes) per exercise, edit any exercise, add new ones, or select two exercises and merge them into a superset.
-- **Nutrition** — log meals with calories/protein against a daily goal.
-- **Water** — quick-add buttons + custom amounts against a daily goal.
-- **Focus Timer** — clock in/out per category (Deep Work, Training, Learning, Other); today's totals roll up into the Dashboard.
-- **Budget** — income, expenses, and debts, with running balance and open-debt total.
+- **Overview** — active focus timer widget, next high-priority tasks, today's budget spend against your daily limit, hydration/calorie rings, and a weekly focus-hours chart.
+- **Tasks** — a Kanban board (To Do / In Progress / Completed) with animated drag-and-drop between columns; each card carries an Eisenhower-quadrant priority badge.
+- **Courses** — your Coursera roadmap, grouped by phase. Fully editable: add courses, change status.
+- **Workout** — a 3-day Push/Pull/Legs routine. Log sets, edit exercises, merge two into a superset, attach a form-check video, and see a 14-day volume sparkline.
+- **Nutrition** — log meals against a daily calorie goal, with hydration quick-add and a weekly macro trend chart folded into the same panel.
+- **Focus Timer** — clock in/out, pause/resume. The active session lives in SQLite, not component state, so switching tabs never resets or duplicates it.
+- **Budget** — income/expense/transfer transactions with a category dropdown that's always in sync with the selected type, plus a spend-by-category chart.
+- **Settings** — theme (Light, Dark, Solarized, Midnight, Cyberpunk), typography, daily goals, data export, and reseed-to-defaults.
 
 ## Editing the seeded data
 
-Everything seeded (courses, exercises) is just rows in SQLite — edit or delete freely from the UI. If you ever want a clean slate, close the app and delete `life-os.sqlite3` from the userData folder; it will be recreated and reseeded on next launch.
+Everything seeded (courses, exercises, budget categories) is just rows in SQLite — edit or delete freely from the UI. For a clean slate, close the app and delete `praxisos.sqlite3` from the userData folder; it will be recreated and reseeded on next launch.

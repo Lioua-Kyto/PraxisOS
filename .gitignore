@@ -4,4 +4,6 @@ dist-electron/
 out/
 release/
 *.sqlite3
+*.tsbuildinfo
+.impeccable/
 .DS_Store

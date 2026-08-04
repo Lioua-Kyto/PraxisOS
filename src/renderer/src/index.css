@@ -1,0 +1,204 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,340..600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Dark is the default palette (also used as :root fallback). */
+  :root,
+  [data-theme="dark"] {
+    --background: 30 12% 8%;
+    --foreground: 40 20% 92%;
+    --card: 30 10% 11%;
+    --card-foreground: 40 20% 92%;
+    --popover: 30 10% 11%;
+    --popover-foreground: 40 20% 92%;
+    --primary: 24 62% 52%;
+    --primary-foreground: 30 15% 8%;
+    --secondary: 30 10% 16%;
+    --secondary-foreground: 40 20% 92%;
+    --muted: 30 8% 16%;
+    --muted-foreground: 35 10% 62%;
+    --accent: 30 10% 18%;
+    --accent-foreground: 40 20% 92%;
+    --destructive: 6 55% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 100 20% 55%;
+    --success-foreground: 30 15% 8%;
+    --warning: 40 55% 60%;
+    --warning-foreground: 30 15% 8%;
+    --border: 30 15% 20%;
+    --border-soft: 30 12% 15%;
+    --input: 30 15% 20%;
+    --ring: 24 62% 52%;
+    --sunken: 30 15% 6%;
+    --radius: 0.6rem;
+  }
+
+  [data-theme="light"] {
+    --background: 42 32% 93%;
+    --foreground: 30 22% 12%;
+    --card: 42 28% 97%;
+    --card-foreground: 30 22% 12%;
+    --popover: 42 28% 97%;
+    --popover-foreground: 30 22% 12%;
+    --primary: 140 26% 30%;
+    --primary-foreground: 42 32% 97%;
+    --secondary: 42 20% 87%;
+    --secondary-foreground: 30 22% 12%;
+    --muted: 42 18% 87%;
+    --muted-foreground: 32 12% 38%;
+    --accent: 42 22% 84%;
+    --accent-foreground: 30 22% 12%;
+    --destructive: 8 60% 42%;
+    --destructive-foreground: 42 32% 97%;
+    --success: 140 26% 30%;
+    --success-foreground: 42 32% 97%;
+    --warning: 42 60% 34%;
+    --warning-foreground: 42 32% 97%;
+    --border: 40 20% 76%;
+    --border-soft: 40 18% 82%;
+    --input: 40 20% 76%;
+    --ring: 140 26% 30%;
+    --sunken: 42 30% 99%;
+    --radius: 0.6rem;
+  }
+
+  [data-theme="solarized"] {
+    --background: 193 100% 11%;
+    --foreground: 186 10% 68%;
+    --card: 192 76% 14%;
+    --card-foreground: 186 10% 68%;
+    --popover: 192 76% 14%;
+    --popover-foreground: 186 10% 68%;
+    --primary: 205 69% 49%;
+    --primary-foreground: 193 100% 10%;
+    --secondary: 194 30% 20%;
+    --secondary-foreground: 186 10% 68%;
+    --muted: 194 25% 18%;
+    --muted-foreground: 194 14% 52%;
+    --accent: 175 59% 40%;
+    --accent-foreground: 193 100% 10%;
+    --destructive: 1 71% 52%;
+    --destructive-foreground: 44 87% 94%;
+    --success: 68 70% 34%;
+    --success-foreground: 44 87% 94%;
+    --warning: 45 100% 35%;
+    --warning-foreground: 193 100% 10%;
+    --border: 194 30% 22%;
+    --border-soft: 194 28% 18%;
+    --input: 194 30% 22%;
+    --ring: 205 69% 49%;
+    --sunken: 193 100% 8%;
+    --radius: 0.5rem;
+  }
+
+  [data-theme="midnight"] {
+    --background: 228 32% 7%;
+    --foreground: 220 25% 92%;
+    --card: 228 28% 10%;
+    --card-foreground: 220 25% 92%;
+    --popover: 228 28% 10%;
+    --popover-foreground: 220 25% 92%;
+    --primary: 231 70% 66%;
+    --primary-foreground: 228 32% 7%;
+    --secondary: 228 20% 15%;
+    --secondary-foreground: 220 25% 92%;
+    --muted: 228 18% 15%;
+    --muted-foreground: 225 12% 62%;
+    --accent: 265 55% 64%;
+    --accent-foreground: 228 32% 7%;
+    --destructive: 350 65% 58%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 160 50% 50%;
+    --success-foreground: 228 32% 7%;
+    --warning: 40 70% 58%;
+    --warning-foreground: 228 32% 7%;
+    --border: 228 22% 18%;
+    --border-soft: 228 20% 14%;
+    --input: 228 22% 18%;
+    --ring: 231 70% 66%;
+    --sunken: 228 35% 4%;
+    --radius: 0.6rem;
+  }
+
+  [data-theme="cyberpunk"] {
+    --background: 260 40% 6%;
+    --foreground: 300 25% 93%;
+    --card: 265 35% 9%;
+    --card-foreground: 300 25% 93%;
+    --popover: 265 35% 9%;
+    --popover-foreground: 300 25% 93%;
+    --primary: 320 90% 60%;
+    --primary-foreground: 260 40% 6%;
+    --secondary: 260 25% 15%;
+    --secondary-foreground: 300 25% 93%;
+    --muted: 260 20% 15%;
+    --muted-foreground: 280 15% 64%;
+    --accent: 178 90% 55%;
+    --accent-foreground: 260 40% 6%;
+    --destructive: 350 90% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 140 80% 50%;
+    --success-foreground: 260 40% 6%;
+    --warning: 45 95% 58%;
+    --warning-foreground: 260 40% 6%;
+    --border: 280 40% 24%;
+    --border-soft: 280 35% 17%;
+    --input: 280 40% 24%;
+    --ring: 320 90% 60%;
+    --sunken: 260 45% 4%;
+    --radius: 0.3rem;
+  }
+
+  /* Font family choices — swap the primary UI typeface, headings stay display. */
+  :root,
+  [data-font="sans"] {
+    --font-sans: "Inter", system-ui, sans-serif;
+  }
+  [data-font="display"] {
+    --font-sans: "Fraunces", Georgia, serif;
+  }
+  [data-font="mono"] {
+    --font-sans: "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  :root {
+    --font-display: "Fraunces", Georgia, serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+  .tabular {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+}
