@@ -5,6 +5,7 @@ import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema";
 import { seedIfEmpty } from "./seed";
+import { localDateString, localDateTimeString, parseStoredDateTime } from "../../shared/datetime";
 
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS tasks (
@@ -181,6 +182,13 @@ export const db = () => {
 
 export type AppDb = ReturnType<typeof db>;
 
+/** Raw handle for whole-table operations (backup export/restore) that are
+ *  simpler and safer to express in plain SQL than through the query builder. */
+export function getRawDb(): Database.Database {
+  if (!sqlite) throw new Error("Database not initialized — call initDb() first");
+  return sqlite;
+}
+
 export function getMediaDir(): string {
   const dir = path.join(path.dirname(dbFilePath), "media");
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -236,6 +244,87 @@ function migrateLegacyColumns(sqlite: Database.Database): void {
   if (taskCols.length && !taskCols.some((c) => c.name === "finished_at")) {
     sqlite.exec("ALTER TABLE tasks ADD COLUMN finished_at TEXT");
   }
+
+  backfillLegacyUtcDatetimes(sqlite);
+  ensureNotesFtsIndex(sqlite);
+}
+
+/**
+ * Full-text index over notes, kept in sync by triggers so searches stay
+ * correct without the app having to remember to reindex. Uses an external-
+ * content table (content='notes') so the text isn't stored twice.
+ *
+ * FTS5 is compiled into the better-sqlite3 build we ship, but this is
+ * wrapped defensively: if the extension is ever unavailable the app still
+ * starts and search silently falls back to a LIKE scan.
+ */
+function ensureNotesFtsIndex(sqlite: Database.Database): void {
+  try {
+    sqlite.exec(`
+      CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
+        title, content, tags, content='notes', content_rowid='id', tokenize='porter unicode61'
+      );
+
+      CREATE TRIGGER IF NOT EXISTS notes_fts_insert AFTER INSERT ON notes BEGIN
+        INSERT INTO notes_fts(rowid, title, content, tags) VALUES (new.id, new.title, new.content, new.tags);
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS notes_fts_delete AFTER DELETE ON notes BEGIN
+        INSERT INTO notes_fts(notes_fts, rowid, title, content, tags)
+          VALUES ('delete', old.id, old.title, old.content, old.tags);
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS notes_fts_update AFTER UPDATE ON notes BEGIN
+        INSERT INTO notes_fts(notes_fts, rowid, title, content, tags)
+          VALUES ('delete', old.id, old.title, old.content, old.tags);
+        INSERT INTO notes_fts(rowid, title, content, tags) VALUES (new.id, new.title, new.content, new.tags);
+      END;
+    `);
+
+    // Backfill on first creation (or if the index was emptied).
+    const indexed = sqlite.prepare("SELECT COUNT(*) AS c FROM notes_fts").get() as { c: number };
+    const total = sqlite.prepare("SELECT COUNT(*) AS c FROM notes").get() as { c: number };
+    if (indexed.c === 0 && total.c > 0) {
+      sqlite.exec("INSERT INTO notes_fts(notes_fts) VALUES('rebuild')");
+    }
+    notesFtsAvailable = true;
+  } catch {
+    notesFtsAvailable = false;
+  }
+}
+
+let notesFtsAvailable = false;
+
+export function isNotesFtsAvailable(): boolean {
+  return notesFtsAvailable;
+}
+
+/**
+ * Rewrites focus sessions written before the local-time change, which stored
+ * UTC ISO strings ("2026-08-04T13:45:00.000Z") and derived `date` from
+ * SQLite's UTC date('now'). Both are converted to local wall-clock so old
+ * rows group correctly in the daily/weekly rollups instead of landing on the
+ * wrong side of midnight.
+ *
+ * Detection is the "T" separator, which only the legacy format has, so this
+ * is idempotent — already-migrated rows are skipped on subsequent launches.
+ */
+function backfillLegacyUtcDatetimes(sqlite: Database.Database): void {
+  const legacy = sqlite
+    .prepare("SELECT id, start_time, end_time FROM focus_sessions WHERE start_time LIKE '%T%' OR end_time LIKE '%T%'")
+    .all() as Array<{ id: number; start_time: string | null; end_time: string | null }>;
+  if (!legacy.length) return;
+
+  const update = sqlite.prepare("UPDATE focus_sessions SET start_time = ?, end_time = ?, date = ? WHERE id = ?");
+  const run = sqlite.transaction((rows: typeof legacy) => {
+    for (const row of rows) {
+      const start = row.start_time ? localDateTimeString(parseStoredDateTime(row.start_time)) : row.start_time;
+      const end = row.end_time ? localDateTimeString(parseStoredDateTime(row.end_time)) : row.end_time;
+      const date = start ? start.slice(0, 10) : localDateString();
+      update.run(start, end, date, row.id);
+    }
+  });
+  run(legacy);
 }
 
 export function closeDb(): void {
