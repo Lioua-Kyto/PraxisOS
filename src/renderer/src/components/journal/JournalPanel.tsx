@@ -92,7 +92,7 @@ function JournalForDate({ date }: { date: string }) {
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="text-[10px] text-muted-foreground">{d.createdAt.slice(11, 16)}</span>
-                  <button onClick={() => removeDump.mutate(d.id)} className="text-muted-foreground hover:text-destructive">
+                  <button onClick={() => removeDump.mutate(d.id)} aria-label="Delete brain dump" title="Delete" className="text-muted-foreground hover:text-destructive">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>

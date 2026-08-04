@@ -95,7 +95,7 @@ export function ThemePicker() {
               <div className="flex items-center justify-between">
                 <span className="text-[9.5px] uppercase tracking-wide text-muted-foreground">{p.baseTheme}</span>
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <button onClick={() => openEdit(p)} className="hover:text-foreground" title="Edit preset">
+                  <button onClick={() => openEdit(p)} className="hover:text-foreground" title="Edit preset" aria-label={`Edit preset ${p.name}`}>
                     <Pencil className="h-3 w-3" />
                   </button>
                   <button
@@ -105,6 +105,7 @@ export function ThemePicker() {
                     }}
                     className="hover:text-destructive"
                     title="Delete preset"
+                    aria-label={`Delete preset ${p.name}`}
                   >
                     <Trash2 className="h-3 w-3" />
                   </button>

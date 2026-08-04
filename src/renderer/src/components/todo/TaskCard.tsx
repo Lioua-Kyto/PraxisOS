@@ -45,10 +45,10 @@ export const TaskCard = memo(function TaskCard({
         <div className="mb-2 flex items-start justify-between gap-2">
           <Badge variant={meta.variant}>{meta.label}</Badge>
           <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-            <button onClick={() => onEdit(task)} className="text-muted-foreground hover:text-foreground" title="Edit task">
+            <button onClick={() => onEdit(task)} className="text-muted-foreground hover:text-foreground" title="Edit task" aria-label={`Edit task: ${task.text}`}>
               <Pencil className="h-3 w-3" />
             </button>
-            <button onClick={() => onRemove(task.id)} className="text-muted-foreground hover:text-destructive" title="Delete task">
+            <button onClick={() => onRemove(task.id)} className="text-muted-foreground hover:text-destructive" title="Delete task" aria-label={`Delete task: ${task.text}`}>
               <X className="h-3.5 w-3.5" />
             </button>
           </div>

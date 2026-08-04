@@ -69,7 +69,7 @@ export function NoteEditor({ note, onBack }: { note: Note; onBack: () => void })
         {tags.map((t) => (
           <Badge key={t} variant="secondary" className="gap-1">
             {t}
-            <button onClick={() => removeTag(t)}>
+            <button onClick={() => removeTag(t)} aria-label={`Remove tag ${t}`}>
               <X className="h-2.5 w-2.5" />
             </button>
           </Badge>

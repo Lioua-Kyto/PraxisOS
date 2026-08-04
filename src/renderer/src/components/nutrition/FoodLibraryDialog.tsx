@@ -120,7 +120,7 @@ export function FoodLibraryDialog() {
                   <td className="tabular py-2">{f.calories}</td>
                   <td className="tabular py-2">{f.proteinG}g</td>
                   <td className="py-2 text-right">
-                    <Button size="icon" variant="ghost" className="text-destructive" onClick={() => removeFood.mutate(f.id)}>
+                    <Button size="icon" variant="ghost" className="text-destructive" aria-label={`Remove ${f.name} from library`} title="Remove" onClick={() => removeFood.mutate(f.id)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </td>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Download, Upload } from "lucide-react";
 import { PageHeader } from "../layout/PageHeader";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
@@ -10,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { ThemePicker } from "./ThemePicker";
 import { WorkoutScheduleEditor } from "./WorkoutScheduleEditor";
 import { useSettings, useUpdateSettings } from "../../queries/settings";
-import { useExportAll } from "../../queries/system";
+import { useExportBackup, useImportBackup } from "../../queries/backup";
 import { useRestoreDefaultCourses } from "../../queries/courses";
 import { useRestoreDefaultWorkout } from "../../queries/workouts";
 
@@ -31,7 +32,8 @@ const FOCUS_CATEGORY_OPTIONS = [
 export function SettingsPanel() {
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
-  const exportAll = useExportAll();
+  const exportBackup = useExportBackup();
+  const importBackup = useImportBackup();
   const restoreCourses = useRestoreDefaultCourses();
   const restoreWorkout = useRestoreDefaultWorkout();
 
@@ -41,7 +43,9 @@ export function SettingsPanel() {
     defaultRestSeconds: 60,
     defaultFocusCategory: "deep_work",
     weekStartsOn: 1,
-    confirmBeforeEndingWorkout: true
+    confirmBeforeEndingWorkout: true,
+    habitRemindersEnabled: false,
+    habitReminderTime: "20:00"
   });
   const [status, setStatus] = useState("");
 
@@ -58,7 +62,9 @@ export function SettingsPanel() {
       defaultRestSeconds: settings.defaultRestSeconds,
       defaultFocusCategory: settings.defaultFocusCategory,
       weekStartsOn: settings.weekStartsOn,
-      confirmBeforeEndingWorkout: settings.confirmBeforeEndingWorkout
+      confirmBeforeEndingWorkout: settings.confirmBeforeEndingWorkout,
+      habitRemindersEnabled: settings.habitRemindersEnabled,
+      habitReminderTime: settings.habitReminderTime
     });
   }, [settings]);
 
@@ -78,14 +84,28 @@ export function SettingsPanel() {
   };
 
   const exportData = async () => {
-    const dump = await exportAll.mutateAsync();
-    const blob = new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `praxisos-export-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const savedPath = await exportBackup.mutateAsync();
+    if (savedPath) flash(`Backup saved to ${savedPath}`);
+  };
+
+  const importData = async () => {
+    if (
+      !confirm(
+        "Restoring replaces ALL current data in PraxisOS with the contents of the backup file. This cannot be undone. Continue?"
+      )
+    ) {
+      return;
+    }
+    try {
+      const summary = await importBackup.mutateAsync();
+      if (!summary) return;
+      const missing = summary.missingMedia.length
+        ? ` ${summary.missingMedia.length} media file(s) referenced by the backup aren't in this install's media folder.`
+        : "";
+      flash(`Restored ${summary.totalRows} rows.${missing}`);
+    } catch (e) {
+      flash(`Restore failed: ${(e as Error).message}`);
+    }
   };
 
   const doRestoreCourses = () => {
@@ -199,26 +219,63 @@ export function SettingsPanel() {
 
           <Separator className="my-4" />
 
-          <label className="flex items-center gap-2.5 text-[13px]">
-            <Switch
-              checked={prefs.confirmBeforeEndingWorkout}
-              onCheckedChange={(checked) => {
-                setPrefs({ ...prefs, confirmBeforeEndingWorkout: checked });
-                updateSettings.mutate({ confirmBeforeEndingWorkout: checked });
-              }}
-            />
-            Ask for confirmation before ending a workout early
-          </label>
+          <div className="flex flex-col gap-3">
+            <label className="flex items-center gap-2.5 text-[13px]">
+              <Switch
+                checked={prefs.confirmBeforeEndingWorkout}
+                onCheckedChange={(checked) => {
+                  setPrefs({ ...prefs, confirmBeforeEndingWorkout: checked });
+                  updateSettings.mutate({ confirmBeforeEndingWorkout: checked });
+                }}
+              />
+              Ask for confirmation before ending a workout early
+            </label>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="flex items-center gap-2.5 text-[13px]">
+                <Switch
+                  checked={prefs.habitRemindersEnabled}
+                  onCheckedChange={(checked) => {
+                    setPrefs({ ...prefs, habitRemindersEnabled: checked });
+                    updateSettings.mutate({ habitRemindersEnabled: checked });
+                  }}
+                />
+                Remind me about habits still open today
+              </label>
+              <Input
+                type="time"
+                value={prefs.habitReminderTime}
+                disabled={!prefs.habitRemindersEnabled}
+                onChange={(e) => setPrefs({ ...prefs, habitReminderTime: e.target.value })}
+                onBlur={() => updateSettings.mutate({ habitReminderTime: prefs.habitReminderTime })}
+                className="w-32"
+                aria-label="Habit reminder time"
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="pt-5">
-          <div className="mb-3 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">Data</div>
+          <div className="mb-1 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">Backup &amp; restore</div>
+          <p className="mb-3 text-xs text-muted-foreground">
+            One file covers everything — tasks, habits, workouts, nutrition, budget, journal, notes, themes and settings.
+            The same format is used for both export and restore, so a backup taken today is always readable later.
+          </p>
           <div className="flex flex-wrap gap-2.5">
-            <Button variant="outline" onClick={exportData}>
-              Export all data (.json)
+            <Button onClick={exportData} disabled={exportBackup.isPending}>
+              <Download className="h-3.5 w-3.5" /> Export backup
             </Button>
+            <Button variant="outline" onClick={importData} disabled={importBackup.isPending}>
+              <Upload className="h-3.5 w-3.5" /> Restore from backup
+            </Button>
+          </div>
+
+          <Separator className="my-4" />
+
+          <div className="mb-3 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">Reset to defaults</div>
+          <div className="flex flex-wrap gap-2.5">
             <Button variant="outline" onClick={doRestoreCourses}>
               Restore default course roadmap
             </Button>

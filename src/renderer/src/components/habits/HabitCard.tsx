@@ -72,7 +72,14 @@ export function HabitCard({ habit, month }: { habit: HabitWithLogs; month: strin
               <Check className="h-3.5 w-3.5" /> {doneToday ? "Done" : "Check in"}
             </Button>
             {!habit.managedBy && (
-              <Button size="icon" variant="ghost" className="text-destructive" onClick={() => archive.mutate(habit.id)}>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-destructive"
+                aria-label={`Archive habit ${habit.name}`}
+                title="Archive habit"
+                onClick={() => archive.mutate(habit.id)}
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
@@ -92,9 +99,12 @@ export function HabitCard({ habit, month }: { habit: HabitWithLogs; month: strin
                 type="button"
                 disabled={isFuture}
                 title={`${date}${isFuture ? " — upcoming" : ""}`}
+                aria-label={`${habit.name} on ${date}: ${isDone ? "completed" : isFuture ? "upcoming" : "not completed"}`}
+                aria-pressed={isDone}
                 onClick={() => check(date)}
                 className={cn(
                   "flex h-8 min-w-8 flex-1 items-center justify-center rounded-md border text-[10px] tabular transition-transform",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   isFuture ? "cursor-default opacity-40" : "hover:scale-105",
                   isToday && "ring-2 ring-offset-1 ring-offset-background"
                 )}

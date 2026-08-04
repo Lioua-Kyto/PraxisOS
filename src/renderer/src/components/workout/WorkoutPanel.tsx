@@ -48,7 +48,7 @@ function VideoPickerField({ videoPath, onPick, onClear }: { videoPath: string | 
         {videoPath && (
           <>
             <span className="truncate text-xs text-muted-foreground">{videoPath.split(/[/\\]/).pop()}</span>
-            <button type="button" onClick={onClear} className="text-muted-foreground hover:text-destructive">
+            <button type="button" onClick={onClear} aria-label="Remove attached video" title="Remove video" className="text-muted-foreground hover:text-destructive">
               <X className="h-3.5 w-3.5" />
             </button>
           </>
