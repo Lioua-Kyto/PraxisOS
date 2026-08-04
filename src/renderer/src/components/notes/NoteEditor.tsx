@@ -96,8 +96,13 @@ export function NoteEditor({ note, onBack }: { note: Note; onBack: () => void })
         value={content}
         onChange={setContent}
         onBlur={() => save({ content })}
-        placeholder="Write in markdown — links, snippets, code blocks…"
+        onCommit={(next) => {
+          setContent(next);
+          save({ content: next });
+        }}
+        placeholder="Write in markdown — links, snippets, code blocks… paste or drop images straight in."
         minHeight={360}
+        enableImages
       />
     </div>
   );
