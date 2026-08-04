@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { PageHeader } from "../layout/PageHeader";
 import { Progress } from "../ui/progress";
 import { KanbanColumn } from "./KanbanColumn";
 import { AddTaskDialog } from "./AddTaskDialog";
+import { EditTaskDialog } from "./EditTaskDialog";
 import { useRemoveTask, useSetTaskStatus, useTasks } from "../../queries/tasks";
-import type { TaskStatus } from "@shared/types";
+import type { Task, TaskStatus } from "@shared/types";
 
 const COLUMNS: Array<{ key: TaskStatus; title: string }> = [
   { key: "todo", title: "To Do" },
@@ -15,6 +17,7 @@ export function TodoPanel() {
   const { data: tasks = [] } = useTasks();
   const setStatus = useSetTaskStatus();
   const removeTask = useRemoveTask();
+  const [editing, setEditing] = useState<Task | null>(null);
 
   const done = tasks.filter((t) => t.status === "completed").length;
   const completionRate = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
@@ -43,9 +46,12 @@ export function TodoPanel() {
             tasks={tasks.filter((t) => t.status === col.key)}
             onDropTask={(id) => setStatus.mutate({ id, status: col.key })}
             onRemove={removeTask.mutate}
+            onEdit={setEditing}
           />
         ))}
       </div>
+
+      <EditTaskDialog task={editing} onOpenChange={(open) => !open && setEditing(null)} />
     </div>
   );
 }

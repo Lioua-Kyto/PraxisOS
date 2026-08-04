@@ -22,7 +22,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: PageKey) => void 
       <PageHeader kicker={new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })} title="Overview" />
 
       <div className="mb-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <FocusWidget />
+        <FocusWidget onNavigate={() => onNavigate("timer")} />
         <TopTodosWidget tasks={data?.tasks ?? []} onNavigate={() => onNavigate("todo")} />
         <BudgetWidget
           summary={data?.budgetSummary}

@@ -8,12 +8,14 @@ export function KanbanColumn({
   title,
   tasks,
   onDropTask,
-  onRemove
+  onRemove,
+  onEdit
 }: {
   title: string;
   tasks: Task[];
   onDropTask: (id: number) => void;
   onRemove: (id: number) => void;
+  onEdit: (task: Task) => void;
 }) {
   const [isOver, setIsOver] = useState(false);
 
@@ -41,7 +43,7 @@ export function KanbanColumn({
       </div>
       <AnimatePresence initial={false}>
         {tasks.map((t) => (
-          <TaskCard key={t.id} task={t} onRemove={onRemove} />
+          <TaskCard key={t.id} task={t} onRemove={onRemove} onEdit={onEdit} />
         ))}
       </AnimatePresence>
       {tasks.length === 0 && <div className="px-1 py-6 text-center text-xs text-muted-foreground">Drop a task here</div>}

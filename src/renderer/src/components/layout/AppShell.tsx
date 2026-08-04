@@ -1,6 +1,8 @@
+import { useEffect, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import type { ReactNode } from "react";
 import { Sidebar, type PageKey } from "./Sidebar";
+
+const COLLAPSE_STORAGE_KEY = "praxisos:sidebar-collapsed";
 
 export function AppShell({
   page,
@@ -11,10 +13,18 @@ export function AppShell({
   onNavigate: (page: PageKey) => void;
   children: ReactNode;
 }) {
+  // Purely a UI preference, so localStorage keeps it out of the SQLite
+  // settings round-trip and avoids a flash of the wrong width on load.
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_STORAGE_KEY) === "true");
+
+  useEffect(() => {
+    localStorage.setItem(COLLAPSE_STORAGE_KEY, String(collapsed));
+  }, [collapsed]);
+
   return (
-    <div className="grid h-screen grid-cols-[220px_1fr] overflow-hidden">
-      <Sidebar page={page} onNavigate={onNavigate} />
-      <div className="scrollbar-thin overflow-y-auto px-10 py-8 pb-16">
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar page={page} onNavigate={onNavigate} collapsed={collapsed} onToggleCollapsed={() => setCollapsed((c) => !c)} />
+      <div className="scrollbar-thin min-w-0 flex-1 overflow-y-auto px-10 py-8 pb-16">
         <AnimatePresence mode="wait">
           <motion.div
             key={page}
