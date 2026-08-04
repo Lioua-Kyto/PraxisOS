@@ -132,7 +132,9 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   defaultRestSeconds: "60",
   defaultFocusCategory: "deep_work",
   currencySymbol: "",
-  confirmBeforeEndingWorkout: "true"
+  confirmBeforeEndingWorkout: "true",
+  habitRemindersEnabled: "false",
+  habitReminderTime: "20:00"
 };
 
 export function seedCourses(dbi: AppDb) {

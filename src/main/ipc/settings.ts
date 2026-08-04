@@ -33,7 +33,9 @@ function rowsToSettings(rows: Array<{ key: string; value: string }>): AppSetting
     defaultRestSeconds: Number(map.defaultRestSeconds ?? 60),
     defaultFocusCategory: map.defaultFocusCategory ?? "deep_work",
     currencySymbol: map.currencySymbol ?? "",
-    confirmBeforeEndingWorkout: map.confirmBeforeEndingWorkout !== "false"
+    confirmBeforeEndingWorkout: map.confirmBeforeEndingWorkout !== "false",
+    habitRemindersEnabled: map.habitRemindersEnabled === "true",
+    habitReminderTime: map.habitReminderTime ?? "20:00"
   };
 }
 

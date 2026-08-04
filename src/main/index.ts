@@ -2,6 +2,7 @@ import { app, BrowserWindow, shell } from "electron";
 import { join } from "path";
 import { initDb, closeDb } from "./db/client";
 import { registerAllIpcHandlers } from "./ipc/registerAll";
+import { startHabitReminders, stopHabitReminders } from "./habits/reminderScheduler";
 import { registerMainWindow } from "./workout/workoutSessionEngine";
 
 // In dev this resolves to <root>/build/icon.png (out/main -> up two levels
@@ -50,6 +51,7 @@ app.whenReady().then(() => {
   registerAllIpcHandlers();
 
   createWindow();
+  startHabitReminders();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -57,6 +59,7 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
+  stopHabitReminders();
   closeDb();
   if (process.platform !== "darwin") app.quit();
 });
