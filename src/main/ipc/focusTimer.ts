@@ -2,6 +2,7 @@ import { ipcMain } from "electron";
 import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { focusSessions } from "../db/schema";
+import { daysAgo, localDateString, localDateTimeString, parseStoredDateTime, secondsBetween } from "../../shared/datetime";
 import type {
   FocusCategoryTotal,
   FocusDayCategoryTotal,
@@ -36,8 +37,8 @@ function getActiveRow(): Row | undefined {
     .get();
 }
 
-function secondsSince(iso: string): number {
-  return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+function secondsSince(stored: string): number {
+  return Math.max(0, Math.floor((Date.now() - parseStoredDateTime(stored).getTime()) / 1000));
 }
 
 // Guards against duplicate "in progress" sessions: if one is already
@@ -48,16 +49,19 @@ export function startFocusSession(category: string, label: string): FocusSession
   const existing = getActiveRow();
   if (existing) return rowToSession(existing);
 
-  const now = new Date().toISOString();
+  const now = new Date();
   const row = db()
     .insert(focusSessions)
     .values({
       category,
       label: label || null,
-      startTime: now,
+      // Explicit local date/time — the column default is SQLite's UTC
+      // date('now'), which files late-evening sessions under tomorrow.
+      date: localDateString(now),
+      startTime: localDateTimeString(now),
       status: "running",
       accumulatedSeconds: 0,
-      lastStartedAt: now
+      lastStartedAt: localDateTimeString(now)
     })
     .returning()
     .get();
@@ -77,7 +81,7 @@ export function stopFocusSession(id: number): FocusSession {
     .update(focusSessions)
     .set({
       status: "completed",
-      endTime: new Date().toISOString(),
+      endTime: localDateTimeString(),
       durationSeconds: finalAccumulated,
       accumulatedSeconds: finalAccumulated,
       lastStartedAt: null
@@ -119,7 +123,7 @@ export function registerFocusTimerHandlers(): void {
 
     const row = db()
       .update(focusSessions)
-      .set({ status: "running", lastStartedAt: new Date().toISOString() })
+      .set({ status: "running", lastStartedAt: localDateTimeString() })
       .where(eq(focusSessions.id, id))
       .returning()
       .get();
@@ -133,10 +137,7 @@ export function registerFocusTimerHandlers(): void {
     (_e, entry: ManualFocusEntry): FocusSession => {
       const start = `${entry.date} ${entry.startClock}:00`;
       const end = `${entry.date} ${entry.endClock}:00`;
-      const durationSeconds = Math.max(
-        0,
-        Math.round((new Date(end).getTime() - new Date(start).getTime()) / 1000)
-      );
+      const durationSeconds = secondsBetween(start, end);
       const row = db()
         .insert(focusSessions)
         .values({
@@ -161,10 +162,7 @@ export function registerFocusTimerHandlers(): void {
       db().update(focusSessions).set(fields).where(eq(focusSessions.id, id)).run();
       const updated = db().select().from(focusSessions).where(eq(focusSessions.id, id)).get()!;
       if (updated.startTime && updated.endTime) {
-        const durationSeconds = Math.max(
-          0,
-          Math.round((new Date(updated.endTime).getTime() - new Date(updated.startTime).getTime()) / 1000)
-        );
+        const durationSeconds = secondsBetween(updated.startTime, updated.endTime);
         const row = db()
           .update(focusSessions)
           .set({ durationSeconds, accumulatedSeconds: durationSeconds })
@@ -202,7 +200,7 @@ export function registerFocusTimerHandlers(): void {
         seconds: sql<number>`SUM(COALESCE(${focusSessions.durationSeconds}, 0))`
       })
       .from(focusSessions)
-      .where(and(eq(focusSessions.date, sql`date('now')`), eq(focusSessions.status, "completed")))
+      .where(and(eq(focusSessions.date, localDateString()), eq(focusSessions.status, "completed")))
       .groupBy(focusSessions.category)
       .all()
   );
@@ -215,7 +213,7 @@ export function registerFocusTimerHandlers(): void {
         seconds: sql<number>`SUM(COALESCE(${focusSessions.durationSeconds}, 0))`
       })
       .from(focusSessions)
-      .where(and(gte(focusSessions.date, sql`date('now','-6 days')`), eq(focusSessions.status, "completed")))
+      .where(and(gte(focusSessions.date, localDateString(daysAgo(6))), eq(focusSessions.status, "completed")))
       .groupBy(focusSessions.date, focusSessions.category)
       .orderBy(focusSessions.date)
       .all()

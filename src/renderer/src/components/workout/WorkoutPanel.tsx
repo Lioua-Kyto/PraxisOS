@@ -27,6 +27,7 @@ import {
 import { useStartWorkoutSession, useWorkoutSessionState } from "../../queries/workoutSession";
 import { useWorkoutSessionOverlay } from "../workoutSession/WorkoutSessionOverlayContext";
 import { useSettings } from "../../queries/settings";
+import { toFileUrl } from "../../lib/fileUrl";
 import type { ExerciseType, WorkoutExercise, WorkoutExerciseGroup } from "@shared/types";
 
 function VideoPickerField({ videoPath, onPick, onClear }: { videoPath: string | null; onPick: (path: string) => void; onClear: () => void }) {
@@ -176,7 +177,14 @@ function ExerciseDetail({ ex }: { ex: WorkoutExercise }) {
         </div>
       </div>
       {ex.videoPath ? (
-        <video className="mt-2 max-w-[340px] rounded-md border border-border" src={`file://${ex.videoPath}`} controls />
+        <video
+          key={ex.videoPath}
+          className="mt-2 max-w-[340px] rounded-md border border-border"
+          src={toFileUrl(ex.videoPath)}
+          controls
+          preload="metadata"
+          playsInline
+        />
       ) : (
         <div className="mt-2 text-xs text-muted-foreground">No form-check video attached yet — it plays right here once added.</div>
       )}
@@ -384,12 +392,24 @@ export function WorkoutPanel() {
               {group.exercises.map((ex, idx) => (
                 <div key={ex.id} className={idx > 0 ? "mt-3 border-t border-dashed border-border-soft pt-3" : ""}>
                   {editingId === ex.id ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
-                      <Input type="number" value={editForm.sets} onChange={(e) => setEditForm({ ...editForm, sets: Number(e.target.value) })} />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <Label>Name</Label>
+                        <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label>Sets</Label>
+                        <Input type="number" value={editForm.sets} onChange={(e) => setEditForm({ ...editForm, sets: Number(e.target.value) })} />
+                      </div>
                       <ExerciseTypeFields value={editForm} onChange={(patch) => setEditForm({ ...editForm, ...patch })} days={days} showDay />
-                      <Input value={editForm.progression} onChange={(e) => setEditForm({ ...editForm, progression: e.target.value })} placeholder="Progression" />
-                      <Input className="col-span-2" value={editForm.tips} onChange={(e) => setEditForm({ ...editForm, tips: e.target.value })} placeholder="Tips" />
+                      <div className="flex flex-col gap-1.5">
+                        <Label>Progression scheme</Label>
+                        <Input value={editForm.progression} onChange={(e) => setEditForm({ ...editForm, progression: e.target.value })} />
+                      </div>
+                      <div className="col-span-2 flex flex-col gap-1.5">
+                        <Label>Tips</Label>
+                        <Input value={editForm.tips} onChange={(e) => setEditForm({ ...editForm, tips: e.target.value })} />
+                      </div>
                       <VideoPickerField
                         videoPath={editForm.videoPath}
                         onPick={(path) => setEditForm({ ...editForm, videoPath: path })}

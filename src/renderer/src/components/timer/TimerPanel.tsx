@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pause, Play, Square } from "lucide-react";
 import { PageHeader } from "../layout/PageHeader";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Timeline24, type TimelineSegment } from "../viz/Timeline24";
 import { TimerDisplay } from "./TimerDisplay";
@@ -20,17 +21,28 @@ import {
   useStopFocusSession,
   useUpdateFocusSession
 } from "../../queries/focusTimer";
+import { useSettings } from "../../queries/settings";
+import { clockFromStored, dateFromStored, localDateString } from "@shared/datetime";
 import type { FocusSession } from "@shared/types";
 
 const CATEGORIES = [
   { key: "deep_work", label: "Deep Work", color: "hsl(var(--primary))" },
   { key: "training", label: "Training", color: "hsl(var(--destructive))" },
   { key: "learning", label: "Learning", color: "hsl(var(--success))" },
+  { key: "reading", label: "Reading", color: "hsl(265 70% 65%)" },
+  { key: "writing", label: "Writing", color: "hsl(200 80% 55%)" },
+  { key: "planning", label: "Planning", color: "hsl(45 85% 55%)" },
+  { key: "meeting", label: "Meeting", color: "hsl(172 60% 45%)" },
+  { key: "admin", label: "Admin & Chores", color: "hsl(215 15% 55%)" },
+  { key: "side_project", label: "Side Project", color: "hsl(340 75% 65%)" },
+  { key: "rest", label: "Rest & Recovery", color: "hsl(90 55% 50%)" },
   { key: "other", label: "Other", color: "hsl(var(--muted-foreground))" }
 ];
 
+const FALLBACK_CATEGORY = CATEGORIES[CATEGORIES.length - 1];
+
 function catMeta(key: string) {
-  return CATEGORIES.find((c) => c.key === key) ?? CATEGORIES[3];
+  return CATEGORIES.find((c) => c.key === key) ?? FALLBACK_CATEGORY;
 }
 
 function fmtHMS(seconds: number): string {
@@ -40,14 +52,14 @@ function fmtHMS(seconds: number): string {
   return [h, m, s].map((x) => String(x).padStart(2, "0")).join(":");
 }
 
-function timeToHour(t: string | null): number {
-  if (!t) return 0;
-  const parts = t.split(" ")[1] || t;
-  const [h, m] = parts.split(":").map(Number);
+function timeToHour(stored: string | null): number {
+  const clock = clockFromStored(stored);
+  if (!clock) return 0;
+  const [h, m] = clock.split(":").map(Number);
   return h + (m || 0) / 60;
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => localDateString();
 
 export function TimerPanel() {
   const { data: active } = useActiveFocusSession();
@@ -63,7 +75,14 @@ export function TimerPanel() {
   const updateSession = useUpdateFocusSession();
   const removeSession = useRemoveFocusSession();
 
-  const [category, setCategory] = useState("deep_work");
+  const { data: settings } = useSettings();
+  const [category, setCategory] = useState(settings?.defaultFocusCategory ?? "deep_work");
+
+  // Adopt the configured default until the user picks something themselves.
+  const touchedCategory = useRef(false);
+  useEffect(() => {
+    if (!touchedCategory.current && settings?.defaultFocusCategory) setCategory(settings.defaultFocusCategory);
+  }, [settings?.defaultFocusCategory]);
   const [label, setLabel] = useState("");
   const [showManual, setShowManual] = useState(false);
   const [manual, setManual] = useState({ category: "deep_work", label: "", date: today(), start: "09:00", end: "10:00" });
@@ -75,7 +94,7 @@ export function TimerPanel() {
 
   const startEdit = (s: FocusSession) => {
     setEditingId(s.id);
-    setEditForm({ ...s, startClock: s.startTime.split(" ")[1]?.slice(0, 5) ?? "", endClock: s.endTime?.split(" ")[1]?.slice(0, 5) ?? "" });
+    setEditForm({ ...s, date: dateFromStored(s.startTime) || s.date, startClock: clockFromStored(s.startTime), endClock: clockFromStored(s.endTime) });
   };
 
   const saveEdit = () => {
@@ -130,7 +149,7 @@ export function TimerPanel() {
           <div className="flex items-center gap-2">
             {!active && (
               <>
-                <Select value={category} onValueChange={setCategory}>
+                <Select value={category} onValueChange={(v) => { touchedCategory.current = true; setCategory(v); }}>
                   <SelectTrigger className="w-[150px]">
                     <SelectValue />
                   </SelectTrigger>
@@ -273,41 +292,60 @@ export function TimerPanel() {
             <tbody>
               {recent.map((r) =>
                 editingId === r.id ? (
+                  // Editing spans the full table width instead of squeezing
+                  // native date/time pickers into narrow columns, which left
+                  // their calendar/clock indicators clipped outside the field.
                   <tr key={r.id}>
-                    <td className="py-1.5 pr-2">
-                      <Input type="date" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} className="w-32" />
-                    </td>
-                    <td className="py-1.5 pr-2">
-                      <Select value={editForm.category} onValueChange={(v) => setEditForm({ ...editForm, category: v })}>
-                        <SelectTrigger className="w-[130px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {CATEGORIES.map((c) => (
-                            <SelectItem key={c.key} value={c.key}>
-                              {c.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </td>
-                    <td className="py-1.5 pr-2">
-                      <Input value={editForm.label ?? ""} onChange={(e) => setEditForm({ ...editForm, label: e.target.value })} />
-                    </td>
-                    <td className="py-1.5 pr-2">
-                      <Input type="time" value={editForm.startClock} onChange={(e) => setEditForm({ ...editForm, startClock: e.target.value })} className="w-24" />
-                    </td>
-                    <td className="py-1.5 pr-2">
-                      <Input type="time" value={editForm.endClock} onChange={(e) => setEditForm({ ...editForm, endClock: e.target.value })} className="w-24" />
-                    </td>
-                    <td className="tabular py-1.5 pr-2">{editForm.durationSeconds ? fmtHMS(editForm.durationSeconds) : "—"}</td>
-                    <td className="flex gap-1 py-1.5">
-                      <Button size="sm" onClick={saveEdit}>
-                        Save
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
-                        Cancel
-                      </Button>
+                    <td colSpan={7} className="py-3">
+                      <div className="rounded-md border border-border-soft bg-sunken p-4">
+                        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                          <div className="flex flex-col gap-1.5">
+                            <Label>Date</Label>
+                            <Input type="date" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <Label>Category</Label>
+                            <Select value={editForm.category} onValueChange={(v) => setEditForm({ ...editForm, category: v })}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {CATEGORIES.map((c) => (
+                                  <SelectItem key={c.key} value={c.key}>
+                                    {c.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <Label>Start</Label>
+                            <Input type="time" value={editForm.startClock} onChange={(e) => setEditForm({ ...editForm, startClock: e.target.value })} />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <Label>End</Label>
+                            <Input type="time" value={editForm.endClock} onChange={(e) => setEditForm({ ...editForm, endClock: e.target.value })} />
+                          </div>
+                          <div className="col-span-2 flex flex-col gap-1.5 md:col-span-3">
+                            <Label>Label</Label>
+                            <Input value={editForm.label ?? ""} onChange={(e) => setEditForm({ ...editForm, label: e.target.value })} />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <Label>Duration</Label>
+                            <div className="tabular flex h-8 items-center text-sm text-muted-foreground">
+                              {editForm.durationSeconds ? fmtHMS(editForm.durationSeconds) : "—"}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                          <Button size="sm" onClick={saveEdit}>
+                            Save
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -317,9 +355,9 @@ export function TimerPanel() {
                       {catMeta(r.category).label}
                     </td>
                     <td className="py-2">{r.label}</td>
-                    <td className="tabular py-2">{r.startTime.split(" ")[1]?.slice(0, 5)}</td>
+                    <td className="tabular py-2">{clockFromStored(r.startTime) || "—"}</td>
                     <td className="tabular py-2">
-                      {r.status === "completed" ? r.endTime?.split(" ")[1]?.slice(0, 5) : r.status === "paused" ? "paused" : "in progress"}
+                      {r.status === "completed" ? clockFromStored(r.endTime) || "—" : r.status === "paused" ? "paused" : "in progress"}
                     </td>
                     <td className="tabular py-2">{r.durationSeconds != null ? fmtHMS(r.durationSeconds) : "—"}</td>
                     <td className="py-2">

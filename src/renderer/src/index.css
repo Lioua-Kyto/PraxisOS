@@ -279,6 +279,34 @@
   }
 }
 
+@layer base {
+  /* Native date/time controls default to a light-mode calendar/clock glyph,
+     which disappears against the dark themes. Invert it for dark surfaces and
+     give the indicator room so it stays inside the field. */
+  input[type="date"],
+  input[type="time"] {
+    min-width: 0;
+    padding-right: 0.5rem;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.65;
+    margin-left: 0.25rem;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator:hover,
+  input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+
+  :root:not([data-theme="light"]) input[type="date"]::-webkit-calendar-picker-indicator,
+  :root:not([data-theme="light"]) input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
+
 @layer utilities {
   .font-display {
     font-family: var(--font-display);
