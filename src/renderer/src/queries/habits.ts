@@ -1,48 +1,41 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { NewHabit } from "@shared/types";
 
-const KEY = ["habits"] as const;
+const habitsKey = (month: string) => ["habits", month] as const;
 
-export function useHabits() {
-  return useQuery({ queryKey: KEY, queryFn: () => window.api.habits.list() });
+export function useHabits(month: string) {
+  return useQuery({ queryKey: habitsKey(month), queryFn: () => window.api.habits.list(month) });
 }
 
-export function useAddHabit() {
+function useHabitMutation<TVars>(month: string, mutationFn: (vars: TVars) => Promise<unknown>) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: NewHabit) => window.api.habits.add(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY })
+    mutationFn,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["habits"] }),
+    onSettled: () => qc.invalidateQueries({ queryKey: habitsKey(month) })
   });
 }
 
-export function useUpdateHabit() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, fields }: { id: number; fields: Partial<NewHabit> }) => window.api.habits.update(id, fields),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY })
-  });
+export function useAddHabit(month: string) {
+  return useHabitMutation<NewHabit>(month, (input) => window.api.habits.add(input));
 }
 
-export function useArchiveHabit() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: number) => window.api.habits.archive(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY })
-  });
+export function useUpdateHabit(month: string) {
+  return useHabitMutation<{ id: number; fields: Partial<NewHabit> }>(month, ({ id, fields }) =>
+    window.api.habits.update(id, fields)
+  );
 }
 
-export function useRemoveHabit() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: number) => window.api.habits.remove(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY })
-  });
+export function useArchiveHabit(month: string) {
+  return useHabitMutation<number>(month, (id) => window.api.habits.archive(id));
 }
 
-export function useToggleHabitDate() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, date }: { id: number; date: string }) => window.api.habits.toggleDate(id, date),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY })
-  });
+export function useRemoveHabit(month: string) {
+  return useHabitMutation<number>(month, (id) => window.api.habits.remove(id));
+}
+
+export function useToggleHabitDate(month: string) {
+  return useHabitMutation<{ id: number; date: string }>(month, ({ id, date }) =>
+    window.api.habits.toggleDate(id, date, month)
+  );
 }
