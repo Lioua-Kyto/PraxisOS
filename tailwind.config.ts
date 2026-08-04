@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import animate from "tailwindcss-animate";
+import typography from "@tailwindcss/typography";
 
 export default {
   darkMode: ["class"],
@@ -72,8 +73,34 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out"
+      },
+      // Ties markdown preview typography to the app's own theme tokens
+      // instead of Tailwind Typography's baked-in gray scale — otherwise
+      // `prose`/`prose-invert` would look wrong across the 8 color themes.
+      typography: {
+        DEFAULT: {
+          css: {
+            "--tw-prose-body": "hsl(var(--foreground))",
+            "--tw-prose-headings": "hsl(var(--foreground))",
+            "--tw-prose-lead": "hsl(var(--muted-foreground))",
+            "--tw-prose-links": "hsl(var(--primary))",
+            "--tw-prose-bold": "hsl(var(--foreground))",
+            "--tw-prose-counters": "hsl(var(--muted-foreground))",
+            "--tw-prose-bullets": "hsl(var(--border))",
+            "--tw-prose-hr": "hsl(var(--border-soft))",
+            "--tw-prose-quotes": "hsl(var(--foreground))",
+            "--tw-prose-quote-borders": "hsl(var(--border))",
+            "--tw-prose-captions": "hsl(var(--muted-foreground))",
+            "--tw-prose-code": "hsl(var(--foreground))",
+            "--tw-prose-pre-code": "hsl(var(--foreground))",
+            "--tw-prose-pre-bg": "hsl(var(--sunken))",
+            "--tw-prose-th-borders": "hsl(var(--border))",
+            "--tw-prose-td-borders": "hsl(var(--border-soft))",
+            maxWidth: "none"
+          }
+        }
       }
     }
   },
-  plugins: [animate]
+  plugins: [animate, typography]
 } satisfies Config;

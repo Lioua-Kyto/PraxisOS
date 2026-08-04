@@ -35,11 +35,13 @@ CREATE TABLE IF NOT EXISTS workout_exercises (
   name TEXT NOT NULL,
   sets INTEGER,
   reps_range TEXT,
+  exercise_type TEXT NOT NULL DEFAULT 'reps',
+  duration_seconds INTEGER,
   progression TEXT,
   tips TEXT,
-  link TEXT,
   order_index INTEGER NOT NULL DEFAULT 0,
   superset_group TEXT,
+  superset_color TEXT,
   archived INTEGER NOT NULL DEFAULT 0,
   video_path TEXT
 );
@@ -103,6 +105,56 @@ CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS theme_presets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  base_theme TEXT NOT NULL DEFAULT 'dark',
+  background TEXT NOT NULL,
+  accent TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS habits (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  cadence TEXT NOT NULL DEFAULT 'daily',
+  color TEXT NOT NULL DEFAULT 'primary',
+  order_index INTEGER NOT NULL DEFAULT 0,
+  archived INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS habit_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  habit_id INTEGER NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
+  date TEXT NOT NULL DEFAULT (date('now')),
+  completed_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS journal_entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT NOT NULL UNIQUE,
+  morning_intentions TEXT NOT NULL DEFAULT '',
+  evening_reflection TEXT NOT NULL DEFAULT '',
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS brain_dumps (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT NOT NULL DEFAULT (date('now')),
+  content TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS notes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL DEFAULT '',
+  tags TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `;
 
 let sqlite: Database.Database | null = null;
@@ -141,6 +193,18 @@ function migrateLegacyColumns(sqlite: Database.Database): void {
   const workoutCols = sqlite.prepare("PRAGMA table_info(workout_exercises)").all() as Array<{ name: string }>;
   if (!workoutCols.some((c) => c.name === "video_path")) {
     sqlite.exec("ALTER TABLE workout_exercises ADD COLUMN video_path TEXT");
+  }
+  if (!workoutCols.some((c) => c.name === "superset_color")) {
+    sqlite.exec("ALTER TABLE workout_exercises ADD COLUMN superset_color TEXT");
+  }
+  if (workoutCols.some((c) => c.name === "link")) {
+    sqlite.exec("ALTER TABLE workout_exercises DROP COLUMN link");
+  }
+  if (!workoutCols.some((c) => c.name === "exercise_type")) {
+    sqlite.exec("ALTER TABLE workout_exercises ADD COLUMN exercise_type TEXT NOT NULL DEFAULT 'reps'");
+  }
+  if (!workoutCols.some((c) => c.name === "duration_seconds")) {
+    sqlite.exec("ALTER TABLE workout_exercises ADD COLUMN duration_seconds INTEGER");
   }
 }
 

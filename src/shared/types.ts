@@ -41,23 +41,27 @@ export interface Course {
 
 export type NewCourse = Omit<Course, "id" | "createdAt">;
 
+export type ExerciseType = "reps" | "time";
+
 export interface WorkoutExercise {
   id: number;
   day: string;
   name: string;
   sets: number | null;
   repsRange: string | null;
+  exerciseType: ExerciseType;
+  durationSeconds: number | null;
   progression: string | null;
   tips: string | null;
-  link: string | null;
   orderIndex: number;
   supersetGroup: string | null;
+  supersetColor: string | null;
   archived: boolean;
   videoPath: string | null;
 }
 
 export type NewWorkoutExercise = Partial<
-  Omit<WorkoutExercise, "id" | "archived" | "supersetGroup" | "videoPath">
+  Omit<WorkoutExercise, "id" | "archived" | "supersetGroup" | "supersetColor">
 > &
   Pick<WorkoutExercise, "day" | "name">;
 
@@ -74,6 +78,34 @@ export interface WorkoutLog {
 export interface ExerciseVolumePoint {
   date: string;
   vol: number;
+}
+
+// A "group" is either a single exercise or a superset (2+ exercises sharing
+// a superset_group) treated as one unit for session sequencing.
+export interface WorkoutExerciseGroup {
+  key: string;
+  exercises: WorkoutExercise[];
+  color: string | null;
+}
+
+export type WorkoutSessionPhase = "preview" | "countdown" | "work" | "rest" | "complete";
+
+export interface WorkoutSessionState {
+  id: string;
+  day: string;
+  groupOrder: string[];
+  currentGroupIndex: number;
+  currentSet: number;
+  totalSets: number;
+  phase: WorkoutSessionPhase;
+  /** Fixed auto-transition anchor for "countdown" and time-based "work" — not used for "rest", which is pausable (see restX fields). */
+  phaseEndsAt: string | null;
+  restSeconds: number;
+  restElapsedSeconds: number;
+  restRunning: boolean;
+  restStartedAt: string | null;
+  focusSessionId: number | null;
+  startedAt: string;
 }
 
 export type MealType = "Breakfast" | "Lunch" | "Dinner" | "Snack";
@@ -176,8 +208,8 @@ export interface BudgetSummary {
   transferTotal: number;
 }
 
-export type ThemeKey = "light" | "dark" | "solarized" | "midnight" | "cyberpunk";
-export type FontKey = "sans" | "display" | "mono";
+export type ThemeKey = "light" | "dark" | "solarized" | "midnight" | "cyberpunk" | "forest" | "nord" | "rose";
+export type FontKey = "sans" | "display" | "mono" | "grotesk" | "newsreader";
 
 export interface AppSettings {
   theme: ThemeKey;
@@ -185,6 +217,84 @@ export interface AppSettings {
   waterGoalMl: number;
   calorieGoal: number;
   dailyBudgetLimit: number;
+  activePresetId: number | null;
+  workoutDays: string[];
+}
+
+export interface ThemePreset {
+  id: number;
+  name: string;
+  baseTheme: ThemeKey;
+  background: string;
+  accent: string;
+  createdAt: string;
+}
+
+export interface NewThemePreset {
+  name: string;
+  baseTheme: ThemeKey;
+  background: string;
+  accent: string;
+}
+
+export type HabitCadence = "daily" | "weekly";
+
+export interface Habit {
+  id: number;
+  name: string;
+  cadence: HabitCadence;
+  color: string;
+  orderIndex: number;
+  archived: boolean;
+  createdAt: string;
+}
+
+export interface NewHabit {
+  name: string;
+  cadence: HabitCadence;
+  color?: string;
+}
+
+export interface HabitLog {
+  id: number;
+  habitId: number;
+  date: string;
+  completedAt: string;
+}
+
+export interface HabitWithLogs extends Habit {
+  completedDates: string[];
+  streak: number;
+}
+
+export interface JournalEntry {
+  id: number;
+  date: string;
+  morningIntentions: string;
+  eveningReflection: string;
+  updatedAt: string;
+}
+
+export interface BrainDump {
+  id: number;
+  date: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface Note {
+  id: number;
+  title: string;
+  content: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NewNote {
+  title: string;
+  content?: string;
+  tags?: string[];
 }
 
 export interface DataExport {
@@ -197,4 +307,9 @@ export interface DataExport {
   focus_sessions: FocusSession[];
   budget_transactions: BudgetTransaction[];
   budget_categories: BudgetCategory[];
+  habits: Habit[];
+  habit_logs: HabitLog[];
+  journal_entries: JournalEntry[];
+  brain_dumps: BrainDump[];
+  notes: Note[];
 }

@@ -29,11 +29,13 @@ export const workoutExercises = sqliteTable("workout_exercises", {
   name: text("name").notNull(),
   sets: integer("sets"),
   repsRange: text("reps_range"),
+  exerciseType: text("exercise_type").notNull().default("reps"),
+  durationSeconds: integer("duration_seconds"),
   progression: text("progression"),
   tips: text("tips"),
-  link: text("link"),
   orderIndex: integer("order_index").notNull().default(0),
   supersetGroup: text("superset_group"),
+  supersetColor: text("superset_color"),
   archived: integer("archived", { mode: "boolean" }).notNull().default(false),
   videoPath: text("video_path")
 });
@@ -98,4 +100,56 @@ export const budgetTransactions = sqliteTable("budget_transactions", {
 export const settings = sqliteTable("settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull()
+});
+
+export const themePresets = sqliteTable("theme_presets", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  baseTheme: text("base_theme").notNull().default("dark"),
+  background: text("background").notNull(),
+  accent: text("accent").notNull(),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`)
+});
+
+export const habits = sqliteTable("habits", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  cadence: text("cadence").notNull().default("daily"),
+  color: text("color").notNull().default("primary"),
+  orderIndex: integer("order_index").notNull().default(0),
+  archived: integer("archived", { mode: "boolean" }).notNull().default(false),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`)
+});
+
+export const habitLogs = sqliteTable("habit_logs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  habitId: integer("habit_id")
+    .notNull()
+    .references(() => habits.id, { onDelete: "cascade" }),
+  date: text("date").notNull().default(sql`(date('now'))`),
+  completedAt: text("completed_at").notNull().default(sql`(datetime('now'))`)
+});
+
+export const journalEntries = sqliteTable("journal_entries", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  date: text("date").notNull().unique(),
+  morningIntentions: text("morning_intentions").notNull().default(""),
+  eveningReflection: text("evening_reflection").notNull().default(""),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`)
+});
+
+export const brainDumps = sqliteTable("brain_dumps", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  date: text("date").notNull().default(sql`(date('now'))`),
+  content: text("content").notNull(),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`)
+});
+
+export const notes = sqliteTable("notes", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title: text("title").notNull(),
+  content: text("content").notNull().default(""),
+  tags: text("tags").notNull().default(""),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`)
 });

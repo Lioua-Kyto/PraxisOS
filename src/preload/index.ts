@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type {
   AppSettings,
+  BrainDump,
   BudgetCategory,
   BudgetSummary,
   BudgetTransaction,
@@ -11,19 +12,28 @@ import type {
   FocusCategoryTotal,
   FocusDayCategoryTotal,
   FocusSession,
+  HabitWithLogs,
   HydrationLog,
+  JournalEntry,
   ManualFocusEntry,
   NewBudgetTransaction,
   NewCourse,
+  NewHabit,
+  NewNote,
   NewNutritionLog,
   NewTask,
+  NewThemePreset,
   NewWorkoutExercise,
+  Note,
   NutritionDayTotal,
   NutritionLog,
   Task,
   TaskStatus,
+  ThemePreset,
   WorkoutExercise,
-  WorkoutLog
+  WorkoutExerciseGroup,
+  WorkoutLog,
+  WorkoutSessionState
 } from "../shared/types";
 
 const invoke = <T>(channel: string, ...args: unknown[]): Promise<T> => ipcRenderer.invoke(channel, ...args);
@@ -51,6 +61,7 @@ const api = {
     archiveExercise: (id: number) => invoke<void>("workouts:archiveExercise", id),
     mergeToSuperset: (idA: number, idB: number) => invoke<void>("workouts:mergeToSuperset", idA, idB),
     unlinkSuperset: (id: number) => invoke<void>("workouts:unlinkSuperset", id),
+    reorder: (orderedIds: number[]) => invoke<void>("workouts:reorder", orderedIds),
     logSet: (exerciseId: number, setNumber: number, reps: number, weightKg: number | null, notes: string) =>
       invoke<WorkoutLog>("workouts:logSet", exerciseId, setNumber, reps, weightKg, notes),
     logsForExercise: (exerciseId: number, limit = 30) =>
@@ -60,7 +71,30 @@ const api = {
     volumeByExercise: (exerciseId: number, days = 14) =>
       invoke<ExerciseVolumePoint[]>("workouts:volumeByExercise", exerciseId, days),
     restoreDefaults: () => invoke<WorkoutExercise[]>("workouts:restoreDefaults"),
-    pickVideo: (exerciseId: number) => invoke<string | null>("workouts:pickVideo", exerciseId)
+    pickVideo: (exerciseId: number) => invoke<string | null>("workouts:pickVideo", exerciseId),
+    pickVideoFile: () => invoke<string | null>("workouts:pickVideoFile")
+  },
+  workoutSession: {
+    start: (day: string) => invoke<WorkoutSessionState>("workoutSession:start", day),
+    getState: () => invoke<WorkoutSessionState | null>("workoutSession:getState"),
+    getGroups: (day: string) => invoke<WorkoutExerciseGroup[]>("workoutSession:getGroups", day),
+    startExercise: () => invoke<WorkoutSessionState>("workoutSession:startExercise"),
+    finishSet: () => invoke<WorkoutSessionState>("workoutSession:finishSet"),
+    setRestSeconds: (seconds: number) => invoke<WorkoutSessionState | null>("workoutSession:setRestSeconds", seconds),
+    pauseRest: () => invoke<WorkoutSessionState | null>("workoutSession:pauseRest"),
+    resumeRest: () => invoke<WorkoutSessionState | null>("workoutSession:resumeRest"),
+    resetRest: () => invoke<WorkoutSessionState | null>("workoutSession:resetRest"),
+    skipRest: () => invoke<WorkoutSessionState | null>("workoutSession:skipRest"),
+    refreshGroups: () => invoke<WorkoutSessionState | null>("workoutSession:refreshGroups"),
+    cancel: () => invoke<void>("workoutSession:cancel"),
+    close: () => invoke<void>("workoutSession:close"),
+    onChanged: (callback: () => void) => {
+      const listener = () => callback();
+      ipcRenderer.on("workoutSession:changed", listener);
+      return () => {
+        ipcRenderer.removeListener("workoutSession:changed", listener);
+      };
+    }
   },
   nutrition: {
     listToday: () => invoke<NutritionLog[]>("nutrition:listToday"),
@@ -104,6 +138,36 @@ const api = {
   settings: {
     get: () => invoke<AppSettings>("settings:get"),
     set: (patch: Partial<AppSettings>) => invoke<AppSettings>("settings:set", patch)
+  },
+  themePresets: {
+    list: () => invoke<ThemePreset[]>("themePresets:list"),
+    add: (input: NewThemePreset) => invoke<ThemePreset>("themePresets:add", input),
+    rename: (id: number, name: string) => invoke<ThemePreset>("themePresets:rename", id, name),
+    update: (id: number, fields: Partial<NewThemePreset>) => invoke<ThemePreset>("themePresets:update", id, fields),
+    remove: (id: number) => invoke<void>("themePresets:remove", id)
+  },
+  habits: {
+    list: () => invoke<HabitWithLogs[]>("habits:list"),
+    add: (input: NewHabit) => invoke<HabitWithLogs>("habits:add", input),
+    update: (id: number, fields: Partial<NewHabit>) => invoke<HabitWithLogs>("habits:update", id, fields),
+    archive: (id: number) => invoke<void>("habits:archive", id),
+    remove: (id: number) => invoke<void>("habits:remove", id),
+    toggleDate: (id: number, date: string) => invoke<HabitWithLogs>("habits:toggleDate", id, date)
+  },
+  journal: {
+    getByDate: (date: string) => invoke<JournalEntry | null>("journal:getByDate", date),
+    save: (date: string, fields: { morningIntentions?: string; eveningReflection?: string }) =>
+      invoke<JournalEntry>("journal:save", date, fields),
+    listDumpsByDate: (date: string) => invoke<BrainDump[]>("journal:listDumpsByDate", date),
+    addDump: (date: string, content: string) => invoke<BrainDump>("journal:addDump", date, content),
+    removeDump: (id: number) => invoke<void>("journal:removeDump", id),
+    datesWithEntries: () => invoke<string[]>("journal:datesWithEntries")
+  },
+  notes: {
+    list: () => invoke<Note[]>("notes:list"),
+    add: (input: NewNote) => invoke<Note>("notes:add", input),
+    update: (id: number, fields: Partial<NewNote>) => invoke<Note>("notes:update", id, fields),
+    remove: (id: number) => invoke<void>("notes:remove", id)
   },
   system: {
     exportAll: () => invoke<DataExport>("system:exportAll")

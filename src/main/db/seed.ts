@@ -1,6 +1,8 @@
 import { eq } from "drizzle-orm";
 import type { AppDb } from "./client";
-import { budgetCategories, courses, settings, workoutExercises } from "./schema";
+import { budgetCategories, courses, habits, settings, workoutExercises } from "./schema";
+
+export const WORKOUT_HABIT_NAME = "Workout";
 
 const COURSE_SEED = [
   ["AWS Cloud Technical Essentials", "AWS / Coursera", "Cloud & DevOps", 1, "https://www.coursera.org/learn/aws-cloud-technical-essentials", "planned", "Start here before the specialization below — core AWS services, IAM, VPC, compute, storage."],
@@ -18,20 +20,20 @@ const COURSE_SEED = [
 ] as const;
 
 const WORKOUT_SEED = [
-  ["Push", "Dips (Wall-Mount Machine)", 4, "8–12", "Add weight via loaded backpack. Once you hit 12 reps, add more books/bottles.", "Lean your torso forward to target the chest. Keep your shoulders pushed down and away from your ears.", "https://www.muscleandstrength.com/exercises/dips", 1],
-  ["Push", "30kg Bag Floor Press", 4, "10–15", "Increase reps. Once hitting 15, add a 3-second pause at the bottom of every rep.", "Lie flat, rest the bag across your chest, grab the sides and press up. Squeeze your chest hard at the top.", "https://fitbod.me/exercises/dumbbell-floor-press", 2],
-  ["Push", "Pike Push-ups", 3, "8–12", "Elevate feet on a chair to put more bodyweight onto your shoulders.", 'Keep your legs straight and hips high in an inverted "V" shape. Lower the top of your head toward the floor.', "https://www.muscleandstrength.com/exercises/pike-push-up", 3],
-  ["Push", "Push-ups", 3, "10–20", "Elevate feet (decline) or add the loaded backpack.", "Keep your core braced. Do not let your lower back sag.", "https://www.muscleandstrength.com/exercises/push-up", 4],
-  ["Push", "Bodyweight Triceps Extensions", 3, "10–15", "Walk your feet further back to decrease your leverage, making it heavier.", "Use the dip handles. Keep your elbows tucked in tightly; don't let them flare out.", "https://www.muscleandstrength.com/exercises/bodyweight-tricep-extension", 5],
-  ["Pull", "Wide Grip Pull-ups (Machine)", 4, "6–10", "Add loaded backpack when 10 reps are easy.", 'STRUGGLING? Do "Negatives": Jump up so your chin is over the bar, then fight gravity to lower yourself as slowly as possible (5–8 seconds).', "https://www.muscleandstrength.com/exercises/pull-up", 1],
-  ["Pull", "30kg Bag Bent-Over Rows", 4, "8–15", "Increase reps. Once hitting 15, slow the lowering phase down to 3 seconds per rep.", "Hinge forward at the hips, keeping your back perfectly flat. Pull the bag directly into your belly button.", "https://www.muscleandstrength.com/exercises/bent-over-row", 2],
-  ["Pull", "Chin-ups (Underhand Grip)", 3, "6–10", "Add loaded backpack.", 'STRUGGLING? Try "Isometric Holds": Jump to the top and hold your chin over the bar as long as possible.', "https://www.muscleandstrength.com/exercises/chin-up", 3],
-  ["Pull", "Towel Inverted Rows", 3, "10–15", "Walk your feet further forward so your body is closer to parallel with the floor.", "Drape a towel over the high bar. Squeeze your shoulder blades together at the top of the pull.", "https://www.muscleandstrength.com/exercises/inverted-row", 4],
-  ["Pull", "30kg Bag Zercher Carries", 3, "45–60s", "Walk further distances or purposefully walk slower to increase time under tension.", "Bear hug the bag or cradle it in your elbows. Walk with perfect, upright posture.", "https://www.muscleandstrength.com/exercises/zercher-carry", 5],
-  ["Legs", "30kg Bear Hug Squats", 4, "10–20", "Once hitting 20 reps, add a deep 3-second pause at the very bottom of the squat.", "Squeeze the vertical bag tightly against your chest. Keep your chest up and drive through your heels.", "https://www.muscleandstrength.com/exercises/goblet-squat", 1],
-  ["Legs", "30kg Bag Romanian Deadlifts", 4, "10–15", "Slow the descent down to 4 seconds, feeling a deep stretch in the hamstrings.", "Hold the bag horizontally. Keep legs mostly straight. Push your hips as far backward as they can go.", "https://www.muscleandstrength.com/exercises/romanian-deadlift", 2],
-  ["Legs", "30kg Bag Bulgarian Split Squats", 3, "8–15", "Add a 2-second pause at the bottom of the movement.", "Hold the bag across your shoulders or in a bear hug. Rest your back foot on a chair.", "https://www.muscleandstrength.com/exercises/bulgarian-split-squat", 3],
-  ["Legs", "Captain's Chair Leg Raises", 3, "10–20", "Keep legs perfectly straight. Add a 1-second hold at the top.", "Use the backrest and arm pads on your machine. Do not use momentum; use your core to lift your legs.", "https://www.muscleandstrength.com/exercises/hanging-leg-raise", 4]
+  ["Push", "Dips (Wall-Mount Machine)", 4, "8–12", "Add weight via loaded backpack. Once you hit 12 reps, add more books/bottles.", "Lean your torso forward to target the chest. Keep your shoulders pushed down and away from your ears.", 1],
+  ["Push", "30kg Bag Floor Press", 4, "10–15", "Increase reps. Once hitting 15, add a 3-second pause at the bottom of every rep.", "Lie flat, rest the bag across your chest, grab the sides and press up. Squeeze your chest hard at the top.", 2],
+  ["Push", "Pike Push-ups", 3, "8–12", "Elevate feet on a chair to put more bodyweight onto your shoulders.", 'Keep your legs straight and hips high in an inverted "V" shape. Lower the top of your head toward the floor.', 3],
+  ["Push", "Push-ups", 3, "10–20", "Elevate feet (decline) or add the loaded backpack.", "Keep your core braced. Do not let your lower back sag.", 4],
+  ["Push", "Bodyweight Triceps Extensions", 3, "10–15", "Walk your feet further back to decrease your leverage, making it heavier.", "Use the dip handles. Keep your elbows tucked in tightly; don't let them flare out.", 5],
+  ["Pull", "Wide Grip Pull-ups (Machine)", 4, "6–10", "Add loaded backpack when 10 reps are easy.", 'STRUGGLING? Do "Negatives": Jump up so your chin is over the bar, then fight gravity to lower yourself as slowly as possible (5–8 seconds).', 1],
+  ["Pull", "30kg Bag Bent-Over Rows", 4, "8–15", "Increase reps. Once hitting 15, slow the lowering phase down to 3 seconds per rep.", "Hinge forward at the hips, keeping your back perfectly flat. Pull the bag directly into your belly button.", 2],
+  ["Pull", "Chin-ups (Underhand Grip)", 3, "6–10", "Add loaded backpack.", 'STRUGGLING? Try "Isometric Holds": Jump to the top and hold your chin over the bar as long as possible.', 3],
+  ["Pull", "Towel Inverted Rows", 3, "10–15", "Walk your feet further forward so your body is closer to parallel with the floor.", "Drape a towel over the high bar. Squeeze your shoulder blades together at the top of the pull.", 4],
+  ["Pull", "30kg Bag Zercher Carries", 3, "45–60s", "Walk further distances or purposefully walk slower to increase time under tension.", "Bear hug the bag or cradle it in your elbows. Walk with perfect, upright posture.", 5],
+  ["Legs", "30kg Bear Hug Squats", 4, "10–20", "Once hitting 20 reps, add a deep 3-second pause at the very bottom of the squat.", "Squeeze the vertical bag tightly against your chest. Keep your chest up and drive through your heels.", 1],
+  ["Legs", "30kg Bag Romanian Deadlifts", 4, "10–15", "Slow the descent down to 4 seconds, feeling a deep stretch in the hamstrings.", "Hold the bag horizontally. Keep legs mostly straight. Push your hips as far backward as they can go.", 2],
+  ["Legs", "30kg Bag Bulgarian Split Squats", 3, "8–15", "Add a 2-second pause at the bottom of the movement.", "Hold the bag across your shoulders or in a bear hug. Rest your back foot on a chair.", 3],
+  ["Legs", "Captain's Chair Leg Raises", 3, "10–20", "Keep legs perfectly straight. Add a 1-second hold at the top.", "Use the backrest and arm pads on your machine. Do not use momentum; use your core to lift your legs.", 4]
 ] as const;
 
 const BUDGET_CATEGORY_SEED: Array<{ name: string; type: "expense" | "income" | "transfer" }> = [
@@ -69,10 +71,10 @@ export function seedCourses(dbi: AppDb) {
 }
 
 export function seedWorkoutExercises(dbi: AppDb) {
-  for (const [day, name, sets, repsRange, progression, tips, link, orderIndex] of WORKOUT_SEED) {
+  for (const [day, name, sets, repsRange, progression, tips, orderIndex] of WORKOUT_SEED) {
     dbi
       .insert(workoutExercises)
-      .values({ day, name, sets, repsRange, progression, tips, link, orderIndex })
+      .values({ day, name, sets, repsRange, progression, tips, orderIndex })
       .run();
   }
 }
@@ -87,6 +89,9 @@ export function seedIfEmpty(dbi: AppDb): void {
   if (dbi.select().from(courses).all().length === 0) seedCourses(dbi);
   if (dbi.select().from(workoutExercises).all().length === 0) seedWorkoutExercises(dbi);
   if (dbi.select().from(budgetCategories).all().length === 0) seedBudgetCategories(dbi);
+  if (dbi.select().from(habits).all().length === 0) {
+    dbi.insert(habits).values({ name: WORKOUT_HABIT_NAME, cadence: "daily", color: "primary", orderIndex: 0 }).run();
+  }
 
   const existingSettings = new Set(dbi.select({ key: settings.key }).from(settings).all().map((s) => s.key));
   for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {

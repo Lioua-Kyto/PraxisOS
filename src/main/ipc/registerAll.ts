@@ -1,19 +1,29 @@
 import { registerBudgetHandlers } from "./budget";
 import { registerCourseHandlers } from "./courses";
 import { registerFocusTimerHandlers } from "./focusTimer";
+import { registerHabitHandlers } from "./habits";
+import { registerJournalHandlers } from "./journal";
+import { registerNoteHandlers } from "./notes";
 import { registerNutritionHandlers } from "./nutrition";
 import { registerSettingsHandlers } from "./settings";
 import { registerSystemHandlers } from "./system";
 import { registerTaskHandlers } from "./tasks";
+import { registerThemePresetHandlers } from "./themePresets";
 import { registerWorkoutHandlers } from "./workouts";
+import { registerWorkoutSessionHandlers } from "./workoutSession";
 
 export function registerAllIpcHandlers(): void {
   registerTaskHandlers();
   registerCourseHandlers();
   registerWorkoutHandlers();
+  registerWorkoutSessionHandlers();
   registerNutritionHandlers();
   registerFocusTimerHandlers();
   registerBudgetHandlers();
   registerSettingsHandlers();
   registerSystemHandlers();
+  registerHabitHandlers();
+  registerJournalHandlers();
+  registerNoteHandlers();
+  registerThemePresetHandlers();
 }

@@ -1,16 +1,22 @@
 import { ipcMain } from "electron";
 import { db } from "../db/client";
 import {
+  brainDumps,
   budgetCategories,
   budgetTransactions,
   courses,
   focusSessions,
+  habitLogs,
+  habits,
   hydrationLogs,
+  journalEntries,
+  notes,
   nutritionLogs,
   tasks,
   workoutExercises,
   workoutLogs
 } from "../db/schema";
+import { rowToNote } from "./notes";
 import type { DataExport } from "../../shared/types";
 
 export function registerSystemHandlers(): void {
@@ -25,7 +31,12 @@ export function registerSystemHandlers(): void {
       hydration_logs: dbi.select().from(hydrationLogs).all() as DataExport["hydration_logs"],
       focus_sessions: dbi.select().from(focusSessions).all() as DataExport["focus_sessions"],
       budget_transactions: dbi.select().from(budgetTransactions).all() as DataExport["budget_transactions"],
-      budget_categories: dbi.select().from(budgetCategories).all() as DataExport["budget_categories"]
+      budget_categories: dbi.select().from(budgetCategories).all() as DataExport["budget_categories"],
+      habits: dbi.select().from(habits).all() as DataExport["habits"],
+      habit_logs: dbi.select().from(habitLogs).all() as DataExport["habit_logs"],
+      journal_entries: dbi.select().from(journalEntries).all() as DataExport["journal_entries"],
+      brain_dumps: dbi.select().from(brainDumps).all() as DataExport["brain_dumps"],
+      notes: dbi.select().from(notes).all().map(rowToNote)
     };
   });
 }

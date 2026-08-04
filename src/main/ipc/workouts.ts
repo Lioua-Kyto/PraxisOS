@@ -5,14 +5,36 @@ import { and, asc, desc, eq, gte, sql } from "drizzle-orm";
 import { db, getMediaDir } from "../db/client";
 import { workoutExercises, workoutLogs } from "../db/schema";
 import { reseedWorkout } from "../db/seed";
+import { rowToExercise } from "./workoutHelpers";
 import type { ExerciseVolumePoint, NewWorkoutExercise, WorkoutExercise, WorkoutLog } from "../../shared/types";
-
-function rowToExercise(row: typeof workoutExercises.$inferSelect): WorkoutExercise {
-  return { ...row, archived: Boolean(row.archived) };
-}
 
 function rowToLog(row: typeof workoutLogs.$inferSelect): WorkoutLog {
   return row;
+}
+
+const SUPERSET_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--accent))",
+  "hsl(var(--warning))",
+  "hsl(var(--success))",
+  "hsl(var(--destructive))"
+];
+
+async function pickAndCopyVideo(win: Electron.BrowserWindow | null): Promise<string | null> {
+  const options: Electron.OpenDialogOptions = {
+    title: "Choose a form-check video",
+    properties: ["openFile"],
+    filters: [{ name: "Videos", extensions: ["mp4", "mov", "webm", "mkv", "avi"] }]
+  };
+  const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
+  if (result.canceled || !result.filePaths.length) return null;
+
+  const src = result.filePaths[0];
+  const mediaDir = getMediaDir();
+  const destName = `ex-${Date.now()}${path.extname(src)}`;
+  const dest = path.join(mediaDir, destName);
+  fs.copyFileSync(src, dest);
+  return dest;
 }
 
 export function registerWorkoutHandlers(): void {
@@ -34,9 +56,11 @@ export function registerWorkoutHandlers(): void {
         name: input.name,
         sets: input.sets ?? 3,
         repsRange: input.repsRange ?? "",
+        exerciseType: input.exerciseType ?? "reps",
+        durationSeconds: input.durationSeconds ?? null,
         progression: input.progression ?? "",
         tips: input.tips ?? "",
-        link: input.link ?? "",
+        videoPath: input.videoPath ?? null,
         orderIndex: input.orderIndex ?? 0
       })
       .returning()
@@ -57,13 +81,35 @@ export function registerWorkoutHandlers(): void {
   });
 
   ipcMain.handle("workouts:mergeToSuperset", (_e, idA: number, idB: number): void => {
-    const group = `ss-${idA}-${idB}-${Date.now()}`;
-    db().update(workoutExercises).set({ supersetGroup: group }).where(eq(workoutExercises.id, idA)).run();
-    db().update(workoutExercises).set({ supersetGroup: group }).where(eq(workoutExercises.id, idB)).run();
+    const a = db().select().from(workoutExercises).where(eq(workoutExercises.id, idA)).get();
+    // Dropping one exercise onto an existing superset folds it into that
+    // group (and keeps its color); dropping two standalone exercises
+    // together mints a fresh group with the next unused color.
+    const existingGroup = a?.supersetGroup;
+    const group = existingGroup ?? `ss-${idA}-${idB}-${Date.now()}`;
+    const color =
+      (existingGroup ? a?.supersetColor : null) ??
+      SUPERSET_COLORS[
+        db()
+          .select()
+          .from(workoutExercises)
+          .where(sql`${workoutExercises.supersetGroup} IS NOT NULL`)
+          .all()
+          .reduce((acc, r) => (r.supersetGroup ? acc.add(r.supersetGroup) : acc), new Set<string>()).size %
+          SUPERSET_COLORS.length
+      ];
+    db().update(workoutExercises).set({ supersetGroup: group, supersetColor: color }).where(eq(workoutExercises.id, idA)).run();
+    db().update(workoutExercises).set({ supersetGroup: group, supersetColor: color }).where(eq(workoutExercises.id, idB)).run();
   });
 
   ipcMain.handle("workouts:unlinkSuperset", (_e, id: number): void => {
-    db().update(workoutExercises).set({ supersetGroup: null }).where(eq(workoutExercises.id, id)).run();
+    db().update(workoutExercises).set({ supersetGroup: null, supersetColor: null }).where(eq(workoutExercises.id, id)).run();
+  });
+
+  ipcMain.handle("workouts:reorder", (_e, orderedIds: number[]): void => {
+    orderedIds.forEach((id, index) => {
+      db().update(workoutExercises).set({ orderIndex: index }).where(eq(workoutExercises.id, id)).run();
+    });
   });
 
   ipcMain.handle("workouts:logSet", (_e, exerciseId: number, setNumber: number, reps: number, weightKg: number | null, notes: string): WorkoutLog => {
@@ -114,23 +160,22 @@ export function registerWorkoutHandlers(): void {
 
   ipcMain.handle("workouts:restoreDefaults", (): WorkoutExercise[] => reseedWorkout(db()).map(rowToExercise));
 
+  // Attaches a video to an existing exercise immediately (quick-action from
+  // the exercise list/detail view).
   ipcMain.handle("workouts:pickVideo", async (event, exerciseId: number): Promise<string | null> => {
     const win = BrowserWindow.fromWebContents(event.sender);
-    const options: Electron.OpenDialogOptions = {
-      title: "Choose a form-check video",
-      properties: ["openFile"],
-      filters: [{ name: "Videos", extensions: ["mp4", "mov", "webm", "mkv", "avi"] }]
-    };
-    const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
-    if (result.canceled || !result.filePaths.length) return null;
-
-    const src = result.filePaths[0];
-    const mediaDir = getMediaDir();
-    const destName = `ex${exerciseId}-${Date.now()}${path.extname(src)}`;
-    const dest = path.join(mediaDir, destName);
-    fs.copyFileSync(src, dest);
-
+    const dest = await pickAndCopyVideo(win);
+    if (!dest) return null;
     db().update(workoutExercises).set({ videoPath: dest }).where(eq(workoutExercises.id, exerciseId)).run();
     return dest;
+  });
+
+  // Just picks + copies a video into the media dir without touching any row
+  // — used by the add/edit exercise form, which may not have an exercise id
+  // yet (a brand-new exercise) and instead includes the returned path in the
+  // create/update payload itself.
+  ipcMain.handle("workouts:pickVideoFile", async (event): Promise<string | null> => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    return pickAndCopyVideo(win);
   });
 }

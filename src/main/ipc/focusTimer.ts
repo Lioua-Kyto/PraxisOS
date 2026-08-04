@@ -40,34 +40,63 @@ function secondsSince(iso: string): number {
   return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
 }
 
+// Guards against duplicate "in progress" sessions: if one is already
+// running/paused, hand it back instead of inserting a second row. Exported
+// (not just an IPC handler) so the workout-session engine can auto-start a
+// "training" session without round-tripping through IPC.
+export function startFocusSession(category: string, label: string): FocusSession {
+  const existing = getActiveRow();
+  if (existing) return rowToSession(existing);
+
+  const now = new Date().toISOString();
+  const row = db()
+    .insert(focusSessions)
+    .values({
+      category,
+      label: label || null,
+      startTime: now,
+      status: "running",
+      accumulatedSeconds: 0,
+      lastStartedAt: now
+    })
+    .returning()
+    .get();
+  return rowToSession(row);
+}
+
+export function stopFocusSession(id: number): FocusSession {
+  const current = db().select().from(focusSessions).where(eq(focusSessions.id, id)).get();
+  if (!current) throw new Error(`Focus session ${id} not found`);
+
+  const finalAccumulated =
+    current.status === "running" && current.lastStartedAt
+      ? current.accumulatedSeconds + secondsSince(current.lastStartedAt)
+      : current.accumulatedSeconds;
+
+  const row = db()
+    .update(focusSessions)
+    .set({
+      status: "completed",
+      endTime: new Date().toISOString(),
+      durationSeconds: finalAccumulated,
+      accumulatedSeconds: finalAccumulated,
+      lastStartedAt: null
+    })
+    .where(eq(focusSessions.id, id))
+    .returning()
+    .get();
+  return rowToSession(row);
+}
+
 export function registerFocusTimerHandlers(): void {
   ipcMain.handle("focusTimer:getActive", (): FocusSession | null => {
     const row = getActiveRow();
     return row ? rowToSession(row) : null;
   });
 
-  // Guards against duplicate "in progress" sessions: if one is already
-  // running/paused, hand it back instead of inserting a second row — this is
-  // the fix for repeated "Clock in" clicks creating duplicates.
-  ipcMain.handle("focusTimer:start", (_e, category: string, label: string): FocusSession => {
-    const existing = getActiveRow();
-    if (existing) return rowToSession(existing);
-
-    const now = new Date().toISOString();
-    const row = db()
-      .insert(focusSessions)
-      .values({
-        category,
-        label: label || null,
-        startTime: now,
-        status: "running",
-        accumulatedSeconds: 0,
-        lastStartedAt: now
-      })
-      .returning()
-      .get();
-    return rowToSession(row);
-  });
+  ipcMain.handle("focusTimer:start", (_e, category: string, label: string): FocusSession =>
+    startFocusSession(category, label)
+  );
 
   ipcMain.handle("focusTimer:pause", (_e, id: number): FocusSession => {
     const current = db().select().from(focusSessions).where(eq(focusSessions.id, id)).get();
@@ -97,29 +126,7 @@ export function registerFocusTimerHandlers(): void {
     return rowToSession(row);
   });
 
-  ipcMain.handle("focusTimer:stop", (_e, id: number): FocusSession => {
-    const current = db().select().from(focusSessions).where(eq(focusSessions.id, id)).get();
-    if (!current) throw new Error(`Focus session ${id} not found`);
-
-    const finalAccumulated =
-      current.status === "running" && current.lastStartedAt
-        ? current.accumulatedSeconds + secondsSince(current.lastStartedAt)
-        : current.accumulatedSeconds;
-
-    const row = db()
-      .update(focusSessions)
-      .set({
-        status: "completed",
-        endTime: new Date().toISOString(),
-        durationSeconds: finalAccumulated,
-        accumulatedSeconds: finalAccumulated,
-        lastStartedAt: null
-      })
-      .where(eq(focusSessions.id, id))
-      .returning()
-      .get();
-    return rowToSession(row);
-  });
+  ipcMain.handle("focusTimer:stop", (_e, id: number): FocusSession => stopFocusSession(id));
 
   ipcMain.handle(
     "focusTimer:addManual",

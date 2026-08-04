@@ -28,6 +28,7 @@
     "@radix-ui/react-switch": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.1",
     "@radix-ui/react-toast": "^1.2.2",
+    "@tailwindcss/typography": "^0.5.20",
     "@tanstack/react-query": "^5.59.20",
     "better-sqlite3": "12.11.1",
     "class-variance-authority": "^0.7.0",
@@ -38,7 +39,9 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.53.2",
+    "react-markdown": "^10.1.0",
     "recharts": "^2.13.3",
+    "remark-gfm": "^4.0.1",
     "tailwind-merge": "^2.5.4",
     "zod": "^3.23.8"
   },
@@ -54,7 +57,9 @@
     "electron": "^42.8.0",
     "electron-builder": "^26.15.3",
     "electron-vite": "^2.3.0",
+    "png-to-ico": "^3.0.2",
     "postcss": "^8.4.49",
+    "sharp": "^0.35.3",
     "tailwindcss": "^3.4.14",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.6.3",
@@ -63,22 +68,33 @@
   "build": {
     "appId": "com.lioua.praxisos",
     "productName": "PraxisOS",
+    "icon": "build/icon.png",
     "files": [
       "out/**/*",
       "node_modules/**/*",
       "package.json"
     ],
+    "extraResources": [
+      { "from": "build/icon.png", "to": "icon.png" }
+    ],
     "directories": {
       "output": "release"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
     },
     "mac": {
-      "target": "dmg"
+      "target": "dmg",
+      "icon": "build/icon.png"
     },
     "linux": {
-      "target": "AppImage"
+      "target": "AppImage",
+      "icon": "build/icon.png"
     }
   }
 }
