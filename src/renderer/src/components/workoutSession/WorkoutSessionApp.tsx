@@ -2,17 +2,16 @@ import { ArrowLeft, Check, Pause, Play, RotateCcw, SkipForward, Trophy, X } from
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";
-import { ExerciseGroupList } from "../workout/ExerciseGroupList";
 import { PhaseCountdown } from "./PhaseCountdown";
 import { ExerciseDetailCard } from "./ExerciseDetailCard";
 import { RestDurationControl } from "./RestDurationControl";
 import { SetLogInput } from "./SetLogInput";
+import { activeExercisesForSet, finishedExercisesForSet, groupTargetLabel, isFullyTimed } from "./groupHelpers";
 import {
   useCancelWorkoutSession,
   useCloseWorkoutSession,
   useFinishSet,
   usePauseRest,
-  useRefreshWorkoutGroups,
   useResetRest,
   useResumeRest,
   useSkipRest,
@@ -70,7 +69,6 @@ export function WorkoutSessionApp({ onReturn }: { onReturn: () => void }) {
   const resumeRest = useResumeRest();
   const resetRest = useResetRest();
   const skipRest = useSkipRest();
-  const refreshGroups = useRefreshWorkoutGroups();
   const cancelSession = useCancelWorkoutSession();
   const closeSession = useCloseWorkoutSession();
   const { data: settings } = useSettings();
@@ -103,7 +101,9 @@ export function WorkoutSessionApp({ onReturn }: { onReturn: () => void }) {
   const currentGroup = groups.find((g) => g.key === currentKey);
   const nextGroup = groups.find((g) => g.key === state.groupOrder[state.currentGroupIndex + 1]);
   const isSuperset = (currentGroup?.exercises.length ?? 0) > 1;
-  const isTimed = currentGroup?.exercises.some((e) => e.exerciseType === "time") ?? false;
+  const isTimed = currentGroup ? isFullyTimed(currentGroup, state.currentSet) : false;
+  const activeNow = currentGroup ? activeExercisesForSet(currentGroup, state.currentSet) : [];
+  const finishedNow = currentGroup ? finishedExercisesForSet(currentGroup, state.currentSet) : [];
 
   return (
     <div className="scrollbar-thin h-screen overflow-y-auto bg-background">
@@ -191,7 +191,21 @@ export function WorkoutSessionApp({ onReturn }: { onReturn: () => void }) {
               )}
             </div>
 
-            <div className="font-display text-2xl leading-tight">{groupTitle(currentGroup)}</div>
+            <div className="font-display text-2xl leading-tight">{activeNow.map((e) => e.name).join(" + ")}</div>
+
+            {/* An uneven superset (4 sets + 3 sets) needs to say plainly that
+                one exercise is done while the other still owes a round. */}
+            {finishedNow.length > 0 && (
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                <Check className="h-3 w-3 text-success" />
+                Finished for this exercise:
+                {finishedNow.map((e) => (
+                  <Badge key={e.id} variant="success">
+                    {e.name}
+                  </Badge>
+                ))}
+              </div>
+            )}
 
             {isTimed && state.phaseEndsAt && (
               <div className="my-6 text-center">
@@ -201,14 +215,16 @@ export function WorkoutSessionApp({ onReturn }: { onReturn: () => void }) {
             )}
 
             <div className="mt-4 flex flex-col gap-3">
-              {currentGroup.exercises.map((ex) => (
+              {activeNow.map((ex) => (
                 <ExerciseDetailCard key={ex.id} exercise={ex} accentColor={isSuperset ? currentGroup.color : null} compact={isTimed} />
               ))}
             </div>
 
+            {/* Only fully-timed groups auto-advance. A mixed superset still
+                stops here so its reps half can be logged. */}
             {!isTimed && (
               <SetLogInput
-                exercises={currentGroup.exercises}
+                exercises={activeNow}
                 setNumber={state.currentSet}
                 onFinish={() => finishSet.mutate()}
                 disabled={finishSet.isPending}
@@ -287,14 +303,16 @@ export function WorkoutSessionApp({ onReturn }: { onReturn: () => void }) {
         {state.phase !== "complete" && groups.length > 0 && (
           <div>
             <div className="mb-2.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">Sequence</div>
-            <ExerciseGroupList
-              groups={groups}
-              onChanged={() => refreshGroups.mutate()}
-              renderGroup={(group) => {
+            {/* Read-only during a session: reordering or re-pairing supersets
+                mid-workout would shift the sequence under the running engine.
+                Those edits belong in the Workout panel before starting. */}
+            <div className="flex flex-col gap-2">
+              {groups.map((group) => {
                 const index = state.groupOrder.indexOf(group.key);
                 const status = index < state.currentGroupIndex ? "done" : index === state.currentGroupIndex ? "current" : "upcoming";
                 return (
                   <div
+                    key={group.key}
                     className={cn(
                       "flex items-center justify-between gap-3 rounded-md border border-border-soft bg-card px-3.5 py-2.5",
                       status === "current" && "border-primary",
@@ -304,18 +322,14 @@ export function WorkoutSessionApp({ onReturn }: { onReturn: () => void }) {
                   >
                     <div className="min-w-0 truncate text-[13px]">{groupTitle(group)}</div>
                     <div className="flex shrink-0 items-center gap-2">
-                      <span className="tabular text-[11px] text-muted-foreground">
-                        {group.exercises[0].exerciseType === "time"
-                          ? `${group.exercises[0].sets ?? 1} × ${group.exercises[0].durationSeconds ?? 30}s`
-                          : `${group.exercises[0].sets ?? 1} × ${group.exercises[0].repsRange || "—"}`}
-                      </span>
+                      <span className="tabular text-[11px] text-muted-foreground">{groupTargetLabel(group)}</span>
                       {status === "done" && <Check className="h-3.5 w-3.5 text-success" />}
                       {status === "current" && <Badge>Now</Badge>}
                     </div>
                   </div>
                 );
-              }}
-            />
+              })}
+            </div>
           </div>
         )}
       </div>

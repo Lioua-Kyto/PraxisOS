@@ -48,9 +48,25 @@ function totalSetsFor(group: WorkoutExerciseGroup): number {
   return Math.max(1, ...group.exercises.map((e) => e.sets ?? 1));
 }
 
-function timeBasedDuration(group: WorkoutExerciseGroup): number | null {
-  const durations = group.exercises.filter((e) => e.exerciseType === "time").map((e) => e.durationSeconds ?? 30);
-  return durations.length ? Math.max(...durations) : null;
+/**
+ * A group only runs on an automatic timer when *every* exercise still in play
+ * is time-based. A mixed superset (30s plank + 10 push-ups) previously
+ * auto-advanced the moment the plank timer expired, skipping the set-log step
+ * the reps half needs — so mixed groups are driven manually instead.
+ *
+ * Exercises whose set count is already satisfied are excluded, so the final
+ * rounds of an uneven superset are judged only on what's actually left.
+ */
+function timeBasedDuration(group: WorkoutExerciseGroup, currentSet: number): number | null {
+  const active = activeExercises(group, currentSet);
+  if (!active.length) return null;
+  if (!active.every((e) => e.exerciseType === "time")) return null;
+  return Math.max(...active.map((e) => e.durationSeconds ?? 30));
+}
+
+/** Exercises in the group that still have this set remaining. */
+function activeExercises(group: WorkoutExerciseGroup, currentSet: number) {
+  return group.exercises.filter((e) => (e.sets ?? 1) >= currentSet);
 }
 
 function beginPreview(groupIndex: number): void {
@@ -76,7 +92,7 @@ function beginWork(): void {
   if (!state) return;
   state.phase = "work";
   const group = currentGroup();
-  const timedDuration = group ? timeBasedDuration(group) : null;
+  const timedDuration = group ? timeBasedDuration(group, state.currentSet) : null;
   if (timedDuration) {
     state.phaseEndsAt = new Date(Date.now() + timedDuration * 1000).toISOString();
     scheduleTransition(timedDuration, completeCurrentSet);
@@ -146,7 +162,7 @@ export function startSession(day: string): WorkoutSessionState {
   const groups = getExerciseGroupsForDay(day);
   if (groups.length === 0) throw new Error(`No exercises found for ${day}`);
 
-  const focusSession = startFocusSession("training", `Workout: ${day}`);
+  const focusSession = startFocusSession("training", `Workout: ${day}`, { replaceActive: true });
 
   state = {
     id: randomUUID(),
