@@ -7,3 +7,9 @@ release/
 *.tsbuildinfo
 .impeccable/
 .DS_Store
+
+# Local working notes — not part of the published project
+TASKS.md
+tasks.md
+CLAUDE.md
+.claude/
