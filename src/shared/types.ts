@@ -1,3 +1,5 @@
+export type ExerciseMediaKind = "video" | "image";
+
 // Domain types shared between the main process (Drizzle rows), the preload
 // bridge, and the renderer (TanStack Query hooks). Single source of truth so
 // IPC payloads stay in sync across process boundaries.
@@ -60,6 +62,7 @@ export interface WorkoutExercise {
   supersetColor: string | null;
   archived: boolean;
   videoPath: string | null;
+  imagePath: string | null;
 }
 
 export type NewWorkoutExercise = Partial<
@@ -356,7 +359,11 @@ export interface NewNote {
  * `formatVersion` is bumped whenever the shape changes so imports can refuse
  * files they don't understand.
  */
-export const BACKUP_FORMAT_VERSION = 1;
+/**
+ * Bump whenever the exported table shapes change, and add a matching
+ * transformer in src/main/backup/migrations.ts so older backups still import.
+ */
+export const BACKUP_FORMAT_VERSION = 2;
 
 export type BackupTableName =
   | "tasks"
@@ -392,4 +399,29 @@ export interface ImportSummary {
   restored: Record<string, number>;
   totalRows: number;
   missingMedia: string[];
+  /** Format version of the file that was read. */
+  sourceFormatVersion: number;
+  /** Format versions the payload was upgraded through, if any. */
+  upgradedThrough: number[];
+}
+
+export interface ReleaseInfo {
+  version: string;
+  name: string;
+  notes: string;
+  url: string;
+  publishedAt: string | null;
+}
+
+export interface UpdateCheck {
+  currentVersion: string;
+  latest: ReleaseInfo | null;
+  updateAvailable: boolean;
+}
+
+export interface WhatsNew {
+  version: string;
+  previousVersion?: string;
+  notes: string;
+  show: boolean;
 }

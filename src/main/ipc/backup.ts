@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { getRawDb, getMediaDir } from "../db/client";
 import { BACKUP_FORMAT_VERSION, type BackupFile, type BackupTableName, type ImportSummary } from "../../shared/types";
+import { upgradeBackupTables } from "../backup/migrations";
 
 // Insert order matters: parents before children so foreign keys resolve.
 const TABLES: BackupTableName[] = [
@@ -30,8 +31,10 @@ function collectMediaFilenames(tables: BackupFile["tables"]): string[] {
   const names = new Set<string>();
 
   for (const row of tables.workout_exercises ?? []) {
-    const videoPath = row.video_path;
-    if (typeof videoPath === "string" && videoPath) names.add(path.basename(videoPath));
+    for (const key of ["video_path", "image_path"]) {
+      const value = row[key];
+      if (typeof value === "string" && value) names.add(path.basename(value));
+    }
   }
   for (const row of tables.notes ?? []) {
     const content = row.content;
@@ -86,18 +89,42 @@ function remapMediaPath(value: string, mediaDir: string): string {
   return value.startsWith("file://") ? `file://${localPath.replace(/\\/g, "/")}` : localPath;
 }
 
+/**
+ * The single entry point for restoring. Everything — the file dialog, a drag
+ * and drop, a test — goes through here, so validation, format upgrades and the
+ * foreign-key-safe wipe can't be skipped by a caller that forgot a step.
+ */
+export function importBackup(jsonString: string): ImportSummary {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonString);
+  } catch {
+    throw new Error("That file isn't valid JSON, so it can't be a PraxisOS backup.");
+  }
+  return restoreBackup(parsed as BackupFile);
+}
+
 export function restoreBackup(backup: BackupFile): ImportSummary {
   assertValidBackup(backup);
   const sqlite = getRawDb();
   const mediaDir = getMediaDir();
   const restored: Record<string, number> = {};
 
+  const sourceFormatVersion = backup.formatVersion;
+  // Bring an older payload up to the shape this build's tables expect before
+  // anything touches the live database.
+  const { tables, applied: upgradedThrough } = upgradeBackupTables(
+    backup.tables,
+    sourceFormatVersion,
+    BACKUP_FORMAT_VERSION
+  );
+
   const run = sqlite.transaction(() => {
     // Children first on the way out, so deletes don't trip foreign keys.
     for (const table of [...TABLES].reverse()) sqlite.prepare(`DELETE FROM ${table}`).run();
 
     for (const table of TABLES) {
-      const rows = backup.tables[table] ?? [];
+      const rows = tables[table] ?? [];
       restored[table] = rows.length;
       if (!rows.length) continue;
 
@@ -113,8 +140,8 @@ export function restoreBackup(backup: BackupFile): ImportSummary {
 
         const values = columns.map((c) => {
           const value = row[c];
-          if (typeof value === "string" && (c === "video_path" || c === "content")) {
-            return c === "video_path" ? remapMediaPath(value, mediaDir) : remapNoteImages(value, mediaDir);
+          if (typeof value === "string" && (c === "video_path" || c === "image_path" || c === "content")) {
+            return c === "content" ? remapNoteImages(value, mediaDir) : remapMediaPath(value, mediaDir);
           }
           return value === undefined ? null : (value as string | number | null);
         });
@@ -129,7 +156,13 @@ export function restoreBackup(backup: BackupFile): ImportSummary {
   run();
 
   const missingMedia = (backup.mediaFiles ?? []).filter((name) => !fs.existsSync(path.join(mediaDir, name)));
-  return { restored, totalRows: Object.values(restored).reduce((a, b) => a + b, 0), missingMedia };
+  return {
+    restored,
+    totalRows: Object.values(restored).reduce((a, b) => a + b, 0),
+    missingMedia,
+    sourceFormatVersion,
+    upgradedThrough
+  };
 }
 
 function remapNoteImages(content: string, mediaDir: string): string {
@@ -164,7 +197,6 @@ export function registerBackupHandlers(): void {
     const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
     if (result.canceled || !result.filePaths.length) return null;
 
-    const parsed = JSON.parse(fs.readFileSync(result.filePaths[0], "utf8"));
-    return restoreBackup(parsed);
+    return importBackup(fs.readFileSync(result.filePaths[0], "utf8"));
   });
 }
