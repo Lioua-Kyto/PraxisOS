@@ -1,5 +1,5 @@
 import { Badge } from "../ui/badge";
-import { toFileUrl } from "../../lib/fileUrl";
+import { toMediaUrl } from "../../lib/fileUrl";
 import type { WorkoutExercise } from "@shared/types";
 
 export function ExerciseDetailCard({
@@ -34,7 +34,7 @@ export function ExerciseDetailCard({
             <video
               key={exercise.videoPath}
               className="w-full shrink-0 rounded-md border border-border sm:w-56"
-              src={toFileUrl(exercise.videoPath)}
+              src={toMediaUrl(exercise.videoPath)}
               controls
               preload="metadata"
               playsInline

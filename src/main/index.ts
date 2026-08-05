@@ -4,6 +4,7 @@ import { initDb, closeDb } from "./db/client";
 import { registerAllIpcHandlers } from "./ipc/registerAll";
 import { startHabitReminders, stopHabitReminders } from "./habits/reminderScheduler";
 import { registerMainWindow } from "./workout/workoutSessionEngine";
+import { registerMediaProtocolHandler, registerMediaScheme } from "./mediaProtocol";
 
 // In dev this resolves to <root>/build/icon.png (out/main -> up two levels
 // -> project root -> build/icon.png). Packaged builds don't ship the
@@ -46,8 +47,13 @@ function createWindow(): void {
   registerMainWindow(win);
 }
 
+// Must run before the app is ready, otherwise the scheme never gets its
+// streaming/standard privileges.
+registerMediaScheme();
+
 app.whenReady().then(() => {
   initDb();
+  registerMediaProtocolHandler();
   registerAllIpcHandlers();
 
   createWindow();

@@ -27,7 +27,7 @@ import {
 import { useStartWorkoutSession, useWorkoutSessionState } from "../../queries/workoutSession";
 import { useWorkoutSessionOverlay } from "../workoutSession/WorkoutSessionOverlayContext";
 import { useSettings } from "../../queries/settings";
-import { toFileUrl } from "../../lib/fileUrl";
+import { toMediaUrl } from "../../lib/fileUrl";
 import type { ExerciseType, WorkoutExercise, WorkoutExerciseGroup } from "@shared/types";
 
 function VideoPickerField({ videoPath, onPick, onClear }: { videoPath: string | null; onPick: (path: string) => void; onClear: () => void }) {
@@ -180,7 +180,7 @@ function ExerciseDetail({ ex }: { ex: WorkoutExercise }) {
         <video
           key={ex.videoPath}
           className="mt-2 max-w-[340px] rounded-md border border-border"
-          src={toFileUrl(ex.videoPath)}
+          src={toMediaUrl(ex.videoPath)}
           controls
           preload="metadata"
           playsInline
