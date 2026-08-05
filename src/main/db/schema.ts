@@ -53,7 +53,8 @@ export const workoutExercises = sqliteTable("workout_exercises", {
   supersetGroup: text("superset_group"),
   supersetColor: text("superset_color"),
   archived: integer("archived", { mode: "boolean" }).notNull().default(false),
-  videoPath: text("video_path")
+  videoPath: text("video_path"),
+  imagePath: text("image_path")
 });
 
 export const workoutLogs = sqliteTable("workout_logs", {

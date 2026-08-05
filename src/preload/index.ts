@@ -1,6 +1,8 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type {
   AppSettings,
+  UpdateCheck,
+  WhatsNew,
   BrainDump,
   BudgetCategory,
   BudgetSummary,
@@ -75,8 +77,9 @@ const api = {
     volumeByExercise: (exerciseId: number, days = 14) =>
       invoke<ExerciseVolumePoint[]>("workouts:volumeByExercise", exerciseId, days),
     restoreDefaults: () => invoke<WorkoutExercise[]>("workouts:restoreDefaults"),
-    pickVideo: (exerciseId: number) => invoke<string | null>("workouts:pickVideo", exerciseId),
-    pickVideoFile: () => invoke<string | null>("workouts:pickVideoFile")
+    pickMedia: (exerciseId: number, kind: "video" | "image") =>
+      invoke<string | null>("workouts:pickMedia", exerciseId, kind),
+    pickMediaFile: (kind: "video" | "image") => invoke<string | null>("workouts:pickMediaFile", kind)
   },
   workoutSession: {
     start: (day: string) => invoke<WorkoutSessionState>("workoutSession:start", day),
@@ -192,6 +195,20 @@ const api = {
     exportToFile: () => invoke<string | null>("backup:export"),
     /** Opens an open dialog; resolves to a restore summary, or null if cancelled. */
     importFromFile: () => invoke<ImportSummary | null>("backup:import")
+  },
+  updates: {
+    version: () => invoke<string>("updates:version"),
+    check: () => invoke<UpdateCheck>("updates:check"),
+    openRelease: (url: string) => invoke<void>("updates:openRelease", url),
+    whatsNew: () => invoke<WhatsNew>("updates:whatsNew"),
+    acknowledge: () => invoke<void>("updates:acknowledge")
+  },
+  widget: {
+    open: () => invoke<void>("widget:open"),
+    close: () => invoke<void>("widget:close"),
+    isOpen: () => invoke<boolean>("widget:isOpen"),
+    openMain: () => invoke<void>("widget:openMain"),
+    hideMain: () => invoke<void>("widget:hideMain")
   }
 };
 

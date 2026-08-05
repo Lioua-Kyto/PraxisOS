@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ExerciseMediaKind } from "@shared/types";
 import type { NewWorkoutExercise, WorkoutExercise } from "@shared/types";
 
 const EXERCISES_KEY = ["workouts", "exercises"] as const;
@@ -89,18 +90,20 @@ export function useLogSet() {
   });
 }
 
-export function useAttachVideo() {
+export function useAttachMedia() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (exerciseId: number) => window.api.workouts.pickVideo(exerciseId),
+    mutationFn: ({ exerciseId, kind }: { exerciseId: number; kind: ExerciseMediaKind }) =>
+      window.api.workouts.pickMedia(exerciseId, kind),
     onSuccess: () => qc.invalidateQueries({ queryKey: EXERCISES_KEY })
   });
 }
 
-export function useRemoveVideo() {
+export function useRemoveMedia() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => window.api.workouts.updateExercise(id, { videoPath: null }),
+    mutationFn: ({ id, kind }: { id: number; kind: ExerciseMediaKind }) =>
+      window.api.workouts.updateExercise(id, kind === "video" ? { videoPath: null } : { imagePath: null }),
     onSuccess: () => qc.invalidateQueries({ queryKey: EXERCISES_KEY })
   });
 }
@@ -113,8 +116,8 @@ export function useReorderExercises() {
   });
 }
 
-export function usePickVideoFile() {
-  return useMutation({ mutationFn: () => window.api.workouts.pickVideoFile() });
+export function usePickMediaFile() {
+  return useMutation({ mutationFn: (kind: ExerciseMediaKind) => window.api.workouts.pickMediaFile(kind) });
 }
 
 export function useRestoreDefaultWorkout() {

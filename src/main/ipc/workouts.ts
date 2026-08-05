@@ -20,19 +20,36 @@ const SUPERSET_COLORS = [
   "hsl(var(--destructive))"
 ];
 
-async function pickAndCopyVideo(win: Electron.BrowserWindow | null): Promise<string | null> {
-  const options: Electron.OpenDialogOptions = {
+export type ExerciseMediaKind = "video" | "image";
+
+const MEDIA_DIALOG: Record<ExerciseMediaKind, { title: string; name: string; extensions: string[] }> = {
+  video: {
     title: "Choose a form-check video",
+    name: "Videos",
+    extensions: ["mp4", "mov", "webm", "mkv", "avi"]
+  },
+  image: {
+    title: "Choose a reference photo",
+    name: "Images",
+    extensions: ["png", "jpg", "jpeg", "webp", "gif", "avif"]
+  }
+};
+
+async function pickAndCopyMedia(
+  win: Electron.BrowserWindow | null,
+  kind: ExerciseMediaKind
+): Promise<string | null> {
+  const { title, name, extensions } = MEDIA_DIALOG[kind];
+  const options: Electron.OpenDialogOptions = {
+    title,
     properties: ["openFile"],
-    filters: [{ name: "Videos", extensions: ["mp4", "mov", "webm", "mkv", "avi"] }]
+    filters: [{ name, extensions }]
   };
   const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
   if (result.canceled || !result.filePaths.length) return null;
 
   const src = result.filePaths[0];
-  const mediaDir = getMediaDir();
-  const destName = `ex-${Date.now()}${path.extname(src)}`;
-  const dest = path.join(mediaDir, destName);
+  const dest = path.join(getMediaDir(), `ex-${kind}-${Date.now()}${path.extname(src)}`);
   fs.copyFileSync(src, dest);
   return dest;
 }
@@ -61,6 +78,7 @@ export function registerWorkoutHandlers(): void {
         progression: input.progression ?? "",
         tips: input.tips ?? "",
         videoPath: input.videoPath ?? null,
+        imagePath: input.imagePath ?? null,
         orderIndex: input.orderIndex ?? 0
       })
       .returning()
@@ -160,22 +178,26 @@ export function registerWorkoutHandlers(): void {
 
   ipcMain.handle("workouts:restoreDefaults", (): WorkoutExercise[] => reseedWorkout(db()).map(rowToExercise));
 
-  // Attaches a video to an existing exercise immediately (quick-action from
-  // the exercise list/detail view).
-  ipcMain.handle("workouts:pickVideo", async (event, exerciseId: number): Promise<string | null> => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    const dest = await pickAndCopyVideo(win);
-    if (!dest) return null;
-    db().update(workoutExercises).set({ videoPath: dest }).where(eq(workoutExercises.id, exerciseId)).run();
-    return dest;
-  });
+  // Attaches media to an existing exercise immediately (quick-action from the
+  // exercise list/detail view).
+  ipcMain.handle(
+    "workouts:pickMedia",
+    async (event, exerciseId: number, kind: ExerciseMediaKind): Promise<string | null> => {
+      const win = BrowserWindow.fromWebContents(event.sender);
+      const dest = await pickAndCopyMedia(win, kind);
+      if (!dest) return null;
+      const field = kind === "video" ? { videoPath: dest } : { imagePath: dest };
+      db().update(workoutExercises).set(field).where(eq(workoutExercises.id, exerciseId)).run();
+      return dest;
+    }
+  );
 
-  // Just picks + copies a video into the media dir without touching any row
-  // — used by the add/edit exercise form, which may not have an exercise id
-  // yet (a brand-new exercise) and instead includes the returned path in the
+  // Just picks + copies into the media dir without touching any row — used by
+  // the add/edit exercise form, which may not have an exercise id yet (a
+  // brand-new exercise) and instead includes the returned path in the
   // create/update payload itself.
-  ipcMain.handle("workouts:pickVideoFile", async (event): Promise<string | null> => {
+  ipcMain.handle("workouts:pickMediaFile", async (event, kind: ExerciseMediaKind): Promise<string | null> => {
     const win = BrowserWindow.fromWebContents(event.sender);
-    return pickAndCopyVideo(win);
+    return pickAndCopyMedia(win, kind);
   });
 }

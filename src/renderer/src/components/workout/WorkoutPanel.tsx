@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Film, Play, X } from "lucide-react";
+import { Film, Image as ImageIcon, Play, X } from "lucide-react";
 import { PageHeader } from "../layout/PageHeader";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
@@ -14,13 +14,13 @@ import { DayTabsEditor } from "./DayTabsEditor";
 import {
   useAddExercise,
   useArchiveExercise,
-  useAttachVideo,
+  useAttachMedia,
   useExerciseLogs,
   useExerciseVolume,
   useExercises,
   useLogSet,
-  usePickVideoFile,
-  useRemoveVideo,
+  usePickMediaFile,
+  useRemoveMedia,
   useUnlinkSuperset,
   useUpdateExercise
 } from "../../queries/workouts";
@@ -28,32 +28,96 @@ import { useStartWorkoutSession, useWorkoutSessionState } from "../../queries/wo
 import { useWorkoutSessionOverlay } from "../workoutSession/WorkoutSessionOverlayContext";
 import { useSettings } from "../../queries/settings";
 import { toMediaUrl } from "../../lib/fileUrl";
-import type { ExerciseType, WorkoutExercise, WorkoutExerciseGroup } from "@shared/types";
+import type { ExerciseMediaKind, ExerciseType, WorkoutExercise, WorkoutExerciseGroup } from "@shared/types";
 
-function VideoPickerField({ videoPath, onPick, onClear }: { videoPath: string | null; onPick: (path: string) => void; onClear: () => void }) {
-  const pickVideoFile = usePickVideoFile();
+function MediaRow({
+  kind,
+  path,
+  onPick,
+  onClear,
+  pending
+}: {
+  kind: ExerciseMediaKind;
+  path: string | null;
+  onPick: () => void;
+  onClear: () => void;
+  pending: boolean;
+}) {
+  const isVideo = kind === "video";
+  const noun = isVideo ? "video" : "photo";
+  return (
+    <div className="flex items-center gap-2">
+      <Button type="button" variant="outline" size="sm" onClick={onPick} disabled={pending}>
+        {isVideo ? <Film className="h-3.5 w-3.5" /> : <ImageIcon className="h-3.5 w-3.5" />}
+        {pending ? "Choosing…" : path ? `Replace ${noun}` : `Attach ${noun}`}
+      </Button>
+      {path && (
+        <>
+          <span className="truncate text-xs text-muted-foreground">{path.split(/[/\\]/).pop()}</span>
+          <button
+            type="button"
+            onClick={onClear}
+            aria-label={`Remove attached ${noun}`}
+            title={`Remove ${noun}`}
+            className="text-muted-foreground hover:text-destructive"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
 
-  const pick = async () => {
-    const path = await pickVideoFile.mutateAsync();
-    if (path) onPick(path);
+/**
+ * A video and a photo are alternatives, not a pair — a still reference is
+ * enough for most exercises, so neither is required and the card falls back to
+ * whichever one is present.
+ */
+function MediaPickerField({
+  videoPath,
+  imagePath,
+  onChange
+}: {
+  videoPath: string | null;
+  imagePath: string | null;
+  onChange: (fields: Partial<{ videoPath: string | null; imagePath: string | null }>) => void;
+}) {
+  const pickFile = usePickMediaFile();
+  const [pendingKind, setPendingKind] = useState<ExerciseMediaKind | null>(null);
+
+  const pick = async (kind: ExerciseMediaKind) => {
+    setPendingKind(kind);
+    try {
+      const picked = await pickFile.mutateAsync(kind);
+      if (picked) onChange(kind === "video" ? { videoPath: picked } : { imagePath: picked });
+    } finally {
+      setPendingKind(null);
+    }
   };
 
   return (
     <div className="col-span-2 flex flex-col gap-1.5">
-      <Label>Form-check video</Label>
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={pick} disabled={pickVideoFile.isPending}>
-          <Film className="h-3.5 w-3.5" /> {pickVideoFile.isPending ? "Choosing…" : videoPath ? "Replace video" : "Attach video"}
-        </Button>
-        {videoPath && (
-          <>
-            <span className="truncate text-xs text-muted-foreground">{videoPath.split(/[/\\]/).pop()}</span>
-            <button type="button" onClick={onClear} aria-label="Remove attached video" title="Remove video" className="text-muted-foreground hover:text-destructive">
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </>
-        )}
+      <Label>Reference media</Label>
+      <div className="flex flex-col gap-1.5">
+        <MediaRow
+          kind="video"
+          path={videoPath}
+          pending={pendingKind === "video"}
+          onPick={() => void pick("video")}
+          onClear={() => onChange({ videoPath: null })}
+        />
+        <MediaRow
+          kind="image"
+          path={imagePath}
+          pending={pendingKind === "image"}
+          onPick={() => void pick("image")}
+          onClear={() => onChange({ imagePath: null })}
+        />
       </div>
+      <span className="text-[11px] text-muted-foreground">
+        A photo is shown when there's no video, so either one on its own is fine.
+      </span>
     </div>
   );
 }
@@ -67,6 +131,7 @@ interface ExerciseFormValue {
   progression: string;
   tips: string;
   videoPath: string | null;
+  imagePath: string | null;
   day?: string;
 }
 
@@ -131,8 +196,8 @@ function ExerciseDetail({ ex }: { ex: WorkoutExercise }) {
   const { data: logs = [] } = useExerciseLogs(ex.id, true);
   const { data: volume = [] } = useExerciseVolume(ex.id, true);
   const logSet = useLogSet();
-  const attachVideo = useAttachVideo();
-  const removeVideo = useRemoveVideo();
+  const attachMedia = useAttachMedia();
+  const removeMedia = useRemoveMedia();
   const [logForm, setLogForm] = useState({ reps: "", weight: "", notes: "" });
 
   const submitLog = () => {
@@ -164,13 +229,41 @@ function ExerciseDetail({ ex }: { ex: WorkoutExercise }) {
       </div>
 
       <div className="mb-2 flex items-center justify-between">
-        <div className="font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">Form-check video</div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => attachVideo.mutate(ex.id)} disabled={attachVideo.isPending}>
-            {attachVideo.isPending ? "Choosing…" : ex.videoPath ? "Replace video" : "Attach video"}
+        <div className="font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">Reference media</div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => attachMedia.mutate({ exerciseId: ex.id, kind: "video" })}
+            disabled={attachMedia.isPending}
+          >
+            {ex.videoPath ? "Replace video" : "Attach video"}
           </Button>
           {ex.videoPath && (
-            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeVideo.mutate(ex.id)}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-destructive"
+              onClick={() => removeMedia.mutate({ id: ex.id, kind: "video" })}
+            >
+              Remove
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => attachMedia.mutate({ exerciseId: ex.id, kind: "image" })}
+            disabled={attachMedia.isPending}
+          >
+            {ex.imagePath ? "Replace photo" : "Attach photo"}
+          </Button>
+          {ex.imagePath && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-destructive"
+              onClick={() => removeMedia.mutate({ id: ex.id, kind: "image" })}
+            >
               Remove
             </Button>
           )}
@@ -185,8 +278,17 @@ function ExerciseDetail({ ex }: { ex: WorkoutExercise }) {
           preload="metadata"
           playsInline
         />
+      ) : ex.imagePath ? (
+        <img
+          key={ex.imagePath}
+          className="mt-2 max-w-[340px] rounded-md border border-border"
+          src={toMediaUrl(ex.imagePath)}
+          alt={`${ex.name} reference`}
+        />
       ) : (
-        <div className="mt-2 text-xs text-muted-foreground">No form-check video attached yet — it plays right here once added.</div>
+        <div className="mt-2 text-xs text-muted-foreground">
+          No video or photo attached yet — whichever you add shows right here.
+        </div>
       )}
 
       <div className="mt-3.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">History</div>
@@ -231,7 +333,8 @@ const emptyAddForm: ExerciseFormValue = {
   durationSeconds: 30,
   progression: "",
   tips: "",
-  videoPath: null
+  videoPath: null,
+  imagePath: null
 };
 
 export function WorkoutPanel() {
@@ -270,6 +373,7 @@ export function WorkoutPanel() {
       progression: ex.progression ?? "",
       tips: ex.tips ?? "",
       videoPath: ex.videoPath,
+      imagePath: ex.imagePath,
       day: ex.day
     });
   };
@@ -362,10 +466,10 @@ export function WorkoutPanel() {
                 <Label>Tips</Label>
                 <Input value={addForm.tips} onChange={(e) => setAddForm({ ...addForm, tips: e.target.value })} />
               </div>
-              <VideoPickerField
+              <MediaPickerField
                 videoPath={addForm.videoPath}
-                onPick={(path) => setAddForm({ ...addForm, videoPath: path })}
-                onClear={() => setAddForm({ ...addForm, videoPath: null })}
+                imagePath={addForm.imagePath}
+                onChange={(fields) => setAddForm({ ...addForm, ...fields })}
               />
               <Button type="submit" className="col-span-2">
                 Add to {day}
@@ -410,10 +514,10 @@ export function WorkoutPanel() {
                         <Label>Tips</Label>
                         <Input value={editForm.tips} onChange={(e) => setEditForm({ ...editForm, tips: e.target.value })} />
                       </div>
-                      <VideoPickerField
+                      <MediaPickerField
                         videoPath={editForm.videoPath}
-                        onPick={(path) => setEditForm({ ...editForm, videoPath: path })}
-                        onClear={() => setEditForm({ ...editForm, videoPath: null })}
+                        imagePath={editForm.imagePath}
+                        onChange={(fields) => setEditForm({ ...editForm, ...fields })}
                       />
                       <div className="col-span-2 flex gap-2">
                         <Button size="sm" onClick={saveEdit}>
@@ -437,7 +541,7 @@ export function WorkoutPanel() {
                           <span className="tabular text-xs text-muted-foreground">
                             {ex.sets} × {ex.exerciseType === "time" ? `${ex.durationSeconds ?? 30}s` : ex.repsRange}
                           </span>
-                          {ex.videoPath && <Badge variant="success">clip</Badge>}
+                          {ex.videoPath ? <Badge variant="success">clip</Badge> : ex.imagePath ? <Badge variant="secondary">photo</Badge> : null}
                         </div>
                         <div className="flex gap-1">
                           <Button size="sm" variant="ghost" onClick={() => startEdit(ex)}>

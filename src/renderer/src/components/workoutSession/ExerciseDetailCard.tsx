@@ -30,7 +30,7 @@ export function ExerciseDetailCard({
 
       {!compact && (
         <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-          {exercise.videoPath && (
+          {exercise.videoPath ? (
             <video
               key={exercise.videoPath}
               className="w-full shrink-0 rounded-md border border-border sm:w-56"
@@ -39,7 +39,14 @@ export function ExerciseDetailCard({
               preload="metadata"
               playsInline
             />
-          )}
+          ) : exercise.imagePath ? (
+            <img
+              key={exercise.imagePath}
+              className="w-full shrink-0 rounded-md border border-border object-cover sm:w-56"
+              src={toMediaUrl(exercise.imagePath)}
+              alt={`${exercise.name} reference`}
+            />
+          ) : null}
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             {exercise.progression && (
               <div>
