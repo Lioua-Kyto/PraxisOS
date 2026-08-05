@@ -61,8 +61,9 @@ const settings = [
   ["habitRemindersEnabled", "true"],
   ["habitReminderTime", "20:30"],
   ["workoutDays", JSON.stringify(["Push", "Pull", "Legs"])],
-  ["workoutSchedule", JSON.stringify({ 1: "Push", 3: "Pull", 5: "Legs" })],
-  ["lastSeenVersion", "0.1.0"]
+  ["workoutSchedule", JSON.stringify({ 1: "Push", 3: "Pull", 5: "Legs" })]
+  // Deliberately no lastSeenVersion: pinning it here would suppress the
+  // What's New modal for anyone who restores this dataset.
 ].map(([key, value]) => ({ key, value }));
 
 // ------------------------------------------------------------ theme presets
@@ -93,16 +94,16 @@ const theme_presets = [
 const TASK_SEED = [
   ["Ship the release build to GitHub", "urgent_important", "in_progress", 1],
   ["Write the migration for exercise photos", "urgent_important", "completed", -1],
-  ["Review AWS specialization module 3", "not_urgent_important", "todo", 4],
-  ["Draft Q3 budget rework", "not_urgent_important", "in_progress", 6],
+  ["Review AWS specialization module 3", "important_not_urgent", "todo", 4],
+  ["Draft Q3 budget rework", "important_not_urgent", "in_progress", 6],
   ["Reply to the recruiter thread", "urgent_not_important", "todo", 0],
   ["Renew the domain", "urgent_not_important", "completed", -3],
   ["Sort out the desk cable mess", "not_urgent_not_important", "todo", null],
-  ["Back up the photo archive", "not_urgent_important", "todo", 12],
-  ["Finish the Algorithms week 2 problem set", "not_urgent_important", "completed", -2],
+  ["Back up the photo archive", "important_not_urgent", "todo", 12],
+  ["Finish the Algorithms week 2 problem set", "important_not_urgent", "completed", -2],
   ["Book the dentist", "urgent_not_important", "todo", 2],
-  ["Refactor the focus timer elapsed logic", "not_urgent_important", "completed", -5],
-  ["Plan next month's training block", "not_urgent_important", "in_progress", 8]
+  ["Refactor the focus timer elapsed logic", "important_not_urgent", "completed", -5],
+  ["Plan next month's training block", "important_not_urgent", "in_progress", 8]
 ];
 
 const tasks = TASK_SEED.map(([text, priority, status, due], i) => {

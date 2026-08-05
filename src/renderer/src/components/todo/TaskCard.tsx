@@ -5,12 +5,25 @@ import { Badge } from "../ui/badge";
 import { dateFromStored } from "@shared/datetime";
 import type { Task, TaskPriority } from "@shared/types";
 
-const PRIORITY_META: Record<TaskPriority, { label: string; variant: "destructive" | "default" | "warning" | "secondary" }> = {
+type PriorityMeta = { label: string; variant: "destructive" | "default" | "warning" | "secondary" };
+
+const PRIORITY_META: Record<TaskPriority, PriorityMeta> = {
   urgent_important: { label: "Do now", variant: "destructive" },
   important_not_urgent: { label: "Schedule", variant: "default" },
   urgent_not_important: { label: "Quick win", variant: "warning" },
   not_urgent_not_important: { label: "Later", variant: "secondary" }
 };
+
+const UNKNOWN_PRIORITY: PriorityMeta = { label: "Unsorted", variant: "secondary" };
+
+/**
+ * A restored backup can carry a priority this build doesn't know. That's a real
+ * boundary, not an internal invariant — an unrecognised value must degrade to a
+ * neutral badge rather than throw and take the panel down.
+ */
+function priorityMeta(priority: string): PriorityMeta {
+  return PRIORITY_META[priority as TaskPriority] ?? UNKNOWN_PRIORITY;
+}
 
 // Memoized: a column can hold many cards, and only the card whose task
 // actually changed (or the remove callback identity) needs to re-render when
@@ -24,7 +37,7 @@ export const TaskCard = memo(function TaskCard({
   onRemove: (id: number) => void;
   onEdit: (task: Task) => void;
 }) {
-  const meta = PRIORITY_META[task.priority];
+  const meta = priorityMeta(task.priority);
 
   return (
     // Native HTML5 drag-and-drop lives on this plain element — motion.div

@@ -12,7 +12,8 @@ const PRIORITY_RANK: Record<Task["priority"], number> = {
 export function TopTodosWidget({ tasks, onNavigate }: { tasks: Task[]; onNavigate: () => void }) {
   const top = tasks
     .filter((t) => t.status !== "completed")
-    .sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority])
+    // Unknown priorities sort last rather than producing NaN comparisons.
+    .sort((a, b) => (PRIORITY_RANK[a.priority] ?? 99) - (PRIORITY_RANK[b.priority] ?? 99))
     .slice(0, 3);
 
   return (

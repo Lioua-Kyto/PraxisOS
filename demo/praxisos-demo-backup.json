@@ -2,7 +2,7 @@
   "format": "praxisos-backup",
   "formatVersion": 2,
   "appVersion": "0.1.0",
-  "exportedAt": "2026-08-05T15:06:57.457Z",
+  "exportedAt": "2026-08-05T16:52:01.189Z",
   "tables": {
     "settings": [
       {
@@ -68,10 +68,6 @@
       {
         "key": "workoutSchedule",
         "value": "{\"1\":\"Push\",\"3\":\"Pull\",\"5\":\"Legs\"}"
-      },
-      {
-        "key": "lastSeenVersion",
-        "value": "0.1.0"
       }
     ],
     "theme_presets": [
@@ -221,7 +217,7 @@
       {
         "id": 5,
         "text": "Review AWS specialization module 3",
-        "priority": "not_urgent_important",
+        "priority": "important_not_urgent",
         "status": "todo",
         "due_date": "2026-08-09",
         "started_at": null,
@@ -232,7 +228,7 @@
       {
         "id": 6,
         "text": "Draft Q3 budget rework",
-        "priority": "not_urgent_important",
+        "priority": "important_not_urgent",
         "status": "in_progress",
         "due_date": "2026-08-11",
         "started_at": "2026-07-29 09:15:00",
@@ -276,7 +272,7 @@
       {
         "id": 10,
         "text": "Back up the photo archive",
-        "priority": "not_urgent_important",
+        "priority": "important_not_urgent",
         "status": "todo",
         "due_date": "2026-08-17",
         "started_at": null,
@@ -287,7 +283,7 @@
       {
         "id": 11,
         "text": "Finish the Algorithms week 2 problem set",
-        "priority": "not_urgent_important",
+        "priority": "important_not_urgent",
         "status": "completed",
         "due_date": "2026-08-03",
         "started_at": "2026-08-03 09:15:00",
@@ -309,7 +305,7 @@
       {
         "id": 13,
         "text": "Refactor the focus timer elapsed logic",
-        "priority": "not_urgent_important",
+        "priority": "important_not_urgent",
         "status": "completed",
         "due_date": "2026-07-31",
         "started_at": "2026-08-05 09:15:00",
@@ -320,7 +316,7 @@
       {
         "id": 14,
         "text": "Plan next month's training block",
-        "priority": "not_urgent_important",
+        "priority": "important_not_urgent",
         "status": "in_progress",
         "due_date": "2026-08-13",
         "started_at": "2026-08-06 09:15:00",

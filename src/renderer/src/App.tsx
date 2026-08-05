@@ -1,5 +1,6 @@
 import { Suspense, lazy, useState, type ComponentType } from "react";
 import { AppShell } from "./components/layout/AppShell";
+import { PanelErrorBoundary } from "./components/layout/PanelErrorBoundary";
 import type { PageKey } from "./components/layout/Sidebar";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { WorkoutSessionApp } from "./components/workoutSession/WorkoutSessionApp";
@@ -55,9 +56,11 @@ function AppContent() {
 
   return (
     <AppShell page={page} onNavigate={setPage}>
-      <Suspense fallback={<PanelFallback />}>
-        <Panel onNavigate={setPage} />
-      </Suspense>
+      <PanelErrorBoundary resetKey={page}>
+        <Suspense fallback={<PanelFallback />}>
+          <Panel onNavigate={setPage} />
+        </Suspense>
+      </PanelErrorBoundary>
     </AppShell>
   );
 }
