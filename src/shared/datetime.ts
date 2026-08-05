@@ -53,9 +53,19 @@ export function daysAgo(days: number, from: Date = new Date()): Date {
   return d;
 }
 
+/** Duration between two stamps. Never negative — an end before a start is 0. */
 export function secondsBetween(startIso: string, endIso: string): number {
+  return Math.max(0, signedSecondsBetween(startIso, endIso));
+}
+
+/**
+ * Signed difference, for callers that need the direction of a change rather
+ * than a duration — moving a session's start *later* is a real, negative shift
+ * and must not be clamped away.
+ */
+export function signedSecondsBetween(startIso: string, endIso: string): number {
   const start = parseStoredDateTime(startIso).getTime();
   const end = parseStoredDateTime(endIso).getTime();
   if (Number.isNaN(start) || Number.isNaN(end)) return 0;
-  return Math.max(0, Math.round((end - start) / 1000));
+  return Math.round((end - start) / 1000);
 }

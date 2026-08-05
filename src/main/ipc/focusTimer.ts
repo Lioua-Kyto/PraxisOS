@@ -2,7 +2,7 @@ import { ipcMain } from "electron";
 import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { focusSessions } from "../db/schema";
-import { daysAgo, localDateString, localDateTimeString, parseStoredDateTime, secondsBetween } from "../../shared/datetime";
+import { daysAgo, localDateString, localDateTimeString, parseStoredDateTime, secondsBetween, signedSecondsBetween } from "../../shared/datetime";
 import type {
   FocusCategoryTotal,
   FocusDayCategoryTotal,
@@ -185,7 +185,10 @@ export function registerFocusTimerHandlers(): void {
       // both running and paused: running elapsed is accumulated + time since
       // resume, so both gain exactly the backdated amount.
       if (isActive && fields.startTime && fields.startTime !== before.startTime) {
-        const shiftSeconds = secondsBetween(fields.startTime, before.startTime);
+        // Signed on purpose. Moving the start *later* is a negative shift, and
+        // clamping it to zero is what made only the first edit take effect —
+        // any correction back towards the present silently did nothing.
+        const shiftSeconds = signedSecondsBetween(fields.startTime, before.startTime);
         const row = db()
           .update(focusSessions)
           .set({ accumulatedSeconds: Math.max(0, updated.accumulatedSeconds + shiftSeconds) })

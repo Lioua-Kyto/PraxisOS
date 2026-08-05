@@ -14,6 +14,7 @@ import {
   Timer
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useActiveFocusSession } from "../../queries/focusTimer";
 import { cn } from "../../lib/utils";
 import logoUrl from "../../assets/logo.svg";
 
@@ -43,18 +44,43 @@ const NAV: Array<{ key: PageKey; label: string; icon: typeof LayoutDashboard }> 
   { key: "notes", label: "Knowledge Base", icon: NotebookText }
 ];
 
+/**
+ * Live marker on the Focus Timer link. It exists so the user can tell from any
+ * panel whether the clock is still running — a session left running by mistake
+ * is otherwise invisible until they navigate back.
+ */
+function TimerPulse({ paused }: { paused: boolean }) {
+  const label = paused ? "Focus session paused" : "Focus session running";
+  return (
+    <span className="relative flex h-2 w-2" title={label} aria-label={label} role="status">
+      {!paused && (
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-70" />
+      )}
+      <span
+        className={cn(
+          "relative inline-flex h-2 w-2 rounded-full",
+          paused ? "bg-warning" : "bg-success"
+        )}
+      />
+    </span>
+  );
+}
+
 function NavButton({
   active,
   collapsed,
   label,
   icon: Icon,
-  onClick
+  onClick,
+  badge
 }: {
   active: boolean;
   collapsed: boolean;
   label: string;
   icon: typeof LayoutDashboard;
   onClick: () => void;
+  /** Rendered after the label, or over the icon when the rail is collapsed. */
+  badge?: React.ReactNode;
 }) {
   return (
     <button
@@ -75,8 +101,16 @@ function NavButton({
           transition={{ type: "spring", stiffness: 500, damping: 40 }}
         />
       )}
-      <Icon className={cn("h-[17px] w-[17px] shrink-0 opacity-80", active && "text-primary opacity-100")} />
-      {!collapsed && <span className="truncate">{label}</span>}
+      <span className="relative shrink-0">
+        <Icon className={cn("h-[17px] w-[17px] opacity-80", active && "text-primary opacity-100")} />
+        {collapsed && badge && <span className="absolute -right-1 -top-1">{badge}</span>}
+      </span>
+      {!collapsed && (
+        <>
+          <span className="truncate">{label}</span>
+          {badge && <span className="ml-auto flex shrink-0 items-center">{badge}</span>}
+        </>
+      )}
     </button>
   );
 }
@@ -92,6 +126,9 @@ export function Sidebar({
   collapsed: boolean;
   onToggleCollapsed: () => void;
 }) {
+  const { data: active } = useActiveFocusSession();
+  const timerState = active?.status === "running" || active?.status === "paused" ? active.status : null;
+
   return (
     <div
       className={cn(
@@ -126,6 +163,7 @@ export function Sidebar({
           label={item.label}
           icon={item.icon}
           onClick={() => onNavigate(item.key)}
+          badge={item.key === "timer" && timerState ? <TimerPulse paused={timerState === "paused"} /> : undefined}
         />
       ))}
 
