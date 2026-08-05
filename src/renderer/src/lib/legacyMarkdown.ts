@@ -26,10 +26,11 @@ function inline(text: string): string {
       .replace(/&lt;span style="color:([^"]+)"&gt;(.*?)&lt;\/span&gt;/g, '<span style="color:$1">$2</span>')
       .replace(/&lt;mark&gt;(.*?)&lt;\/mark&gt;/g, "<mark>$1</mark>")
       .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_m, alt: string, src: string) => {
+        // Rotation was recorded in the legacy alt text but images no longer
+        // rotate, so it's read and dropped rather than carried forward.
         const meta = parseImageAlt(alt);
         const width = meta.width ? ` width="${meta.width}"` : "";
-        const rotation = meta.rotation ? ` data-rotation="${meta.rotation}"` : "";
-        return `<img src="${src}" alt="${escapeHtml(meta.label)}"${width}${rotation}>`;
+        return `<img src="${src}" alt="${escapeHtml(meta.label)}"${width}>`;
       })
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
       .replace(/`([^`]+)`/g, "<code>$1</code>")
