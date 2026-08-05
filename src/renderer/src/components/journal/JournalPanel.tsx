@@ -54,6 +54,7 @@ function JournalForDate({ date }: { date: string }) {
               onChange={setMorning}
               onBlur={() => save.mutate({ morningIntentions: morning })}
               placeholder="What matters today? What does a good version of today look like?"
+              enableFormatting
             />
           </CardContent>
         </Card>
@@ -65,6 +66,7 @@ function JournalForDate({ date }: { date: string }) {
               onChange={setEvening}
               onBlur={() => save.mutate({ eveningReflection: evening })}
               placeholder="What actually happened? What would you change?"
+              enableFormatting
             />
           </CardContent>
         </Card>
