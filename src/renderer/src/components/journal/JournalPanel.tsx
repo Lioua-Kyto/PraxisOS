@@ -4,7 +4,7 @@ import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import { MarkdownEditor } from "../ui/markdown-editor";
+import { RichEditor } from "../ui/rich-editor";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Trash2 } from "lucide-react";
@@ -49,24 +49,22 @@ function JournalForDate({ date }: { date: string }) {
         <Card>
           <CardContent className="pt-5">
             <h3 className="mb-3 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Morning intentions</h3>
-            <MarkdownEditor
+            <RichEditor
               value={morning}
               onChange={setMorning}
               onBlur={() => save.mutate({ morningIntentions: morning })}
               placeholder="What matters today? What does a good version of today look like?"
-              enableFormatting
             />
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-5">
             <h3 className="mb-3 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Evening reflection</h3>
-            <MarkdownEditor
+            <RichEditor
               value={evening}
               onChange={setEvening}
               onBlur={() => save.mutate({ eveningReflection: evening })}
               placeholder="What actually happened? What would you change?"
-              enableFormatting
             />
           </CardContent>
         </Card>

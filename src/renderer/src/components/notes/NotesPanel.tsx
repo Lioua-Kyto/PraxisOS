@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { toPlainPreview } from "../../lib/legacyMarkdown";
 import { Plus, Search } from "lucide-react";
 import { PageHeader } from "../layout/PageHeader";
 import { Card, CardContent } from "../ui/card";
@@ -77,7 +78,7 @@ export function NotesPanel() {
           <Card key={n.id} className="cursor-pointer transition-colors hover:border-primary/50" onClick={() => setSelectedId(n.id)}>
             <CardContent className="pt-5">
               <div className="mb-1.5 truncate font-display text-base">{n.title || "Untitled note"}</div>
-              <div className="mb-2 line-clamp-3 text-xs text-muted-foreground">{n.content || "No content yet."}</div>
+              <div className="mb-2 line-clamp-3 text-xs text-muted-foreground">{toPlainPreview(n.content) || "No content yet."}</div>
               <div className="flex flex-wrap gap-1">
                 {n.tags.map((t) => (
                   <Badge key={t} variant="secondary">

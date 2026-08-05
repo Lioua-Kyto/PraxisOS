@@ -47,6 +47,9 @@ export default defineConfig({
             // so splitting it only adds a request.
             charts: ["recharts"],
             markdown: ["react-markdown", "remark-gfm"],
+            // @tiptap/pm has no root export (subpaths only), so it can't be
+            // named here — it rides along with the packages that import it.
+            editor: ["@tiptap/react", "@tiptap/starter-kit"],
             motion: ["framer-motion"]
           }
         }

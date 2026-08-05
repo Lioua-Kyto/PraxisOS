@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Badge } from "../ui/badge";
-import { MarkdownEditor } from "../ui/markdown-editor";
+import { RichEditor } from "../ui/rich-editor";
 import { useRemoveNote, useUpdateNote } from "../../queries/notes";
 import type { Note } from "@shared/types";
 
@@ -92,18 +92,13 @@ export function NoteEditor({ note, onBack }: { note: Note; onBack: () => void })
         </div>
       </div>
 
-      <MarkdownEditor
+      <RichEditor
         value={content}
         onChange={setContent}
         onBlur={() => save({ content })}
-        onCommit={(next) => {
-          setContent(next);
-          save({ content: next });
-        }}
-        placeholder="Write in markdown — links, snippets, code blocks… paste or drop images straight in."
+        placeholder="Write freely — format as you go, paste or drop images straight in."
         minHeight={360}
         enableImages
-        enableFormatting
       />
     </div>
   );
