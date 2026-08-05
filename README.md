@@ -1,6 +1,6 @@
 # PraxisOS
 
-A local-first personal command center (Electron + React + TypeScript + SQLite) bundling: an Overview dashboard, Tasks (Kanban), Habit Matrix, Courses roadmap, Workout tracker, Nutrition & Hydration, a background-persistent Focus Timer, Budget, Daily Log and a Knowledge Base.
+A local-first personal command center (Electron + React + TypeScript + SQLite) bundling: a dashboard, Kanban tasks, habit tracking, a learning roadmap, a workout tracker, nutrition & hydration, a background-persistent focus timer, a budget ledger, a daily journal and a searchable notes codex.
 
 All data is stored locally in a SQLite database under your OS's app-data folder (`app.getPath('userData')/praxisos.sqlite3`) — nothing leaves your machine.
 
@@ -12,6 +12,7 @@ All data is stored locally in a SQLite database under your OS's app-data folder 
 - [Terms of Use](TERMS.md) — licence, early-access warning, and the limits of liability.
 - [End User Licence Agreement](build/license.txt) — shown by the installer; you must accept it before installation proceeds.
 - [Changelog](CHANGELOG.md) — what changed in each release.
+- [Releasing](docs/RELEASING.md) — how a new version is published.
 
 ## Stack
 
@@ -55,16 +56,16 @@ This writes a new `.sql` file to `drizzle/`. The app applies pending migrations 
 
 ## What's inside
 
-- **Overview** — clickable counters that deep-link into each panel, today's agenda, a 14-day consistency strip, hydration/calorie rings, and a weekly focus-hours chart.
+- **Nexus** (Overview) — clickable counters that deep-link into each panel, today's agenda, a 14-day consistency strip, hydration/calorie rings, and a weekly focus-hours chart.
 - **Tasks** — a Kanban board (To Do / In Progress / Completed) with animated drag-and-drop; each card carries an Eisenhower-quadrant priority badge and start/finish stamps.
-- **Habit Matrix** — daily, weekly or custom cadences with streaks. Any past day can be checked in, so training outside or at a gym still counts.
-- **Courses** — your Coursera roadmap, grouped by phase. Fully editable.
+- **Discipline** (Habits) — daily, weekly or custom cadences with streaks. Any past day can be checked in, so training outside or at a gym still counts.
+- **Mastery** (Courses) — the courses and certifications you are working through, grouped into phases.
 - **Workout** — a 3-day Push/Pull/Legs routine. Log sets, merge exercises into supersets, attach a form-check video *or* a reference photo, and see a 14-day volume sparkline. A guided session walks preview → work → rest per set.
 - **Nutrition** — log meals against daily calorie, protein and carbohydrate goals, with hydration quick-add and a weekly macro trend chart.
-- **Focus Timer** — clock in/out, pause/resume, correct a running session's times after the fact. The active session lives in SQLite, not component state, so switching tabs never resets or duplicates it. It can be popped out into a pinned mini window.
-- **Budget** — income/expense/transfer/debt transactions with editable entries and a spend-by-category chart.
-- **Daily Log** — morning intentions, evening reflection and a brain-dump list.
-- **Knowledge Base** — rich text notes with images, backed by SQLite full-text search.
+- **Flow** (Focus Timer) — clock in/out, pause/resume, correct a running session's times after the fact. The active session lives in SQLite, not component state, so switching tabs never resets or duplicates it. It can be popped out into a pinned mini window.
+- **Ledger** (Budget) — income/expense/transfer/debt transactions with editable entries and a spend-by-category chart.
+- **Journal** — morning intentions, evening reflection and a brain-dump list.
+- **Codex** (Knowledge Base) — rich text notes with images, backed by SQLite full-text search.
 - **Settings** — eight themes plus custom presets, app-wide typography, daily goals, backup/restore, and an About section with version and legal documents.
 
 ## Documentation

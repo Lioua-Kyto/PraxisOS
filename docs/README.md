@@ -5,6 +5,7 @@
 | [Architecture.md](Architecture.md) | Process model, the layers a feature crosses, media handling, theming, why there is no migration tool |
 | [ERD.md](ERD.md) | Every table, the three foreign keys, and the reasoning behind the less obvious columns |
 | [UseCases.md](UseCases.md) | What the app is for, walked through one flow at a time, with the rules each flow enforces |
+| [RELEASING.md](RELEASING.md) | Publishing a new version: one-time GitHub setup, the four commands, and what to do when a build fails |
 | [Flowcharts.md](Flowcharts.md) | Diagrams for the non-obvious flows: startup, focus session lifecycle, the workout engine, theme resolution, backup/restore, search indexing |
 
 ## Getting oriented in the code
