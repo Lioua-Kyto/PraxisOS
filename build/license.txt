@@ -1,0 +1,120 @@
+PraxisOS - End User License Agreement
+
+Publisher: Lioua-Kyto
+Contact: liwaazeddam@gmail.com
+Version 1.0 - Effective 5 August 2026
+
+IMPORTANT - READ CAREFULLY. By selecting "I Agree" and installing PraxisOS
+("the Software"), you accept this Agreement. If you do not accept it, select
+"Cancel" and do not install the Software.
+
+
+1. LICENCE GRANT
+
+The publisher grants you a personal, worldwide, royalty-free, non-exclusive,
+revocable licence to install and use the Software on any number of devices you
+own or control, for personal or commercial purposes.
+
+
+2. RESTRICTIONS
+
+You may not:
+  (a) redistribute the Software as your own work, or under branding suggesting
+      that it is;
+  (b) remove, obscure or alter any copyright, licence or attribution notice;
+  (c) use the Software to store or process material that is unlawful where you
+      are located;
+  (d) represent that the publisher endorses you, your organisation, or any
+      product or output produced with the Software.
+
+
+3. EARLY ACCESS SOFTWARE
+
+The Software is early-access, pre-1.0 software. Features may change or be
+removed between releases, edge-case defects are expected, and the storage
+format may change in ways requiring migration on update.
+
+DO NOT USE THE SOFTWARE AS THE SOLE RECORD OF ANY INFORMATION YOU CANNOT
+AFFORD TO LOSE. Export a backup regularly (Settings > Export backup) and
+verify that it restores.
+
+
+4. YOUR DATA
+
+The Software is local-first. All data you create is stored on your own device
+and is never transmitted to the publisher. The publisher has no access to it
+and cannot recover it for you. You are solely responsible for backing up your
+data and for securing the device it is stored on.
+
+The Software checks GitHub for new releases on launch. That request contains
+no personal data and no content from your database. Full details are in the
+Privacy Policy accompanying the Software.
+
+
+5. NOT PROFESSIONAL ADVICE
+
+The Software records information about training, food, hydration, money and
+personal reflection. It is a logbook, not an advisor.
+
+IT IS NOT A MEDICAL DEVICE and provides no medical, nutritional, dietary or
+fitness advice, diagnosis or treatment. Consult a qualified professional
+before changing your diet or training, particularly if you have a medical
+condition, are pregnant, or take medication. The Software provides no
+financial advice.
+
+Default content shipped with the Software - sample exercises, seed foods,
+example categories, suggested courses - is illustrative only, and nutritional
+figures are approximations that must not be relied on for medical or dietary
+purposes.
+
+
+6. NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, ACCURACY AND
+NON-INFRINGEMENT. THE PUBLISHER DOES NOT WARRANT THAT THE SOFTWARE WILL BE
+UNINTERRUPTED, ERROR-FREE OR SECURE, OR THAT DEFECTS WILL BE CORRECTED.
+
+
+7. LIMITATION OF LIABILITY
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE PUBLISHER SHALL NOT BE
+LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY OR
+PUNITIVE DAMAGES, OR FOR ANY LOSS OF DATA, PROFITS, REVENUE, GOODWILL OR
+BUSINESS OPPORTUNITY, OR FOR ANY PERSONAL INJURY OR HEALTH OUTCOME, ARISING
+OUT OF OR RELATED TO THE SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGES.
+
+THE PUBLISHER'S TOTAL AGGREGATE LIABILITY SHALL NOT EXCEED THE GREATER OF
+(A) THE AMOUNT YOU ACTUALLY PAID FOR THE SOFTWARE, OR (B) TEN EURO (EUR 10).
+
+Because the Software is provided free of charge, these limitations are a
+fundamental part of this Agreement.
+
+
+8. STATUTORY RIGHTS
+
+Nothing in this Agreement excludes or limits any liability that cannot
+lawfully be excluded, including liability for death or personal injury caused
+by negligence, or for fraud. If you are a consumer, you may hold statutory
+rights that this Agreement cannot override; sections 6 and 7 apply only so far
+as the law allows.
+
+
+9. TERMINATION
+
+This licence ends automatically if you breach this Agreement. You may end it
+at any time by uninstalling the Software. Sections 4 and 6 to 10 survive
+termination.
+
+
+10. ENTIRE AGREEMENT
+
+This Agreement, together with the Privacy Policy and the source licence
+published in the project repository, is the entire agreement between you and
+the publisher regarding the Software. If any provision is held unenforceable,
+it is limited to the minimum extent necessary and the rest remains in force.
+
+
+Questions: liwaazeddam@gmail.com

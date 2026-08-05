@@ -11,6 +11,7 @@ import { Switch } from "../ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { ThemePicker } from "./ThemePicker";
 import { WorkoutScheduleEditor } from "./WorkoutScheduleEditor";
+import { AboutSection } from "./AboutSection";
 import { useSettings, useUpdateSettings } from "../../queries/settings";
 import { FOCUS_CATEGORIES } from "../timer/focusCategories";
 import { useExportBackup, useImportBackup } from "../../queries/backup";
@@ -288,6 +289,12 @@ export function SettingsPanel() {
           <div className="text-[11px] text-muted-foreground">
             All data lives locally in a SQLite database under your OS user-data folder. Nothing is sent anywhere.
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-5">
+        <CardContent className="pt-5">
+          <AboutSection />
         </CardContent>
       </Card>
 

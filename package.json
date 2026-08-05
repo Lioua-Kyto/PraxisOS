@@ -1,8 +1,8 @@
 {
   "name": "praxisos",
   "productName": "PraxisOS",
-  "version": "2.0.0",
-  "description": "PraxisOS — a local-first personal command center: tasks, courses roadmap, calisthenics tracker, nutrition & hydration, deep-work timer, and budget.",
+  "version": "0.1.0",
+  "description": "A local-first personal management desktop app.",
   "main": "./out/main/index.js",
   "author": "Lioua Zeddam",
   "private": true,
@@ -12,7 +12,10 @@
     "start": "electron-vite preview",
     "dist": "electron-vite build && electron-builder",
     "typecheck": "tsc --noEmit -p tsconfig.node.json --composite false && tsc --noEmit -p tsconfig.web.json --composite false",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "db:generate": "drizzle-kit generate",
+    "db:check": "drizzle-kit check",
+    "demo:generate": "node scripts/generate-demo-data.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -30,6 +33,15 @@
     "@radix-ui/react-toast": "^1.2.2",
     "@tailwindcss/typography": "^0.5.20",
     "@tanstack/react-query": "^5.59.20",
+    "@tiptap/extension-color": "^2.27.2",
+    "@tiptap/extension-highlight": "^2.27.2",
+    "@tiptap/extension-image": "^2.27.2",
+    "@tiptap/extension-link": "^2.27.2",
+    "@tiptap/extension-placeholder": "^2.27.2",
+    "@tiptap/extension-text-style": "^2.27.2",
+    "@tiptap/pm": "^2.27.2",
+    "@tiptap/react": "^2.27.2",
+    "@tiptap/starter-kit": "^2.27.2",
     "better-sqlite3": "12.11.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -44,6 +56,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^2.5.4",
+    "turndown": "^7.2.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -52,8 +65,10 @@
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@types/turndown": "^5.0.6",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
+    "drizzle-kit": "^0.31.10",
     "electron": "^42.8.0",
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
@@ -78,6 +93,14 @@
       {
         "from": "build/icon.png",
         "to": "icon.png"
+      },
+      {
+        "from": "drizzle",
+        "to": "drizzle"
+      },
+      {
+        "from": "CHANGELOG.md",
+        "to": "CHANGELOG.md"
       }
     ],
     "directories": {
@@ -89,7 +112,12 @@
     },
     "nsis": {
       "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico"
+      "uninstallerIcon": "build/icon.ico",
+      "license": "build/license.txt",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     },
     "mac": {
       "target": "dmg",
@@ -97,7 +125,9 @@
     },
     "linux": {
       "target": "AppImage",
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "category": "Utility"
     }
-  }
+  },
+  "license": "SEE LICENSE IN build/license.txt"
 }
