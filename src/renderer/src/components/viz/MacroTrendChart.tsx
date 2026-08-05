@@ -22,6 +22,7 @@ export function MacroTrendChart({
       label: dayLabel(date),
       calories: macros?.calories ?? 0,
       protein: macros?.protein ?? 0,
+      carbs: macros?.carbs ?? 0,
       // Litres keeps hydration on a scale comparable to protein grams on the
       // right axis, instead of millilitres dwarfing every other series.
       hydration: Number(((hydrationByDate.get(date) ?? 0) / 1000).toFixed(2))
@@ -53,13 +54,14 @@ export function MacroTrendChart({
         <Tooltip
           contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border-soft))", borderRadius: 8, fontSize: 12 }}
           formatter={(value: number, name: string) =>
-            name === "Hydration" ? [`${value} L`, name] : name === "Protein" ? [`${value} g`, name] : [`${value} kcal`, name]
+            name === "Hydration" ? [`${value} L`, name] : name === "Calories" ? [`${value} kcal`, name] : [`${value} g`, name]
           }
         />
         <Legend wrapperStyle={{ fontSize: 11 }} />
         <Bar yAxisId="right" dataKey="hydration" name="Hydration" fill="hsl(var(--primary))" opacity={0.35} radius={[2, 2, 0, 0]} />
         <Line yAxisId="left" type="monotone" dataKey="calories" name="Calories" stroke="hsl(var(--warning))" strokeWidth={2} dot={false} />
         <Line yAxisId="right" type="monotone" dataKey="protein" name="Protein" stroke="hsl(var(--success))" strokeWidth={2} dot={false} />
+        <Line yAxisId="right" type="monotone" dataKey="carbs" name="Carbs" stroke="hsl(var(--warning))" strokeWidth={2} strokeDasharray="4 3" dot={false} />
       </ComposedChart>
     </ResponsiveContainer>
   );

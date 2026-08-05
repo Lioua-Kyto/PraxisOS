@@ -10,7 +10,7 @@ import { useAddFood, useFoods, useRemoveFood } from "../../queries/foods";
 
 const CATEGORIES = ["Any", "Breakfast", "Lunch", "Dinner", "Snack"];
 
-const emptyDraft = { name: "", category: "Any", calories: "", proteinG: "", servingLabel: "" };
+const emptyDraft = { name: "", category: "Any", calories: "", proteinG: "", carbsG: "", servingLabel: "" };
 
 export function FoodLibraryDialog() {
   const { data: foods = [] } = useFoods();
@@ -33,6 +33,7 @@ export function FoodLibraryDialog() {
       category: draft.category,
       calories: Number(draft.calories || 0),
       proteinG: Number(draft.proteinG || 0),
+      carbsG: Number(draft.carbsG || 0),
       servingLabel: draft.servingLabel.trim() || "1 serving"
     });
     setDraft({ ...emptyDraft, category: draft.category });
@@ -53,7 +54,7 @@ export function FoodLibraryDialog() {
           <DialogTitle>Food library</DialogTitle>
         </DialogHeader>
 
-        <form className="grid grid-cols-2 gap-3 rounded-md border border-border-soft bg-sunken p-3 md:grid-cols-6" onSubmit={submit}>
+        <form className="grid grid-cols-2 gap-3 rounded-md border border-border-soft bg-sunken p-3 md:grid-cols-7" onSubmit={submit}>
           <div className="col-span-2 flex flex-col gap-1.5">
             <Label>Name</Label>
             <Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="Greek yogurt" />
@@ -82,11 +83,15 @@ export function FoodLibraryDialog() {
             <Input type="number" value={draft.proteinG} onChange={(e) => setDraft({ ...draft, proteinG: e.target.value })} />
           </div>
           <div className="flex flex-col gap-1.5">
+            <Label>Carbs g</Label>
+            <Input type="number" value={draft.carbsG} onChange={(e) => setDraft({ ...draft, carbsG: e.target.value })} />
+          </div>
+          <div className="flex flex-col gap-1.5">
             <Label>Serving</Label>
             <Input value={draft.servingLabel} onChange={(e) => setDraft({ ...draft, servingLabel: e.target.value })} placeholder="170g" />
           </div>
-          {error && <span className="col-span-2 text-[11px] text-destructive md:col-span-6">{error}</span>}
-          <Button type="submit" className="col-span-2 md:col-span-6" disabled={addFood.isPending}>
+          {error && <span className="col-span-2 text-[11px] text-destructive md:col-span-7">{error}</span>}
+          <Button type="submit" className="col-span-2 md:col-span-7" disabled={addFood.isPending}>
             <Plus className="h-3.5 w-3.5" /> Add to library
           </Button>
         </form>
@@ -104,6 +109,7 @@ export function FoodLibraryDialog() {
                 <th className="sticky top-0 border-b border-border-soft bg-card pb-2">Meal</th>
                 <th className="sticky top-0 border-b border-border-soft bg-card pb-2">Cal</th>
                 <th className="sticky top-0 border-b border-border-soft bg-card pb-2">Protein</th>
+                <th className="sticky top-0 border-b border-border-soft bg-card pb-2">Carbs</th>
                 <th className="sticky top-0 border-b border-border-soft bg-card pb-2" />
               </tr>
             </thead>
@@ -119,6 +125,7 @@ export function FoodLibraryDialog() {
                   </td>
                   <td className="tabular py-2">{f.calories}</td>
                   <td className="tabular py-2">{f.proteinG}g</td>
+                  <td className="tabular py-2">{f.carbsG}g</td>
                   <td className="py-2 text-right">
                     <Button size="icon" variant="ghost" className="text-destructive" aria-label={`Remove ${f.name} from library`} title="Remove" onClick={() => removeFood.mutate(f.id)}>
                       <Trash2 className="h-3.5 w-3.5" />
@@ -128,7 +135,7 @@ export function FoodLibraryDialog() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-4 text-center text-muted-foreground">
+                  <td colSpan={6} className="py-4 text-center text-muted-foreground">
                     {foods.length === 0 ? "No foods yet." : "No foods match your search."}
                   </td>
                 </tr>

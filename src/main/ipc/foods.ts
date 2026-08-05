@@ -15,6 +15,7 @@ export function registerFoodHandlers(): void {
         category: input.category || "Any",
         calories: input.calories ?? 0,
         proteinG: input.proteinG ?? 0,
+        carbsG: input.carbsG ?? 0,
         servingLabel: input.servingLabel || "1 serving"
       })
       .returning()

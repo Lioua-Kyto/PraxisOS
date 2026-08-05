@@ -25,7 +25,8 @@ export function registerNutritionHandlers(): void {
         meal: entry.meal ?? "",
         food: entry.food,
         calories: entry.calories ?? 0,
-        proteinG: entry.proteinG ?? 0
+        proteinG: entry.proteinG ?? 0,
+        carbsG: entry.carbsG ?? 0
       })
       .returning()
       .get()
@@ -40,7 +41,8 @@ export function registerNutritionHandlers(): void {
       .select({
         date: nutritionLogs.date,
         calories: sql<number>`SUM(${nutritionLogs.calories})`,
-        protein: sql<number>`SUM(${nutritionLogs.proteinG})`
+        protein: sql<number>`SUM(${nutritionLogs.proteinG})`,
+        carbs: sql<number>`SUM(${nutritionLogs.carbsG})`
       })
       .from(nutritionLogs)
       .where(gte(nutritionLogs.date, sql`date('now','-6 days')`))

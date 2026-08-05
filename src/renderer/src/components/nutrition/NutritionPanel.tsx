@@ -28,19 +28,21 @@ export function NutritionPanel() {
   const addEntry = useAddNutrition();
   const removeEntry = useRemoveNutrition();
 
-  const [form, setForm] = useState({ meal: "Breakfast", food: "", calories: "", proteinG: "" });
+  const [form, setForm] = useState({ meal: "Breakfast", food: "", calories: "", proteinG: "", carbsG: "" });
 
   const goal = settings?.calorieGoal ?? 2400;
   const proteinGoal = settings?.proteinGoal ?? 150;
   const totalCalories = entries.reduce((a, e) => a + e.calories, 0);
   const totalProtein = entries.reduce((a, e) => a + (e.proteinG || 0), 0);
+  const totalCarbs = entries.reduce((a, e) => a + (e.carbsG || 0), 0);
+  const carbsGoal = settings?.carbsGoal ?? 250;
   const pct = Math.min(100, Math.round((totalCalories / goal) * 100));
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.food.trim() || !form.calories) return;
-    addEntry.mutate({ meal: form.meal, food: form.food, calories: Number(form.calories), proteinG: Number(form.proteinG || 0) });
-    setForm((f) => ({ ...f, food: "", calories: "", proteinG: "" }));
+    addEntry.mutate({ meal: form.meal, food: form.food, calories: Number(form.calories), proteinG: Number(form.proteinG || 0), carbsG: Number(form.carbsG || 0) });
+    setForm((f) => ({ ...f, food: "", calories: "", proteinG: "", carbsG: "" }));
   };
 
   return (
@@ -55,14 +57,28 @@ export function NutritionPanel() {
               {totalCalories} <span className="text-sm text-muted-foreground">/ {goal}</span>
             </div>
             <Progress value={pct} className="mt-2" />
-            <div className="mt-3 text-xs text-muted-foreground">
-              {totalProtein.toFixed(0)}g / {proteinGoal}g protein today
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-muted-foreground">
+                  Protein {totalProtein.toFixed(0)}g / {proteinGoal}g
+                </div>
+                <Progress
+                  value={Math.min(100, Math.round((totalProtein / proteinGoal) * 100))}
+                  className="mt-1.5"
+                  indicatorClassName="bg-success"
+                />
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">
+                  Carbs {totalCarbs.toFixed(0)}g / {carbsGoal}g
+                </div>
+                <Progress
+                  value={Math.min(100, Math.round((totalCarbs / carbsGoal) * 100))}
+                  className="mt-1.5"
+                  indicatorClassName="bg-warning"
+                />
+              </div>
             </div>
-            <Progress
-              value={Math.min(100, Math.round((totalProtein / proteinGoal) * 100))}
-              className="mt-1.5"
-              indicatorClassName="bg-success"
-            />
           </CardContent>
         </Card>
         <Card>
@@ -74,7 +90,7 @@ export function NutritionPanel() {
 
       <Card className="mb-5">
         <CardContent className="pt-5">
-          <h3 className="mb-3 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Calories, protein & hydration this week</h3>
+          <h3 className="mb-3 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Macros & hydration this week</h3>
           <MacroTrendChart data={weekly} hydration={hydrationWeekly} />
         </CardContent>
       </Card>
@@ -100,12 +116,13 @@ export function NutritionPanel() {
               meal={form.meal}
               onChange={(food) => setForm({ ...form, food })}
               onPick={(food) =>
-                setForm({ ...form, food: food.name, calories: String(food.calories), proteinG: String(food.proteinG) })
+                setForm({ ...form, food: food.name, calories: String(food.calories), proteinG: String(food.proteinG), carbsG: String(food.carbsG ?? 0) })
               }
               className="min-w-40 flex-1"
             />
             <Input type="number" placeholder="Calories" value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} className="w-28" />
             <Input type="number" placeholder="Protein g" value={form.proteinG} onChange={(e) => setForm({ ...form, proteinG: e.target.value })} className="w-24" />
+            <Input type="number" placeholder="Carbs g" value={form.carbsG} onChange={(e) => setForm({ ...form, carbsG: e.target.value })} className="w-24" />
             <Button type="submit">Add</Button>
           </form>
         </CardContent>
@@ -122,6 +139,7 @@ export function NutritionPanel() {
                 <th className="border-b border-border-soft pb-2">Food</th>
                 <th className="border-b border-border-soft pb-2">Cal</th>
                 <th className="border-b border-border-soft pb-2">Protein</th>
+                <th className="border-b border-border-soft pb-2">Carbs</th>
                 <th className="border-b border-border-soft pb-2" />
               </tr>
             </thead>
@@ -133,6 +151,7 @@ export function NutritionPanel() {
                   <td className="py-2">{e.food}</td>
                   <td className="py-2">{e.calories}</td>
                   <td className="py-2">{e.proteinG || 0}g</td>
+                  <td className="py-2">{e.carbsG || 0}g</td>
                   <td className="py-2">
                     <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeEntry.mutate(e.id)}>
                       ✕
@@ -142,7 +161,7 @@ export function NutritionPanel() {
               ))}
               {entries.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-4 text-center text-muted-foreground">
+                  <td colSpan={7} className="py-4 text-center text-muted-foreground">
                     Nothing logged yet today.
                   </td>
                 </tr>

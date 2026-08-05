@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { AppDb } from "./client";
 import { budgetCategories, courses, foods, habits, settings, workoutExercises } from "./schema";
 
@@ -84,41 +84,41 @@ const BUDGET_CATEGORY_SEED: Array<{ name: string; type: "expense" | "income" | "
 
 // Rough per-serving values — a practical starting list the user can edit or
 // extend from the Nutrition panel's food-library modal.
-const FOOD_SEED: Array<[string, string, number, number, string]> = [
-  ["Oatmeal", "Breakfast", 150, 5, "1 cup cooked"],
-  ["Scrambled Eggs", "Breakfast", 180, 13, "2 eggs"],
-  ["Greek Yogurt", "Breakfast", 130, 17, "170g"],
-  ["Banana", "Breakfast", 105, 1, "1 medium"],
-  ["Whole Wheat Toast", "Breakfast", 80, 4, "1 slice"],
-  ["Peanut Butter", "Breakfast", 190, 8, "2 tbsp"],
-  ["Protein Shake", "Breakfast", 160, 30, "1 scoop + water"],
-  ["Orange Juice", "Breakfast", 110, 2, "1 cup"],
-  ["Grilled Chicken Breast", "Lunch", 165, 31, "100g"],
-  ["Brown Rice", "Lunch", 215, 5, "1 cup cooked"],
-  ["Tuna Salad", "Lunch", 190, 20, "1 bowl"],
-  ["Turkey Sandwich", "Lunch", 320, 22, "1 sandwich"],
-  ["Lentil Soup", "Lunch", 180, 12, "1 bowl"],
-  ["Caesar Salad", "Lunch", 250, 10, "1 bowl"],
-  ["Couscous", "Lunch", 175, 6, "1 cup cooked"],
-  ["Salmon Fillet", "Dinner", 230, 25, "120g"],
-  ["Beef Steak", "Dinner", 270, 26, "120g"],
-  ["Pasta Bolognese", "Dinner", 400, 20, "1 plate"],
-  ["Roast Vegetables", "Dinner", 120, 3, "1 cup"],
-  ["Baked Potato", "Dinner", 160, 4, "1 medium"],
-  ["Chicken Tagine", "Dinner", 350, 28, "1 plate"],
-  ["Quinoa Bowl", "Dinner", 280, 11, "1 bowl"],
-  ["Almonds", "Snack", 160, 6, "28g"],
-  ["Apple", "Snack", 95, 0, "1 medium"],
-  ["Protein Bar", "Snack", 200, 20, "1 bar"],
-  ["Cottage Cheese", "Snack", 110, 12, "100g"],
-  ["Dark Chocolate", "Snack", 170, 2, "30g"],
-  ["Hummus & Carrots", "Snack", 150, 5, "1 serving"],
-  ["Mixed Nuts", "Snack", 175, 5, "30g"],
-  ["Boiled Egg", "Any", 78, 6, "1 egg"],
-  ["Olive Oil", "Any", 120, 0, "1 tbsp"],
-  ["Avocado", "Any", 240, 3, "1 medium"],
-  ["Milk", "Any", 105, 8, "1 cup"],
-  ["Honey", "Any", 64, 0, "1 tbsp"]
+const FOOD_SEED: Array<[string, string, number, number, number, string]> = [
+  ["Oatmeal", "Breakfast", 150, 5, 27, "1 cup cooked"],
+  ["Scrambled Eggs", "Breakfast", 180, 13, 2, "2 eggs"],
+  ["Greek Yogurt", "Breakfast", 130, 17, 6, "170g"],
+  ["Banana", "Breakfast", 105, 1, 27, "1 medium"],
+  ["Whole Wheat Toast", "Breakfast", 80, 4, 14, "1 slice"],
+  ["Peanut Butter", "Breakfast", 190, 8, 6, "2 tbsp"],
+  ["Protein Shake", "Breakfast", 160, 30, 4, "1 scoop + water"],
+  ["Orange Juice", "Breakfast", 110, 2, 26, "1 cup"],
+  ["Grilled Chicken Breast", "Lunch", 165, 31, 0, "100g"],
+  ["Brown Rice", "Lunch", 215, 5, 45, "1 cup cooked"],
+  ["Tuna Salad", "Lunch", 190, 20, 8, "1 bowl"],
+  ["Turkey Sandwich", "Lunch", 320, 22, 38, "1 sandwich"],
+  ["Lentil Soup", "Lunch", 180, 12, 30, "1 bowl"],
+  ["Caesar Salad", "Lunch", 250, 10, 12, "1 bowl"],
+  ["Couscous", "Lunch", 175, 6, 36, "1 cup cooked"],
+  ["Salmon Fillet", "Dinner", 230, 25, 0, "120g"],
+  ["Beef Steak", "Dinner", 270, 26, 0, "120g"],
+  ["Pasta Bolognese", "Dinner", 400, 20, 55, "1 plate"],
+  ["Roast Vegetables", "Dinner", 120, 3, 18, "1 cup"],
+  ["Baked Potato", "Dinner", 160, 4, 37, "1 medium"],
+  ["Chicken Tagine", "Dinner", 350, 28, 30, "1 plate"],
+  ["Quinoa Bowl", "Dinner", 280, 11, 39, "1 bowl"],
+  ["Almonds", "Snack", 160, 6, 6, "28g"],
+  ["Apple", "Snack", 95, 0, 25, "1 medium"],
+  ["Protein Bar", "Snack", 200, 20, 22, "1 bar"],
+  ["Cottage Cheese", "Snack", 110, 12, 4, "100g"],
+  ["Dark Chocolate", "Snack", 170, 2, 13, "30g"],
+  ["Hummus & Carrots", "Snack", 150, 5, 18, "1 serving"],
+  ["Mixed Nuts", "Snack", 175, 5, 6, "30g"],
+  ["Boiled Egg", "Any", 78, 6, 1, "1 egg"],
+  ["Olive Oil", "Any", 120, 0, 0, "1 tbsp"],
+  ["Avocado", "Any", 240, 3, 13, "1 medium"],
+  ["Milk", "Any", 105, 8, 12, "1 cup"],
+  ["Honey", "Any", 64, 0, 17, "1 tbsp"]
 ];
 
 const DEFAULT_SETTINGS: Record<string, string> = {
@@ -126,6 +126,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   font: "sans",
   waterGoalMl: "2500",
   calorieGoal: "2400",
+  carbsGoal: "250",
   proteinGoal: "150",
   dailyBudgetLimit: "60",
   weekStartsOn: "1",
@@ -177,9 +178,39 @@ export function topUpBudgetCategories(dbi: AppDb) {
   }
 }
 
+/** "Other …" is a catch-all, so it sorts last rather than alphabetically mid-list. */
+export function isCatchAllCategory(name: string): boolean {
+  return /^other\b/i.test(name);
+}
+
 export function seedFoods(dbi: AppDb) {
-  for (const [name, category, calories, proteinG, servingLabel] of FOOD_SEED) {
-    dbi.insert(foods).values({ name, category, calories, proteinG, servingLabel }).run();
+  for (const [name, category, calories, proteinG, carbsG, servingLabel] of FOOD_SEED) {
+    dbi.insert(foods).values({ name, category, calories, proteinG, carbsG, servingLabel }).run();
+  }
+}
+
+/**
+ * Backfills carbs on library foods that predate the column. The ALTER gives
+ * every existing row a 0 default, and the library is only seeded when empty, so
+ * without this an existing install would show 0 g of carbs for every stock food
+ * forever. Only stock foods still sitting at 0 are touched — a food the user
+ * edited, or added themselves, is left alone.
+ */
+export function backfillFoodCarbs(dbi: AppDb): void {
+  const zeroed = new Set(
+    dbi
+      .select({ name: foods.name })
+      .from(foods)
+      .where(eq(foods.carbsG, 0))
+      .all()
+      .map((f) => f.name)
+  );
+  if (!zeroed.size) return;
+
+  for (const [name, , , , carbsG] of FOOD_SEED) {
+    if (carbsG > 0 && zeroed.has(name)) {
+      dbi.update(foods).set({ carbsG }).where(and(eq(foods.name, name), eq(foods.carbsG, 0))).run();
+    }
   }
 }
 
@@ -188,6 +219,7 @@ export function seedIfEmpty(dbi: AppDb): void {
   if (dbi.select().from(workoutExercises).all().length === 0) seedWorkoutExercises(dbi);
   topUpBudgetCategories(dbi);
   if (dbi.select().from(foods).all().length === 0) seedFoods(dbi);
+  else backfillFoodCarbs(dbi);
   if (dbi.select().from(habits).all().length === 0) {
     dbi
       .insert(habits)

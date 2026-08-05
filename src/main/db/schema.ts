@@ -22,6 +22,7 @@ export const foods = sqliteTable("foods", {
   category: text("category").notNull().default("Any"),
   calories: real("calories").notNull().default(0),
   proteinG: real("protein_g").notNull().default(0),
+  carbsG: real("carbs_g").notNull().default(0),
   servingLabel: text("serving_label").notNull().default("1 serving"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`)
 });
@@ -74,6 +75,7 @@ export const nutritionLogs = sqliteTable("nutrition_logs", {
   food: text("food").notNull(),
   calories: real("calories").notNull().default(0),
   proteinG: real("protein_g").notNull().default(0),
+  carbsG: real("carbs_g").notNull().default(0),
   time: text("time").notNull().default(sql`(time('now'))`)
 });
 
@@ -121,8 +123,10 @@ export const themePresets = sqliteTable("theme_presets", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   baseTheme: text("base_theme").notNull().default("dark"),
-  background: text("background").notNull(),
+  /** Null means "inherit the base theme" — the common case is changing only the accent. */
+  background: text("background"),
   accent: text("accent").notNull(),
+  foreground: text("foreground"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`)
 });
 
