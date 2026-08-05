@@ -1,11 +1,39 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Eye, ImagePlus, Loader2, Pencil, RotateCw, Trash2 } from "lucide-react";
+import rehypeRaw from "rehype-raw";
+import {
+  Bold,
+  Code,
+  Eye,
+  Heading2,
+  Highlighter,
+  ImagePlus,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
+  Loader2,
+  Palette,
+  Pencil,
+  Quote,
+  RotateCw,
+  Strikethrough,
+  Trash2
+} from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Textarea } from "./textarea";
 import { Button } from "./button";
-import { toFileUrl } from "../../lib/fileUrl";
+import { toMediaUrl } from "../../lib/fileUrl";
+import {
+  applyColor,
+  applyHighlight,
+  insertLink,
+  togglePrefix,
+  toggleWrap,
+  type FormatResult,
+  type Selection
+} from "../../lib/markdownFormat";
 import {
   buildImageMarkdown,
   fileToDataUrl,
@@ -14,6 +42,9 @@ import {
   removeImage,
   replaceImageMeta
 } from "../../lib/noteImages";
+
+const TEXT_COLORS = ["#e5484d", "#f5a524", "#30a46c", "#0091ff", "#8e4ec6", "#687076"];
+const HIGHLIGHTS = ["#fef08a", "#bbf7d0", "#bfdbfe", "#fbcfe8", "#e9d5ff"];
 
 function EditableImage({
   src,
@@ -43,7 +74,9 @@ function EditableImage({
         style={quarterTurned && meta.width ? { paddingBlock: meta.width * 0.5 } : undefined}
       >
         <img
-          src={src}
+          // Legacy notes stored raw file:// URLs; normalise everything through
+          // the media scheme so old and new content both load.
+          src={toMediaUrl(src)}
           alt={meta.label}
           onClick={() => editable && setSelected((s) => !s)}
           className={cn("block max-w-full", editable && "cursor-pointer")}
@@ -65,6 +98,7 @@ function EditableImage({
             value={meta.width ?? 480}
             onChange={(e) => onChange?.(Number(e.target.value), meta.rotation)}
             className="h-1 w-40 cursor-pointer"
+            aria-label="Image width"
           />
           <span className="tabular w-12 text-[11px] text-muted-foreground">{meta.width ?? "auto"}</span>
           <Button
@@ -88,6 +122,69 @@ function EditableImage({
   );
 }
 
+function ToolbarButton({
+  label,
+  onClick,
+  children
+}: {
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      // Keeps focus (and therefore the selection) in the textarea.
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+      className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+    >
+      {children}
+    </button>
+  );
+}
+
+function SwatchMenu({
+  label,
+  icon,
+  colors,
+  onPick
+}: {
+  label: string;
+  icon: React.ReactNode;
+  colors: string[];
+  onPick: (color: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="relative">
+      <ToolbarButton label={label} onClick={() => setOpen((o) => !o)}>
+        {icon}
+      </ToolbarButton>
+      {open && (
+        <span className="absolute left-0 top-full z-50 mt-1 flex gap-1 rounded-md border border-border-soft bg-popover p-1.5 shadow-lg">
+          {colors.map((c) => (
+            <button
+              key={c}
+              type="button"
+              aria-label={`${label} ${c}`}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                onPick(c);
+                setOpen(false);
+              }}
+              className="h-5 w-5 rounded border border-black/10 transition-transform hover:scale-110"
+              style={{ background: c }}
+            />
+          ))}
+        </span>
+      )}
+    </span>
+  );
+}
+
 export function MarkdownEditor({
   value,
   onChange,
@@ -95,7 +192,8 @@ export function MarkdownEditor({
   onCommit,
   placeholder,
   minHeight = 140,
-  enableImages = false
+  enableImages = false,
+  enableFormatting = false
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -108,10 +206,37 @@ export function MarkdownEditor({
   placeholder?: string;
   minHeight?: number;
   enableImages?: boolean;
+  enableFormatting?: boolean;
 }) {
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [busy, setBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const pendingSelection = useRef<Selection | null>(null);
+
+  // Restore the selection after a formatting action so the user can keep
+  // typing over what they just wrapped.
+  useEffect(() => {
+    const sel = pendingSelection.current;
+    if (!sel || !textareaRef.current) return;
+    pendingSelection.current = null;
+    textareaRef.current.focus();
+    textareaRef.current.setSelectionRange(sel.start, sel.end);
+  }, [value]);
+
+  const commit = (next: string) => {
+    onChange(next);
+    onCommit?.(next);
+  };
+
+  const runFormat = (fn: (value: string, sel: Selection) => FormatResult) => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const sel = { start: el.selectionStart, end: el.selectionEnd };
+    const result = fn(value, sel);
+    pendingSelection.current = result.selection;
+    commit(result.value);
+  };
 
   const insertImages = async (files: File[]) => {
     if (!files.length) return;
@@ -121,18 +246,16 @@ export function MarkdownEditor({
       for (const file of files) {
         const dataUrl = await fileToDataUrl(file);
         const savedPath = await window.api.notes.saveImage(dataUrl, file.name.replace(/\.[^.]+$/, ""));
-        snippets.push(buildImageMarkdown(toFileUrl(savedPath), { label: file.name, width: 480, rotation: 0 }));
+        snippets.push(buildImageMarkdown(toMediaUrl(savedPath), { label: file.name, width: 480, rotation: 0 }));
       }
       const separator = value && !value.endsWith("\n") ? "\n\n" : "";
       commit(`${value}${separator}${snippets.join("\n\n")}\n`);
+      // Drop straight into the rendered view — otherwise the only feedback is
+      // a line of raw markdown, which reads like the paste failed.
+      setMode("preview");
     } finally {
       setBusy(false);
     }
-  };
-
-  const commit = (next: string) => {
-    onChange(next);
-    onCommit?.(next);
   };
 
   const updateImage = (src: string, width: number | null, rotation: number) => {
@@ -141,21 +264,64 @@ export function MarkdownEditor({
 
   return (
     <div className="rounded-md border border-border-soft bg-sunken">
-      <div className="flex items-center justify-between gap-1 border-b border-border-soft p-1.5">
-        <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center justify-between gap-1 border-b border-border-soft p-1.5">
+        <div className="flex flex-wrap items-center gap-0.5">
+          {enableFormatting && mode === "edit" && (
+            <>
+              <ToolbarButton label="Bold" onClick={() => runFormat((v, s) => toggleWrap(v, s, "**"))}>
+                <Bold className="h-3.5 w-3.5" />
+              </ToolbarButton>
+              <ToolbarButton label="Italic" onClick={() => runFormat((v, s) => toggleWrap(v, s, "*"))}>
+                <Italic className="h-3.5 w-3.5" />
+              </ToolbarButton>
+              <ToolbarButton label="Strikethrough" onClick={() => runFormat((v, s) => toggleWrap(v, s, "~~"))}>
+                <Strikethrough className="h-3.5 w-3.5" />
+              </ToolbarButton>
+              <ToolbarButton label="Inline code" onClick={() => runFormat((v, s) => toggleWrap(v, s, "`"))}>
+                <Code className="h-3.5 w-3.5" />
+              </ToolbarButton>
+
+              <span className="mx-1 h-4 w-px bg-border-soft" />
+
+              <ToolbarButton label="Heading" onClick={() => runFormat((v, s) => togglePrefix(v, s, "## "))}>
+                <Heading2 className="h-3.5 w-3.5" />
+              </ToolbarButton>
+              <ToolbarButton label="Bulleted list" onClick={() => runFormat((v, s) => togglePrefix(v, s, "- "))}>
+                <List className="h-3.5 w-3.5" />
+              </ToolbarButton>
+              <ToolbarButton label="Numbered list" onClick={() => runFormat((v, s) => togglePrefix(v, s, "1. "))}>
+                <ListOrdered className="h-3.5 w-3.5" />
+              </ToolbarButton>
+              <ToolbarButton label="Quote" onClick={() => runFormat((v, s) => togglePrefix(v, s, "> "))}>
+                <Quote className="h-3.5 w-3.5" />
+              </ToolbarButton>
+              <ToolbarButton label="Link" onClick={() => runFormat(insertLink)}>
+                <Link2 className="h-3.5 w-3.5" />
+              </ToolbarButton>
+
+              <span className="mx-1 h-4 w-px bg-border-soft" />
+
+              <SwatchMenu
+                label="Text colour"
+                icon={<Palette className="h-3.5 w-3.5" />}
+                colors={TEXT_COLORS}
+                onPick={(c) => runFormat((v, s) => applyColor(v, s, c))}
+              />
+              <SwatchMenu
+                label="Highlight"
+                icon={<Highlighter className="h-3.5 w-3.5" />}
+                colors={HIGHLIGHTS}
+                onPick={(c) => runFormat((v, s) => applyHighlight(v, s, c))}
+              />
+            </>
+          )}
+
           {enableImages && (
             <>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="h-6 gap-1 px-2"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={busy}
-              >
-                {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
-                <span className="text-[11px]">Image</span>
-              </Button>
+              {enableFormatting && mode === "edit" && <span className="mx-1 h-4 w-px bg-border-soft" />}
+              <ToolbarButton label="Insert image" onClick={() => fileInputRef.current?.click()}>
+                {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImagePlus className="h-3.5 w-3.5" />}
+              </ToolbarButton>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -167,10 +333,11 @@ export function MarkdownEditor({
                   e.target.value = "";
                 }}
               />
-              <span className="text-[10.5px] text-muted-foreground">or paste / drop</span>
+              <span className="ml-0.5 text-[10.5px] text-muted-foreground">or paste / drop</span>
             </>
           )}
         </div>
+
         <div className="flex items-center gap-1">
           <Button
             type="button"
@@ -178,6 +345,8 @@ export function MarkdownEditor({
             variant={mode === "edit" ? "secondary" : "ghost"}
             onClick={() => setMode("edit")}
             className="h-6 px-2"
+            aria-label="Edit markdown"
+            title="Edit"
           >
             <Pencil className="h-3 w-3" />
           </Button>
@@ -187,6 +356,8 @@ export function MarkdownEditor({
             variant={mode === "preview" ? "secondary" : "ghost"}
             onClick={() => setMode("preview")}
             className="h-6 px-2"
+            aria-label="Preview"
+            title="Preview"
           >
             <Eye className="h-3 w-3" />
           </Button>
@@ -195,6 +366,7 @@ export function MarkdownEditor({
 
       {mode === "edit" ? (
         <Textarea
+          ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
@@ -225,10 +397,27 @@ export function MarkdownEditor({
           style={{ minHeight }}
         />
       ) : (
-        <div className="prose prose-sm max-w-none p-3" style={{ minHeight }}>
+        <div
+          className="prose prose-sm max-w-none p-3"
+          style={{ minHeight }}
+          onPaste={
+            enableImages
+              ? (e) => {
+                  const files = imageFilesFromDataTransfer(e.clipboardData);
+                  if (files.length) {
+                    e.preventDefault();
+                    void insertImages(files);
+                  }
+                }
+              : undefined
+          }
+        >
           {value.trim() ? (
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
+              // Colour/highlight are emitted as inline HTML, which react-markdown
+              // strips without this. Content is local and user-authored.
+              rehypePlugins={[rehypeRaw]}
               components={{
                 img: ({ src, alt }) => (
                   <EditableImage

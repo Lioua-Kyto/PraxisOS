@@ -103,6 +103,7 @@ export function NoteEditor({ note, onBack }: { note: Note; onBack: () => void })
         placeholder="Write in markdown — links, snippets, code blocks… paste or drop images straight in."
         minHeight={360}
         enableImages
+        enableFormatting
       />
     </div>
   );
