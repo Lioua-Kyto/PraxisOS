@@ -47,7 +47,10 @@ export function CoursesPanel() {
 
   return (
     <div>
-      <PageHeader kicker="Coursera roadmap" title="Courses" />
+      <PageHeader
+        title="Mastery"
+        description="Track the courses and certifications you are working through, grouped into phases."
+      />
 
       <Card className="mb-5">
         <CardContent className="pt-5">

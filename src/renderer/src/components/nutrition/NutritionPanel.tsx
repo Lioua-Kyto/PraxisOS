@@ -47,7 +47,11 @@ export function NutritionPanel() {
 
   return (
     <div>
-      <PageHeader kicker="Fuel & fluids" title="Nutrition" action={<FoodLibraryDialog />} />
+      <PageHeader
+        title="Nutrition"
+        description="Log meals and water against your daily calorie, protein and carbohydrate goals."
+        action={<FoodLibraryDialog />}
+      />
 
       <div className="mb-5 grid grid-cols-2 gap-4">
         <Card>

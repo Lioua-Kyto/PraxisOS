@@ -35,7 +35,7 @@ export function NotesPanel() {
   if (selected) {
     return (
       <div>
-        <PageHeader kicker="Quick capture" title="Knowledge Base" />
+        <PageHeader title="Codex" />
         <NoteEditor key={selected.id} note={selected} onBack={() => setSelectedId(null)} />
       </div>
     );
@@ -44,8 +44,8 @@ export function NotesPanel() {
   return (
     <div>
       <PageHeader
-        kicker="Quick capture"
-        title="Knowledge Base"
+        title="Codex"
+        description="Write notes with full formatting and images. Everything here is searchable by title, content or tag."
         action={
           <Button onClick={createNote} disabled={addNote.isPending}>
             <Plus className="h-3.5 w-3.5" /> New note

@@ -25,7 +25,11 @@ export function HabitMatrixPanel() {
 
   return (
     <div>
-      <PageHeader kicker="Recurring rituals" title="Habit Matrix" action={<AddHabitDialog month={month} />} />
+      <PageHeader
+        title="Discipline"
+        description="Build habits on a daily, weekly or custom cadence, and keep the streak honest. Any past day can be checked in."
+        action={<AddHabitDialog month={month} />}
+      />
 
       <div className="mb-4 flex items-center gap-2">
         <Button variant="outline" size="icon" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Previous month">

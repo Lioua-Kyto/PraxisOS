@@ -53,8 +53,8 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: PageKey) => void 
   return (
     <div>
       <PageHeader
-        kicker={new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
-        title="Overview"
+        title="Nexus"
+        description={`Everything at a glance for ${new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}. Each counter opens the panel behind it.`}
       />
 
       {/* At-a-glance counters — the numbers you'd otherwise open four panels to find. */}

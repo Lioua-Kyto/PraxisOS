@@ -39,7 +39,10 @@ export function BudgetPanel() {
 
   return (
     <div>
-      <PageHeader kicker="Cash flow" title="Budget" />
+      <PageHeader
+        title="Ledger"
+        description="Record what comes in and what goes out, then see where the month actually went."
+      />
 
       <div className="mb-5 grid grid-cols-4 gap-4">
         <Card>

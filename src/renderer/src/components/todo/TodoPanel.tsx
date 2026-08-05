@@ -24,7 +24,11 @@ export function TodoPanel() {
 
   return (
     <div>
-      <PageHeader kicker="Command center" title="Tasks" action={<AddTaskDialog />} />
+      <PageHeader
+        title="Tasks"
+        description="Sort work by urgency and importance, then drag each card across the board as it progresses."
+        action={<AddTaskDialog />}
+      />
 
       <div className="mb-6 flex items-center gap-4 rounded-lg border border-border-soft bg-card p-4">
         <div className="flex-1">

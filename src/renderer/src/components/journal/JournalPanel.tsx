@@ -112,8 +112,8 @@ export function JournalPanel() {
   return (
     <div>
       <PageHeader
-        kicker="Reflect & reset"
-        title="Daily Log"
+        title="Journal"
+        description="Set intentions in the morning, reflect in the evening, and park stray thoughts in the brain dump."
         action={
           <div className="flex items-center gap-2">
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-40" />

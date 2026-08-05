@@ -416,8 +416,8 @@ export function WorkoutPanel() {
   return (
     <div>
       <PageHeader
-        kicker="Bodyweight + 30kg bag"
         title="Workout"
+        description="Build each training day, reorder exercises or merge them into supersets, then start a guided session that walks you through every set."
         action={
           <div className="flex items-center gap-2">
             <Button onClick={onStartWorkout} disabled={startSession.isPending || (dayExercises.length === 0 && !activeSession)}>

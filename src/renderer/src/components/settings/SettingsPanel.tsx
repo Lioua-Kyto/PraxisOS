@@ -129,7 +129,10 @@ export function SettingsPanel() {
 
   return (
     <div className="pb-20">
-      <PageHeader kicker="Preferences" title="Settings" />
+      <PageHeader
+        title="Settings"
+        description="Themes, typography, daily goals and backups. Changes are saved together from the bar that appears when something is edited."
+      />
 
       <Card className="mb-5">
         <CardContent className="pt-5">
