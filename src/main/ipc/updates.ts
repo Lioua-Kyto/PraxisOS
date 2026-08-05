@@ -1,7 +1,7 @@
 import { ipcMain, shell } from "electron";
 import { db } from "../db/client";
 import { settings } from "../db/schema";
-import { checkForUpdate, currentVersion, readReleaseNotes } from "../updates";
+import { checkForUpdate, compareVersions, currentVersion, readReleaseNotes } from "../updates";
 import type { UpdateCheck, WhatsNew } from "../../shared/types";
 
 const LAST_SEEN_KEY = "lastSeenVersion";
@@ -28,23 +28,39 @@ export function registerUpdateHandlers(): void {
 
   /**
    * Patch notes for the version that's actually running, shown once after an
-   * update lands. A fresh install has no previously-seen version, so it gets a
-   * clean first run rather than release notes for software it never had.
+   * update lands.
+   *
+   * Gated on a real version increase rather than a mismatch: running an older
+   * build against a database that has seen a newer one — a rollback, or a
+   * restored backup from a machine that was further ahead — must not present
+   * that older build's notes as if something had just been installed.
    */
   ipcMain.handle("updates:whatsNew", (): WhatsNew => {
     const version = currentVersion();
     const lastSeen = readLastSeen();
 
+    // A fresh install has nothing to compare against, so it gets a clean first
+    // run instead of release notes for software it never had.
     if (!lastSeen) {
       writeLastSeen(version);
       return { version, notes: "", show: false };
     }
-    if (lastSeen === version) return { version, notes: "", show: false };
 
-    const notes = readReleaseNotes(version);
-    return { version, previousVersion: lastSeen, notes, show: true };
+    if (compareVersions(version, lastSeen) <= 0) return { version, notes: "", show: false };
+
+    return { version, previousVersion: lastSeen, notes: readReleaseNotes(version), show: true };
   });
 
   /** Called once the user has dismissed the notes, so they don't reappear. */
   ipcMain.handle("updates:acknowledge", (): void => writeLastSeen(currentVersion()));
+
+  /**
+   * The same notes on demand, from Settings. Without this the feature is only
+   * observable by actually shipping an update, which makes it impossible to
+   * check that the changelog reads well before releasing.
+   */
+  ipcMain.handle("updates:releaseNotes", (): WhatsNew => {
+    const version = currentVersion();
+    return { version, notes: readReleaseNotes(version), show: true };
+  });
 }

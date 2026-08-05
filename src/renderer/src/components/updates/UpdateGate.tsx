@@ -1,36 +1,8 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, PartyPopper, X } from "lucide-react";
+import { Download, X } from "lucide-react";
 import { Button } from "../ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
-import { toPlainPreview } from "../../lib/legacyMarkdown";
-
-/** Release notes are markdown; render the handful of shapes releases use. */
-function Notes({ source }: { source: string }) {
-  const lines = source.split("\n").filter((l) => l.trim());
-  if (!lines.length) return <p className="text-[13px] text-muted-foreground">No notes were published for this release.</p>;
-
-  return (
-    <div className="scrollbar-thin max-h-64 overflow-y-auto pr-1">
-      <ul className="flex flex-col gap-1.5">
-        {lines.map((line, i) => {
-          const item = line.replace(/^[-*]\s+/, "").replace(/^#+\s*/, "");
-          const isHeading = /^#+\s/.test(line);
-          return isHeading ? (
-            <li key={i} className="mt-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
-              {item}
-            </li>
-          ) : (
-            <li key={i} className="flex gap-2 text-[13px]">
-              <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-primary" />
-              <span>{toPlainPreview(item, 400)}</span>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
+import { WhatsNewDialog } from "./WhatsNewDialog";
 
 /**
  * Two related jobs, one mount:
@@ -53,7 +25,7 @@ export function UpdateGate() {
   const { data: check } = useQuery({
     queryKey: ["updates", "check"],
     queryFn: () => window.api.updates.check(),
-    // Once per launch is plenty; a desktop app that polls GitHub on a timer is
+    // Once per launch is plenty; a desktop app polling GitHub on a timer is
     // just noise on someone else's rate limit.
     staleTime: Infinity,
     retry: false
@@ -93,27 +65,7 @@ export function UpdateGate() {
         </div>
       )}
 
-      <Dialog open={whatsNewOpen} onOpenChange={(open) => (open ? setWhatsNewOpen(true) : closeWhatsNew())}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <PartyPopper className="h-4 w-4 text-primary" />
-              What's new in {whatsNew?.version}
-            </DialogTitle>
-            <DialogDescription>
-              {whatsNew?.previousVersion
-                ? `Updated from ${whatsNew.previousVersion}. Here's what changed.`
-                : "Here's what changed."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <Notes source={whatsNew?.notes ?? ""} />
-
-          <DialogFooter>
-            <Button onClick={closeWhatsNew}>Got it</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <WhatsNewDialog data={whatsNew} open={whatsNewOpen} onClose={closeWhatsNew} />
     </>
   );
 }

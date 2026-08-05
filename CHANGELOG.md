@@ -21,8 +21,8 @@ First public early-access release.
 - Update checking against GitHub releases, with these notes shown after an
   update lands.
 - Rich text notes and journal entries in a single editing mode: formatting,
-  colour, highlight, and images you can drag to move, drag an edge to resize,
-  and drag a corner to rotate.
+  colour, highlight, and images that sit in the text flow — drag the block to
+  move it between paragraphs, drag a handle to resize it.
 - Reference photos on exercises as an alternative to a form-check video.
 - Carbohydrate tracking alongside calories and protein.
 - An About section in Settings with the privacy policy, terms, licence and
@@ -47,6 +47,8 @@ First public early-access release.
 - The weekly focus chart renders a full seven-day axis, so bars keep a constant
   width.
 - Note list previews show readable text instead of raw markdown.
+- A panel that hits an error no longer blanks the whole window and forces a
+  restart — it shows the error and the rest of the app keeps working.
 
 ### Known limitations
 

@@ -1,7 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ExternalLink, FileText, RefreshCw, Scale, Shield } from "lucide-react";
+import { AlertTriangle, ExternalLink, FileText, RefreshCw, Scale, ScrollText, Shield } from "lucide-react";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
+import { WhatsNewDialog } from "../updates/WhatsNewDialog";
+import { useState } from "react";
+import type { WhatsNew } from "@shared/types";
 
 const REPO = "https://github.com/Lioua-Kyto/Praxis-OS";
 
@@ -9,10 +12,10 @@ const DOCUMENTS = [
   { label: "Privacy policy", href: `${REPO}/blob/main/PRIVACY.md`, icon: Shield },
   { label: "Terms of use", href: `${REPO}/blob/main/TERMS.md`, icon: FileText },
   { label: "Licence agreement", href: `${REPO}/blob/main/build/license.txt`, icon: Scale },
-  { label: "Release notes", href: `${REPO}/blob/main/CHANGELOG.md`, icon: RefreshCw }
 ];
 
 export function AboutSection() {
+  const [notes, setNotes] = useState<WhatsNew | undefined>();
   const { data: version } = useQuery({
     queryKey: ["updates", "version"],
     queryFn: () => window.api.updates.version(),
@@ -65,7 +68,16 @@ export function AboutSection() {
             <ExternalLink className="h-3 w-3 opacity-60" />
           </Button>
         ))}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={async () => setNotes(await window.api.updates.releaseNotes())}
+        >
+          <ScrollText className="h-3.5 w-3.5" /> What's new in this version
+        </Button>
       </div>
+
+      <WhatsNewDialog data={notes} open={Boolean(notes)} onClose={() => setNotes(undefined)} />
 
       <p className="mt-3 text-[11px] text-muted-foreground">
         Built by Lioua-Kyto. No account, no telemetry, no data leaves your device.

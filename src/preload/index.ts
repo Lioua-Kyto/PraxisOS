@@ -201,7 +201,8 @@ const api = {
     check: () => invoke<UpdateCheck>("updates:check"),
     openRelease: (url: string) => invoke<void>("updates:openRelease", url),
     whatsNew: () => invoke<WhatsNew>("updates:whatsNew"),
-    acknowledge: () => invoke<void>("updates:acknowledge")
+    acknowledge: () => invoke<void>("updates:acknowledge"),
+    releaseNotes: () => invoke<WhatsNew>("updates:releaseNotes")
   },
   widget: {
     open: () => invoke<void>("widget:open"),
