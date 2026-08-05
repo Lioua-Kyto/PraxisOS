@@ -119,6 +119,7 @@ export interface NutritionLog {
   food: string;
   calories: number;
   proteinG: number;
+  carbsG: number;
   time: string;
 }
 
@@ -127,12 +128,14 @@ export interface NewNutritionLog {
   food: string;
   calories: number;
   proteinG?: number;
+  carbsG?: number;
 }
 
 export interface NutritionDayTotal {
   date: string;
   calories: number;
   protein: number;
+  carbs: number;
 }
 
 export interface HydrationLog {
@@ -217,6 +220,7 @@ export interface Food {
   category: string;
   calories: number;
   proteinG: number;
+  carbsG: number;
   servingLabel: string;
   createdAt: string;
 }
@@ -226,6 +230,7 @@ export interface NewFood {
   category: string;
   calories: number;
   proteinG: number;
+  carbsG?: number;
   servingLabel?: string;
 }
 
@@ -242,6 +247,7 @@ export interface AppSettings {
   font: FontKey;
   waterGoalMl: number;
   calorieGoal: number;
+  carbsGoal: number;
   dailyBudgetLimit: number;
   activePresetId: number | null;
   workoutDays: string[];
@@ -262,16 +268,19 @@ export interface ThemePreset {
   id: number;
   name: string;
   baseTheme: ThemeKey;
-  background: string;
+  /** Null inherits the base theme's surfaces — only the accent is overridden. */
+  background: string | null;
   accent: string;
+  foreground: string | null;
   createdAt: string;
 }
 
 export interface NewThemePreset {
   name: string;
   baseTheme: ThemeKey;
-  background: string;
+  background: string | null;
   accent: string;
+  foreground?: string | null;
 }
 
 export type HabitCadence = "daily" | "weekly" | "custom";

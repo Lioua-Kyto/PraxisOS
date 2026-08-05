@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play, Square } from "lucide-react";
+import { Pause, Play, RotateCcw, Square } from "lucide-react";
 import { PageHeader } from "../layout/PageHeader";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
@@ -19,31 +19,17 @@ import {
   useResumeFocusSession,
   useStartFocusSession,
   useStopFocusSession,
+  useReopenFocusSession,
   useUpdateFocusSession
 } from "../../queries/focusTimer";
 import { useSettings } from "../../queries/settings";
+import { FOCUS_CATEGORIES, focusCategoryMeta } from "./focusCategories";
+import { TodayBreakdown } from "./TodayBreakdown";
 import { clockFromStored, dateFromStored, localDateString } from "@shared/datetime";
 import type { FocusSession } from "@shared/types";
 
-const CATEGORIES = [
-  { key: "deep_work", label: "Deep Work", color: "hsl(var(--primary))" },
-  { key: "training", label: "Training", color: "hsl(var(--destructive))" },
-  { key: "learning", label: "Learning", color: "hsl(var(--success))" },
-  { key: "reading", label: "Reading", color: "hsl(265 70% 65%)" },
-  { key: "writing", label: "Writing", color: "hsl(200 80% 55%)" },
-  { key: "planning", label: "Planning", color: "hsl(45 85% 55%)" },
-  { key: "meeting", label: "Meeting", color: "hsl(172 60% 45%)" },
-  { key: "admin", label: "Admin & Chores", color: "hsl(215 15% 55%)" },
-  { key: "side_project", label: "Side Project", color: "hsl(340 75% 65%)" },
-  { key: "rest", label: "Rest & Recovery", color: "hsl(90 55% 50%)" },
-  { key: "other", label: "Other", color: "hsl(var(--muted-foreground))" }
-];
-
-const FALLBACK_CATEGORY = CATEGORIES[CATEGORIES.length - 1];
-
-function catMeta(key: string) {
-  return CATEGORIES.find((c) => c.key === key) ?? FALLBACK_CATEGORY;
-}
+const CATEGORIES = FOCUS_CATEGORIES;
+const catMeta = focusCategoryMeta;
 
 function fmtHMS(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -74,6 +60,7 @@ export function TimerPanel() {
   const addManual = useAddManualFocusSession();
   const updateSession = useUpdateFocusSession();
   const removeSession = useRemoveFocusSession();
+  const reopenSession = useReopenFocusSession();
 
   const { data: settings } = useSettings();
   const [category, setCategory] = useState(settings?.defaultFocusCategory ?? "deep_work");
@@ -191,24 +178,8 @@ export function TimerPanel() {
         </CardContent>
       </Card>
 
-      <div className="mb-5 grid grid-cols-4 gap-4">
-        {CATEGORIES.map((c) => {
-          const row = todayTotals.find((t) => t.category === c.key);
-          const seconds = row?.seconds ?? 0;
-          return (
-            <Card key={c.key}>
-              <CardContent className="pt-5">
-                <div className="font-mono text-[10.5px] uppercase tracking-wide" style={{ color: c.color }}>
-                  {c.label}
-                </div>
-                <div className="tabular font-display mt-1 text-[28px]">
-                  {(seconds / 3600).toFixed(1)}
-                  <small className="text-sm text-muted-foreground"> h today</small>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="mb-5">
+        <TodayBreakdown totals={todayTotals} />
       </div>
 
       <Card className="mb-5">
@@ -361,11 +332,31 @@ export function TimerPanel() {
                     </td>
                     <td className="tabular py-2">{r.durationSeconds != null ? fmtHMS(r.durationSeconds) : "—"}</td>
                     <td className="py-2">
-                      <div className="flex gap-1">
+                      <div className="flex justify-end gap-1">
+                        {/* Undo a mis-clicked clock-out: puts this session
+                            back on the clock with its logged time intact,
+                            instead of splitting the work across two rows. */}
+                        {r.status === "completed" && !active && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title="Resume this session"
+                            onClick={() => reopenSession.mutate(r.id)}
+                            disabled={reopenSession.isPending}
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" /> Resume
+                          </Button>
+                        )}
                         <Button size="sm" variant="ghost" onClick={() => startEdit(r)}>
                           Edit
                         </Button>
-                        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeSession.mutate(r.id)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive"
+                          aria-label="Delete session"
+                          onClick={() => removeSession.mutate(r.id)}
+                        >
                           ✕
                         </Button>
                       </div>

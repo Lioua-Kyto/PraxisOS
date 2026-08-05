@@ -120,6 +120,7 @@ const api = {
     pause: (id: number) => invoke<FocusSession>("focusTimer:pause", id),
     resume: (id: number) => invoke<FocusSession>("focusTimer:resume", id),
     stop: (id: number) => invoke<FocusSession>("focusTimer:stop", id),
+    reopen: (id: number) => invoke<FocusSession>("focusTimer:reopen", id),
     addManual: (entry: ManualFocusEntry) => invoke<FocusSession>("focusTimer:addManual", entry),
     update: (id: number, fields: Partial<FocusSession>) => invoke<FocusSession>("focusTimer:update", id, fields),
     remove: (id: number) => invoke<void>("focusTimer:remove", id),

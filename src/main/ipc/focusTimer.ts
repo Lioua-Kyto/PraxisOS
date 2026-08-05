@@ -45,9 +45,20 @@ function secondsSince(stored: string): number {
 // running/paused, hand it back instead of inserting a second row. Exported
 // (not just an IPC handler) so the workout-session engine can auto-start a
 // "training" session without round-tripping through IPC.
-export function startFocusSession(category: string, label: string): FocusSession {
+export function startFocusSession(
+  category: string,
+  label: string,
+  options?: { replaceActive?: boolean }
+): FocusSession {
   const existing = getActiveRow();
-  if (existing) return rowToSession(existing);
+  if (existing) {
+    // A workout starting while, say, deep work is on the clock shouldn't
+    // silently adopt that session — it would be filed under the wrong
+    // category and then clocked out when the workout ends. Close the old one
+    // cleanly and start a properly-labelled training session instead.
+    if (!options?.replaceActive) return rowToSession(existing);
+    stopFocusSession(existing.id);
+  }
 
   const now = new Date();
   const row = db()
@@ -159,9 +170,33 @@ export function registerFocusTimerHandlers(): void {
   ipcMain.handle(
     "focusTimer:update",
     (_e, id: number, fields: Partial<Pick<FocusSession, "category" | "label" | "date" | "startTime" | "endTime">>): FocusSession => {
+      const before = db().select().from(focusSessions).where(eq(focusSessions.id, id)).get();
+      if (!before) throw new Error(`Focus session ${id} not found`);
+
       db().update(focusSessions).set(fields).where(eq(focusSessions.id, id)).run();
       const updated = db().select().from(focusSessions).where(eq(focusSessions.id, id)).get()!;
-      if (updated.startTime && updated.endTime) {
+
+      const isActive = updated.status === "running" || updated.status === "paused";
+
+      // Correcting the start time of a session that's still running (clocked
+      // in at 09:30 but actually started at 08:30) has to move the elapsed
+      // clock too, otherwise the display keeps counting from the original
+      // moment. Shifting accumulated time by the same delta is correct for
+      // both running and paused: running elapsed is accumulated + time since
+      // resume, so both gain exactly the backdated amount.
+      if (isActive && fields.startTime && fields.startTime !== before.startTime) {
+        const shiftSeconds = secondsBetween(fields.startTime, before.startTime);
+        const row = db()
+          .update(focusSessions)
+          .set({ accumulatedSeconds: Math.max(0, updated.accumulatedSeconds + shiftSeconds) })
+          .where(eq(focusSessions.id, id))
+          .returning()
+          .get();
+        return rowToSession(row);
+      }
+
+      // Completed sessions derive their duration from the edited bounds.
+      if (!isActive && updated.startTime && updated.endTime) {
         const durationSeconds = secondsBetween(updated.startTime, updated.endTime);
         const row = db()
           .update(focusSessions)
@@ -174,6 +209,35 @@ export function registerFocusTimerHandlers(): void {
       return rowToSession(updated);
     }
   );
+
+  /**
+   * Undo a mis-clicked clock-out: puts a completed session back on the clock
+   * with its logged time intact, rather than forcing a fresh session that
+   * splits the same block of work in two.
+   */
+  ipcMain.handle("focusTimer:reopen", (_e, id: number): FocusSession => {
+    const active = getActiveRow();
+    if (active && active.id !== id) {
+      throw new Error("Clock out of the running session before resuming another one.");
+    }
+    const current = db().select().from(focusSessions).where(eq(focusSessions.id, id)).get();
+    if (!current) throw new Error(`Focus session ${id} not found`);
+    if (current.status !== "completed") return rowToSession(current);
+
+    const row = db()
+      .update(focusSessions)
+      .set({
+        status: "running",
+        endTime: null,
+        durationSeconds: null,
+        accumulatedSeconds: current.durationSeconds ?? current.accumulatedSeconds,
+        lastStartedAt: localDateTimeString()
+      })
+      .where(eq(focusSessions.id, id))
+      .returning()
+      .get();
+    return rowToSession(row);
+  });
 
   ipcMain.handle("focusTimer:remove", (_e, id: number): void => {
     db().delete(focusSessions).where(eq(focusSessions.id, id)).run();

@@ -71,6 +71,17 @@ export function useStopFocusSession() {
   });
 }
 
+export function useReopenFocusSession() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => window.api.focusTimer.reopen(id),
+    onSuccess: (data: FocusSession) => {
+      qc.setQueryData(ACTIVE_KEY, data);
+      invalidateAll(qc);
+    }
+  });
+}
+
 export function useAddManualFocusSession() {
   const qc = useQueryClient();
   return useMutation({
