@@ -2,7 +2,7 @@ import { ipcMain } from "electron";
 import { desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { budgetCategories, budgetTransactions } from "../db/schema";
-import { reseedBudgetCategories } from "../db/seed";
+import { isCatchAllCategory, reseedBudgetCategories } from "../db/seed";
 import type {
   BudgetCategory,
   BudgetSummary,
@@ -35,6 +35,14 @@ export function registerBudgetHandlers(): void {
       .where(eq(budgetCategories.type, type))
       .all()
       .map((c) => ({ ...c, type: c.type as BudgetTransactionType }))
+      // Alphabetical, but catch-all "Other …" entries always sink to the
+      // bottom where users expect them.
+      .sort((a, b) => {
+        const aOther = isCatchAllCategory(a.name);
+        const bOther = isCatchAllCategory(b.name);
+        if (aOther !== bOther) return aOther ? 1 : -1;
+        return a.name.localeCompare(b.name);
+      })
   );
 
   ipcMain.handle("budget:list", (): BudgetTransaction[] =>

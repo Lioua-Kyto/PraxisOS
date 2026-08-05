@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -7,6 +7,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useBudgetCategoriesByType } from "../../queries/budget";
+import { localDateString } from "@shared/datetime";
 import type { BudgetTransactionType } from "@shared/types";
 
 const TYPES: BudgetTransactionType[] = ["expense", "income", "transfer", "debt"];
@@ -23,35 +24,53 @@ export type TransactionFormValues = z.infer<typeof transactionSchema>;
 
 export function TransactionForm({
   onSubmit,
-  isSubmitting
+  isSubmitting,
+  initialValues,
+  submitLabel = "Add transaction"
 }: {
   onSubmit: (values: TransactionFormValues) => void;
   isSubmitting?: boolean;
+  /** Present when editing an existing transaction. */
+  initialValues?: TransactionFormValues;
+  submitLabel?: string;
 }) {
+  const emptyDefaults = { type: "expense" as const, date: localDateString() };
   const {
     register,
     handleSubmit,
     watch,
     setValue,
+    reset,
     resetField,
     formState: { errors }
   } = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: { type: "expense", date: new Date().toISOString().slice(0, 10) }
+    defaultValues: initialValues ?? emptyDefaults
   });
 
   const selectedType = watch("type");
   const { data: categories = [] } = useBudgetCategoriesByType(selectedType ?? null);
+  // Skip the category reset on the first render when editing, otherwise
+  // loading an existing transaction would immediately blank its category.
+  const typeInitialised = useRef(false);
 
   // The bug this form exists to fix: switching transaction type used to leave
   // a stale/empty category value behind. Resetting on every type change keeps
   // the dropdown's options and its selected value in sync.
   useEffect(() => {
+    if (!typeInitialised.current) {
+      typeInitialised.current = true;
+      return;
+    }
     resetField("categoryId", { defaultValue: undefined });
   }, [selectedType, resetField]);
 
   const submit = handleSubmit((values) => {
     onSubmit(values);
+    // Clearing after a successful add leaves the form ready for the next
+    // entry; when editing, the dialog closes instead so there's nothing to
+    // reset.
+    if (!initialValues) reset({ ...emptyDefaults, date: values.date });
   });
 
   return (
@@ -106,7 +125,7 @@ export function TransactionForm({
       </div>
 
       <Button type="submit" className="col-span-2 sm:col-span-1 md:col-span-6" disabled={isSubmitting}>
-        Add transaction
+        {submitLabel}
       </Button>
     </form>
   );
