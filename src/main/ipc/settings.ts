@@ -24,6 +24,7 @@ function rowsToSettings(rows: Array<{ key: string; value: string }>): AppSetting
     font: (map.font as AppSettings["font"]) ?? "sans",
     waterGoalMl: Number(map.waterGoalMl ?? 2500),
     calorieGoal: Number(map.calorieGoal ?? 2400),
+    carbsGoal: Number(map.carbsGoal ?? 250),
     dailyBudgetLimit: Number(map.dailyBudgetLimit ?? 60),
     activePresetId: map.activePresetId ? Number(map.activePresetId) : null,
     workoutDays: workoutDays.length ? workoutDays : DEFAULT_WORKOUT_DAYS,

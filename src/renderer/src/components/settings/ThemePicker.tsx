@@ -84,7 +84,7 @@ export function ThemePicker() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex gap-1">
-                  <span className="h-3 w-3 rounded-full border border-black/10" style={{ background: p.background }} />
+                  <span className="h-3 w-3 rounded-full border border-black/10" style={{ background: p.background ?? "transparent", backgroundImage: p.background ? undefined : "repeating-linear-gradient(45deg, hsl(var(--muted)) 0 3px, transparent 3px 6px)" }} title={p.background ? "Custom background" : "Inherits base theme background"} />
                   <span className="h-3 w-3 rounded-full border border-black/10" style={{ background: p.accent }} />
                 </div>
                 {activePresetId === p.id && <Check className="h-3 w-3 text-primary" />}

@@ -3,36 +3,58 @@ import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { Switch } from "../ui/switch";
 import { ColorField } from "../ui/color-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { THEMES } from "../../theme/themes";
 import { derivePaletteOverrides } from "../../lib/color";
 import type { NewThemePreset, ThemeKey, ThemePreset } from "@shared/types";
 
-const themeDefaults = (key: ThemeKey) => {
+const themeSwatches = (key: ThemeKey) => {
   const theme = THEMES.find((t) => t.key === key) ?? THEMES[1];
-  return { background: theme.dots[0], accent: theme.dots[1] };
+  return { background: theme.dots[0], accent: theme.dots[1], foreground: theme.dots[2] };
 };
 
-/** Small live sample so the derived surface/text colors are visible before saving. */
-function PresetPreview({ background, accent }: { background: string; accent: string }) {
-  const vars = derivePaletteOverrides(background, accent) as Record<string, string>;
-  const style = (name: string) => `hsl(${vars[name]})`;
+/**
+ * Live sample. When a colour is inherited we can't resolve the base theme's
+ * exact token here, so the swatch falls back to the theme's representative
+ * colour — close enough to judge contrast before saving.
+ */
+function PresetPreview({
+  baseTheme,
+  background,
+  accent,
+  foreground
+}: {
+  baseTheme: ThemeKey;
+  background: string | null;
+  accent: string;
+  foreground: string | null;
+}) {
+  const swatches = themeSwatches(baseTheme);
+  const bg = background ?? swatches.background;
+  const fg = foreground ?? swatches.foreground;
+  const vars = derivePaletteOverrides(bg, accent, fg);
+  const style = (name: string, fallback: string) => (vars[name] ? `hsl(${vars[name]})` : fallback);
+
   return (
-    <div className="rounded-md border p-3" style={{ background: style("--background"), borderColor: style("--border") }}>
-      <div className="mb-2 text-xs" style={{ color: style("--foreground") }}>
-        Preview — card, text and accent
+    <div
+      className="rounded-md border p-3"
+      style={{ background: style("--background", bg), borderColor: style("--border", "transparent") }}
+    >
+      <div className="mb-2 text-xs" style={{ color: style("--foreground", fg) }}>
+        Preview
       </div>
-      <div className="rounded-md p-2.5" style={{ background: style("--card"), border: `1px solid ${style("--border-soft")}` }}>
-        <div className="text-[13px]" style={{ color: style("--card-foreground") }}>
+      <div
+        className="rounded-md p-2.5"
+        style={{ background: style("--card", bg), border: `1px solid ${style("--border-soft", "transparent")}` }}
+      >
+        <div className="text-[13px]" style={{ color: style("--card-foreground", fg) }}>
           Sample surface
-        </div>
-        <div className="mt-1 text-[11px]" style={{ color: style("--muted-foreground") }}>
-          Secondary text
         </div>
         <div
           className="mt-2 inline-block rounded px-2.5 py-1 text-[11px] font-semibold"
-          style={{ background: style("--primary"), color: style("--primary-foreground") }}
+          style={{ background: style("--primary", accent), color: style("--primary-foreground", "#fff") }}
         >
           Accent button
         </div>
@@ -50,41 +72,39 @@ export function PresetDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Existing preset to edit; omit to create a new one. */
   preset?: ThemePreset;
   onSubmit: (values: NewThemePreset) => void;
   isSubmitting?: boolean;
 }) {
   const [name, setName] = useState("");
   const [baseTheme, setBaseTheme] = useState<ThemeKey>("dark");
-  const [background, setBackground] = useState(themeDefaults("dark").background);
-  const [accent, setAccent] = useState(themeDefaults("dark").accent);
+  const [accent, setAccent] = useState(themeSwatches("dark").accent);
+  const [overrideBackground, setOverrideBackground] = useState(false);
+  const [background, setBackground] = useState(themeSwatches("dark").background);
+  const [overrideForeground, setOverrideForeground] = useState(false);
+  const [foreground, setForeground] = useState(themeSwatches("dark").foreground);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) return;
-    if (preset) {
-      setName(preset.name);
-      setBaseTheme(preset.baseTheme);
-      setBackground(preset.background);
-      setAccent(preset.accent);
-    } else {
-      setName("");
-      setBaseTheme("dark");
-      setBackground(themeDefaults("dark").background);
-      setAccent(themeDefaults("dark").accent);
-    }
+    const base = preset?.baseTheme ?? "dark";
+    const swatches = themeSwatches(base);
+    setName(preset?.name ?? "");
+    setBaseTheme(base);
+    setAccent(preset?.accent ?? swatches.accent);
+    setOverrideBackground(Boolean(preset?.background));
+    setBackground(preset?.background ?? swatches.background);
+    setOverrideForeground(Boolean(preset?.foreground));
+    setForeground(preset?.foreground ?? swatches.foreground);
     setError("");
   }, [open, preset]);
 
-  // Picking a base theme seeds the pickers with that theme's own colors —
-  // without this the base theme only contributed semantic colors, which is
-  // why choosing one appeared to do nothing.
   const changeBaseTheme = (key: ThemeKey) => {
     setBaseTheme(key);
-    const defaults = themeDefaults(key);
-    setBackground(defaults.background);
-    setAccent(defaults.accent);
+    const swatches = themeSwatches(key);
+    setAccent(swatches.accent);
+    setBackground(swatches.background);
+    setForeground(swatches.foreground);
   };
 
   const submit = (e: React.FormEvent) => {
@@ -94,7 +114,13 @@ export function PresetDialog({
       return;
     }
     setError("");
-    onSubmit({ name: name.trim(), baseTheme, background, accent });
+    onSubmit({
+      name: name.trim(),
+      baseTheme,
+      accent,
+      background: overrideBackground ? background : null,
+      foreground: overrideForeground ? foreground : null
+    });
   };
 
   return (
@@ -103,7 +129,8 @@ export function PresetDialog({
         <DialogHeader>
           <DialogTitle>{preset ? "Edit preset" : "New theme preset"}</DialogTitle>
           <DialogDescription>
-            The base theme supplies status colors (success, warning, error) and corner radius, and seeds the two colors below.
+            A preset starts as its base theme and changes only what you override. Leave background and text inherited to
+            keep the theme exactly as-is and just swap the accent.
           </DialogDescription>
         </DialogHeader>
 
@@ -117,7 +144,7 @@ export function PresetDialog({
                 setName(e.target.value);
                 if (error) setError("");
               }}
-              placeholder="e.g. Late Night Amber"
+              placeholder="e.g. Light Amber"
               aria-invalid={Boolean(error)}
               className={error ? "border-destructive focus-visible:ring-destructive" : undefined}
             />
@@ -140,12 +167,40 @@ export function PresetDialog({
             </Select>
           </div>
 
-          <div className="flex flex-wrap gap-4">
-            <ColorField label="Background" value={background} onChange={setBackground} />
-            <ColorField label="Accent" value={accent} onChange={setAccent} />
+          <ColorField label="Accent" value={accent} onChange={setAccent} />
+
+          <div className="flex flex-col gap-2 rounded-md border border-border-soft bg-sunken p-3">
+            <label className="flex items-center gap-2.5 text-[12.5px]">
+              <Switch checked={overrideBackground} onCheckedChange={setOverrideBackground} />
+              Override background &amp; surfaces
+            </label>
+            {overrideBackground ? (
+              <ColorField label="Background" value={background} onChange={setBackground} />
+            ) : (
+              <span className="text-[11px] text-muted-foreground">
+                Inheriting {THEMES.find((t) => t.key === baseTheme)?.label} backgrounds, cards and borders.
+              </span>
+            )}
           </div>
 
-          <PresetPreview background={background} accent={accent} />
+          <div className="flex flex-col gap-2 rounded-md border border-border-soft bg-sunken p-3">
+            <label className="flex items-center gap-2.5 text-[12.5px]">
+              <Switch checked={overrideForeground} onCheckedChange={setOverrideForeground} />
+              Override text colour
+            </label>
+            {overrideForeground ? (
+              <ColorField label="Text" value={foreground} onChange={setForeground} />
+            ) : (
+              <span className="text-[11px] text-muted-foreground">Inheriting the base theme's text colour.</span>
+            )}
+          </div>
+
+          <PresetPreview
+            baseTheme={baseTheme}
+            background={overrideBackground ? background : null}
+            accent={accent}
+            foreground={overrideForeground ? foreground : null}
+          />
 
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Download, Upload } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Check, Download, RotateCcw, Upload } from "lucide-react";
 import { PageHeader } from "../layout/PageHeader";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
@@ -11,23 +12,40 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { ThemePicker } from "./ThemePicker";
 import { WorkoutScheduleEditor } from "./WorkoutScheduleEditor";
 import { useSettings, useUpdateSettings } from "../../queries/settings";
+import { FOCUS_CATEGORIES } from "../timer/focusCategories";
 import { useExportBackup, useImportBackup } from "../../queries/backup";
 import { useRestoreDefaultCourses } from "../../queries/courses";
 import { useRestoreDefaultWorkout } from "../../queries/workouts";
 
-const FOCUS_CATEGORY_OPTIONS = [
-  { key: "deep_work", label: "Deep Work" },
-  { key: "training", label: "Training" },
-  { key: "learning", label: "Learning" },
-  { key: "reading", label: "Reading" },
-  { key: "writing", label: "Writing" },
-  { key: "planning", label: "Planning" },
-  { key: "meeting", label: "Meeting" },
-  { key: "admin", label: "Admin & Chores" },
-  { key: "side_project", label: "Side Project" },
-  { key: "rest", label: "Rest & Recovery" },
-  { key: "other", label: "Other" }
-];
+interface SettingsDraft {
+  waterGoalMl: number;
+  calorieGoal: number;
+  proteinGoal: number;
+  dailyBudgetLimit: number;
+  currencySymbol: string;
+  defaultRestSeconds: number;
+  defaultFocusCategory: string;
+  weekStartsOn: number;
+  confirmBeforeEndingWorkout: boolean;
+  habitRemindersEnabled: boolean;
+  habitReminderTime: string;
+}
+
+const EMPTY_DRAFT: SettingsDraft = {
+  waterGoalMl: 2500,
+  calorieGoal: 2400,
+  proteinGoal: 150,
+  dailyBudgetLimit: 60,
+  currencySymbol: "",
+  defaultRestSeconds: 60,
+  defaultFocusCategory: "deep_work",
+  weekStartsOn: 1,
+  confirmBeforeEndingWorkout: true,
+  habitRemindersEnabled: false,
+  habitReminderTime: "20:00"
+};
+
+const DRAFT_KEYS = Object.keys(EMPTY_DRAFT) as Array<keyof SettingsDraft>;
 
 export function SettingsPanel() {
   const { data: settings } = useSettings();
@@ -37,50 +55,38 @@ export function SettingsPanel() {
   const restoreCourses = useRestoreDefaultCourses();
   const restoreWorkout = useRestoreDefaultWorkout();
 
-  const [goals, setGoals] = useState({ waterGoalMl: 2500, calorieGoal: 2400, proteinGoal: 150, dailyBudgetLimit: 60 });
-  const [prefs, setPrefs] = useState({
-    currencySymbol: "",
-    defaultRestSeconds: 60,
-    defaultFocusCategory: "deep_work",
-    weekStartsOn: 1,
-    confirmBeforeEndingWorkout: true,
-    habitRemindersEnabled: false,
-    habitReminderTime: "20:00"
-  });
+  const [draft, setDraft] = useState<SettingsDraft>(EMPTY_DRAFT);
   const [status, setStatus] = useState("");
+  const [justSaved, setJustSaved] = useState(false);
 
   useEffect(() => {
     if (!settings) return;
-    setGoals({
-      waterGoalMl: settings.waterGoalMl,
-      calorieGoal: settings.calorieGoal,
-      proteinGoal: settings.proteinGoal,
-      dailyBudgetLimit: settings.dailyBudgetLimit
-    });
-    setPrefs({
-      currencySymbol: settings.currencySymbol,
-      defaultRestSeconds: settings.defaultRestSeconds,
-      defaultFocusCategory: settings.defaultFocusCategory,
-      weekStartsOn: settings.weekStartsOn,
-      confirmBeforeEndingWorkout: settings.confirmBeforeEndingWorkout,
-      habitRemindersEnabled: settings.habitRemindersEnabled,
-      habitReminderTime: settings.habitReminderTime
-    });
+    const next = { ...EMPTY_DRAFT };
+    for (const key of DRAFT_KEYS) (next as Record<string, unknown>)[key] = settings[key];
+    setDraft(next);
   }, [settings]);
+
+  const dirty = Boolean(settings) && DRAFT_KEYS.some((key) => draft[key] !== settings![key]);
+
+  const set = <K extends keyof SettingsDraft>(key: K, value: SettingsDraft[K]) =>
+    setDraft((prev) => ({ ...prev, [key]: value }));
 
   const flash = (message: string) => {
     setStatus(message);
-    setTimeout(() => setStatus(""), 2000);
+    setTimeout(() => setStatus(""), 2500);
   };
 
-  const saveGoals = () => {
-    updateSettings.mutate(goals);
-    flash("Goals saved.");
+  const save = () => {
+    updateSettings.mutate(draft);
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 1600);
   };
 
-  const savePrefs = () => {
-    updateSettings.mutate(prefs);
-    flash("Preferences saved.");
+  const revert = () => {
+    if (!settings) return;
+    const next = { ...EMPTY_DRAFT };
+    for (const key of DRAFT_KEYS) (next as Record<string, unknown>)[key] = settings[key];
+    setDraft(next);
   };
 
   const exportData = async () => {
@@ -111,19 +117,17 @@ export function SettingsPanel() {
   const doRestoreCourses = () => {
     if (!confirm("This replaces your course list with the default roadmap. Custom courses you added will be lost. Continue?")) return;
     restoreCourses.mutate();
-    setStatus("Default course roadmap restored.");
-    setTimeout(() => setStatus(""), 2500);
+    flash("Default course roadmap restored.");
   };
 
   const doRestoreWorkout = () => {
     if (!confirm("This replaces your exercise list (and clears logged sets) with the default PPL routine. Continue?")) return;
     restoreWorkout.mutate();
-    setStatus("Default workout routine restored.");
-    setTimeout(() => setStatus(""), 2500);
+    flash("Default workout routine restored.");
   };
 
   return (
-    <div>
+    <div className="pb-20">
       <PageHeader kicker="Preferences" title="Settings" />
 
       <Card className="mb-5">
@@ -138,21 +142,25 @@ export function SettingsPanel() {
           <div className="flex flex-wrap items-end gap-5">
             <div className="flex flex-col gap-1.5">
               <Label>Water goal (ml)</Label>
-              <Input type="number" value={goals.waterGoalMl} onChange={(e) => setGoals({ ...goals, waterGoalMl: Number(e.target.value) })} className="w-36" />
+              <Input type="number" value={draft.waterGoalMl} onChange={(e) => set("waterGoalMl", Number(e.target.value))} className="w-36" />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>Calorie goal</Label>
-              <Input type="number" value={goals.calorieGoal} onChange={(e) => setGoals({ ...goals, calorieGoal: Number(e.target.value) })} className="w-36" />
+              <Input type="number" value={draft.calorieGoal} onChange={(e) => set("calorieGoal", Number(e.target.value))} className="w-36" />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>Protein goal (g)</Label>
-              <Input type="number" value={goals.proteinGoal} onChange={(e) => setGoals({ ...goals, proteinGoal: Number(e.target.value) })} className="w-36" />
+              <Input type="number" value={draft.proteinGoal} onChange={(e) => set("proteinGoal", Number(e.target.value))} className="w-36" />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>Daily budget limit</Label>
-              <Input type="number" value={goals.dailyBudgetLimit} onChange={(e) => setGoals({ ...goals, dailyBudgetLimit: Number(e.target.value) })} className="w-36" />
+              <Input
+                type="number"
+                value={draft.dailyBudgetLimit}
+                onChange={(e) => set("dailyBudgetLimit", Number(e.target.value))}
+                className="w-36"
+              />
             </div>
-            <Button onClick={saveGoals}>Save goals</Button>
           </div>
         </CardContent>
       </Card>
@@ -170,8 +178,8 @@ export function SettingsPanel() {
             <div className="flex flex-col gap-1.5">
               <Label>Currency symbol</Label>
               <Input
-                value={prefs.currencySymbol}
-                onChange={(e) => setPrefs({ ...prefs, currencySymbol: e.target.value })}
+                value={draft.currencySymbol}
+                onChange={(e) => set("currencySymbol", e.target.value)}
                 placeholder="$, €, DZD…"
                 maxLength={4}
                 className="w-28"
@@ -181,19 +189,19 @@ export function SettingsPanel() {
               <Label>Default rest (seconds)</Label>
               <Input
                 type="number"
-                value={prefs.defaultRestSeconds}
-                onChange={(e) => setPrefs({ ...prefs, defaultRestSeconds: Number(e.target.value) })}
+                value={draft.defaultRestSeconds}
+                onChange={(e) => set("defaultRestSeconds", Number(e.target.value))}
                 className="w-36"
               />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>Default focus category</Label>
-              <Select value={prefs.defaultFocusCategory} onValueChange={(v) => setPrefs({ ...prefs, defaultFocusCategory: v })}>
+              <Select value={draft.defaultFocusCategory} onValueChange={(v) => set("defaultFocusCategory", v)}>
                 <SelectTrigger className="w-44">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {FOCUS_CATEGORY_OPTIONS.map((c) => (
+                  {FOCUS_CATEGORIES.map((c) => (
                     <SelectItem key={c.key} value={c.key}>
                       {c.label}
                     </SelectItem>
@@ -203,7 +211,7 @@ export function SettingsPanel() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>Week starts on</Label>
-              <Select value={String(prefs.weekStartsOn)} onValueChange={(v) => setPrefs({ ...prefs, weekStartsOn: Number(v) })}>
+              <Select value={String(draft.weekStartsOn)} onValueChange={(v) => set("weekStartsOn", Number(v))}>
                 <SelectTrigger className="w-36">
                   <SelectValue />
                 </SelectTrigger>
@@ -214,7 +222,6 @@ export function SettingsPanel() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={savePrefs}>Save preferences</Button>
           </div>
 
           <Separator className="my-4" />
@@ -222,11 +229,8 @@ export function SettingsPanel() {
           <div className="flex flex-col gap-3">
             <label className="flex items-center gap-2.5 text-[13px]">
               <Switch
-                checked={prefs.confirmBeforeEndingWorkout}
-                onCheckedChange={(checked) => {
-                  setPrefs({ ...prefs, confirmBeforeEndingWorkout: checked });
-                  updateSettings.mutate({ confirmBeforeEndingWorkout: checked });
-                }}
+                checked={draft.confirmBeforeEndingWorkout}
+                onCheckedChange={(checked) => set("confirmBeforeEndingWorkout", checked)}
               />
               Ask for confirmation before ending a workout early
             </label>
@@ -234,20 +238,16 @@ export function SettingsPanel() {
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex items-center gap-2.5 text-[13px]">
                 <Switch
-                  checked={prefs.habitRemindersEnabled}
-                  onCheckedChange={(checked) => {
-                    setPrefs({ ...prefs, habitRemindersEnabled: checked });
-                    updateSettings.mutate({ habitRemindersEnabled: checked });
-                  }}
+                  checked={draft.habitRemindersEnabled}
+                  onCheckedChange={(checked) => set("habitRemindersEnabled", checked)}
                 />
                 Remind me about habits still open today
               </label>
               <Input
                 type="time"
-                value={prefs.habitReminderTime}
-                disabled={!prefs.habitRemindersEnabled}
-                onChange={(e) => setPrefs({ ...prefs, habitReminderTime: e.target.value })}
-                onBlur={() => updateSettings.mutate({ habitReminderTime: prefs.habitReminderTime })}
+                value={draft.habitReminderTime}
+                disabled={!draft.habitRemindersEnabled}
+                onChange={(e) => set("habitReminderTime", e.target.value)}
                 className="w-32"
                 aria-label="Habit reminder time"
               />
@@ -290,6 +290,36 @@ export function SettingsPanel() {
           </div>
         </CardContent>
       </Card>
+
+      {/* One save control for the whole page, rather than a button per section.
+          It only appears once something actually differs from what's stored. */}
+      <AnimatePresence>
+        {(dirty || justSaved) && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.16 }}
+            className="fixed bottom-5 right-6 z-40 flex items-center gap-2 rounded-lg border border-border bg-popover px-3 py-2 shadow-lg"
+          >
+            {justSaved ? (
+              <span className="flex items-center gap-1.5 px-1 text-[12.5px] text-success">
+                <Check className="h-3.5 w-3.5" /> Saved
+              </span>
+            ) : (
+              <>
+                <span className="px-1 text-[12.5px] text-muted-foreground">Unsaved changes</span>
+                <Button variant="ghost" size="sm" onClick={revert}>
+                  <RotateCcw className="h-3.5 w-3.5" /> Revert
+                </Button>
+                <Button size="sm" onClick={save} disabled={updateSettings.isPending}>
+                  Save changes
+                </Button>
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

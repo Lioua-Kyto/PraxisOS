@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS foods (
   category TEXT NOT NULL DEFAULT 'Any',
   calories REAL NOT NULL DEFAULT 0,
   protein_g REAL NOT NULL DEFAULT 0,
+  carbs_g REAL NOT NULL DEFAULT 0,
   serving_label TEXT NOT NULL DEFAULT '1 serving',
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -76,6 +77,7 @@ CREATE TABLE IF NOT EXISTS nutrition_logs (
   food TEXT NOT NULL,
   calories REAL NOT NULL DEFAULT 0,
   protein_g REAL NOT NULL DEFAULT 0,
+  carbs_g REAL NOT NULL DEFAULT 0,
   time TEXT NOT NULL DEFAULT (time('now'))
 );
 
@@ -123,8 +125,9 @@ CREATE TABLE IF NOT EXISTS theme_presets (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   base_theme TEXT NOT NULL DEFAULT 'dark',
-  background TEXT NOT NULL,
+  background TEXT,
   accent TEXT NOT NULL,
+  foreground TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -229,6 +232,33 @@ function migrateLegacyColumns(sqlite: Database.Database): void {
     sqlite.exec("ALTER TABLE workout_exercises ADD COLUMN duration_seconds INTEGER");
   }
 
+  const presetCols = sqlite
+    .prepare("PRAGMA table_info(theme_presets)")
+    .all() as Array<{ name: string; notnull: number }>;
+  if (presetCols.length && !presetCols.some((c) => c.name === "foreground")) {
+    sqlite.exec("ALTER TABLE theme_presets ADD COLUMN foreground TEXT");
+  }
+  // A preset that inherits its base theme's surfaces stores a null background,
+  // but installs created before that change still carry NOT NULL on the column.
+  // SQLite cannot drop a constraint in place, so rebuild the table.
+  if (presetCols.find((c) => c.name === "background")?.notnull) {
+    sqlite.exec(`
+      CREATE TABLE theme_presets_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        base_theme TEXT NOT NULL DEFAULT 'dark',
+        background TEXT,
+        accent TEXT NOT NULL,
+        foreground TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO theme_presets_new (id, name, base_theme, background, accent, foreground, created_at)
+        SELECT id, name, base_theme, background, accent, foreground, created_at FROM theme_presets;
+      DROP TABLE theme_presets;
+      ALTER TABLE theme_presets_new RENAME TO theme_presets;
+    `);
+  }
+
   const habitCols = sqlite.prepare("PRAGMA table_info(habits)").all() as Array<{ name: string }>;
   if (habitCols.length && !habitCols.some((c) => c.name === "weekdays")) {
     sqlite.exec("ALTER TABLE habits ADD COLUMN weekdays TEXT");
@@ -243,6 +273,13 @@ function migrateLegacyColumns(sqlite: Database.Database): void {
   }
   if (taskCols.length && !taskCols.some((c) => c.name === "finished_at")) {
     sqlite.exec("ALTER TABLE tasks ADD COLUMN finished_at TEXT");
+  }
+
+  for (const table of ["nutrition_logs", "foods"]) {
+    const cols = sqlite.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+    if (cols.length && !cols.some((c) => c.name === "carbs_g")) {
+      sqlite.exec(`ALTER TABLE ${table} ADD COLUMN carbs_g REAL NOT NULL DEFAULT 0`);
+    }
   }
 
   backfillLegacyUtcDatetimes(sqlite);

@@ -59,12 +59,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement.style;
-    if (activePreset) {
-      const overrides = derivePaletteOverrides(activePreset.background, activePreset.accent);
-      for (const [prop, value] of Object.entries(overrides)) root.setProperty(prop, value);
-    } else {
-      for (const prop of OVERRIDE_PROPERTIES) root.removeProperty(prop);
-    }
+    // Always clear first. A preset that inherits its background emits no
+    // surface overrides at all, so without this a previously-applied preset's
+    // background would linger on the root element and bleed into it.
+    for (const prop of OVERRIDE_PROPERTIES) root.removeProperty(prop);
+    if (!activePreset) return;
+
+    const overrides = derivePaletteOverrides(activePreset.background, activePreset.accent, activePreset.foreground);
+    for (const [prop, value] of Object.entries(overrides)) root.setProperty(prop, value);
   }, [activePreset]);
 
   const value = useMemo<ThemeContextValue>(

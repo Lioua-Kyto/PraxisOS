@@ -239,27 +239,35 @@
     --radius: 0.7rem;
   }
 
-  /* Font family choices — swap the primary UI typeface, headings stay display. */
+  /* Font family choices. The selection drives every role — body, headings
+     and tabular numerals — so picking a font restyles the whole app rather
+     than only its body copy. Numerals keep tabular-nums (see .tabular) so
+     columns still line up whichever family is active. */
   :root,
   [data-font="sans"] {
     --font-sans: "Inter", system-ui, sans-serif;
+    --font-display: "Inter", system-ui, sans-serif;
+    --font-mono: "Inter", system-ui, sans-serif;
   }
   [data-font="display"] {
     --font-sans: "Fraunces", Georgia, serif;
+    --font-display: "Fraunces", Georgia, serif;
+    --font-mono: "Fraunces", Georgia, serif;
   }
   [data-font="mono"] {
     --font-sans: "IBM Plex Mono", ui-monospace, monospace;
+    --font-display: "IBM Plex Mono", ui-monospace, monospace;
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
   }
   [data-font="grotesk"] {
     --font-sans: "Space Grotesk", system-ui, sans-serif;
+    --font-display: "Space Grotesk", system-ui, sans-serif;
+    --font-mono: "Space Grotesk", system-ui, sans-serif;
   }
   [data-font="newsreader"] {
     --font-sans: "Newsreader", Georgia, serif;
-  }
-
-  :root {
-    --font-display: "Fraunces", Georgia, serif;
-    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+    --font-display: "Newsreader", Georgia, serif;
+    --font-mono: "Newsreader", Georgia, serif;
   }
 
   * {

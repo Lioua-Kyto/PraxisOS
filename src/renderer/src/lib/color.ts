@@ -64,13 +64,51 @@ export function hslString({ h, s, l }: Hsl): string {
 
 const clampL = (l: number) => Math.min(100, Math.max(0, l));
 
-// Derives a coherent set of surface/text tokens from just a background and
-// an accent color, layered on top of a chosen built-in theme (which still
-// supplies success/warning/destructive — deliberately not user-editable
-// here, so a preset can't accidentally make error states unreadable).
-export function derivePaletteOverrides(backgroundHex: string, accentHex: string) {
-  const bg = hexToHsl(backgroundHex);
+/**
+ * Builds the CSS variable overrides a preset applies on top of its base
+ * theme.
+ *
+ * Crucially, surfaces are only overridden when the preset actually specifies
+ * a background. The common case — "I want the Light theme but with an amber
+ * accent" — passes `backgroundHex: null`, so every background/card/border
+ * token stays exactly as the base theme defines it and only the accent
+ * changes. Previously a preset always re-derived surfaces from an
+ * approximation of the theme's background, which is why picking Light + amber
+ * produced amber buttons on a background that no longer matched Light.
+ */
+export function derivePaletteOverrides(
+  backgroundHex: string | null,
+  accentHex: string,
+  foregroundHex?: string | null
+): Record<string, string> {
   const accent = hexToHsl(accentHex);
+  const accentOverrides: Record<string, string> = {
+    "--primary": hslString(accent),
+    "--primary-foreground": hslString({
+      h: accent.h,
+      s: Math.min(accent.s, 15),
+      l: accent.l < 50 ? 96 : 8
+    }),
+    "--ring": hslString(accent)
+  };
+
+  if (foregroundHex) {
+    accentOverrides["--foreground"] = hslString(hexToHsl(foregroundHex));
+    accentOverrides["--card-foreground"] = accentOverrides["--foreground"];
+    accentOverrides["--popover-foreground"] = accentOverrides["--foreground"];
+    accentOverrides["--secondary-foreground"] = accentOverrides["--foreground"];
+    accentOverrides["--accent-foreground"] = accentOverrides["--foreground"];
+  }
+
+  if (!backgroundHex) return accentOverrides;
+
+  return { ...deriveSurfaceOverrides(backgroundHex, foregroundHex), ...accentOverrides };
+}
+
+// Derives a coherent set of surface/text tokens from a background color. Only
+// used when a preset explicitly overrides the background.
+function deriveSurfaceOverrides(backgroundHex: string, foregroundHex?: string | null) {
+  const bg = hexToHsl(backgroundHex);
   const isDark = bg.l < 50;
   const dir = isDark ? 1 : -1;
 
@@ -82,27 +120,24 @@ export function derivePaletteOverrides(backgroundHex: string, accentHex: string)
   const secondary: Hsl = { ...bg, l: clampL(bg.l + dir * 9) };
   const muted: Hsl = { ...bg, l: clampL(bg.l + dir * 7) };
   const mutedForeground: Hsl = { h: bg.h, s: Math.min(bg.s, 12), l: clampL(isDark ? 62 : 40) };
-  const primaryForeground: Hsl = { h: accent.h, s: Math.min(accent.s, 15), l: accent.l < 50 ? 96 : 8 };
+  const text = foregroundHex ? hexToHsl(foregroundHex) : foreground;
 
   return {
     "--background": hslString(bg),
-    "--foreground": hslString(foreground),
+    "--foreground": hslString(text),
     "--card": hslString(card),
-    "--card-foreground": hslString(foreground),
+    "--card-foreground": hslString(text),
     "--popover": hslString(card),
-    "--popover-foreground": hslString(foreground),
+    "--popover-foreground": hslString(text),
     "--sunken": hslString(sunken),
     "--border": hslString(border),
     "--border-soft": hslString(borderSoft),
     "--input": hslString(border),
     "--secondary": hslString(secondary),
-    "--secondary-foreground": hslString(foreground),
+    "--secondary-foreground": hslString(text),
     "--muted": hslString(muted),
     "--muted-foreground": hslString(mutedForeground),
     "--accent": hslString(secondary),
-    "--accent-foreground": hslString(foreground),
-    "--primary": hslString(accent),
-    "--primary-foreground": hslString(primaryForeground),
-    "--ring": hslString(accent)
-  } as const;
+    "--accent-foreground": hslString(text)
+  } as Record<string, string>;
 }
