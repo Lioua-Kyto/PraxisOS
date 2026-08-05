@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { BrowserWindow, ipcMain } from "electron";
 import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { focusSessions } from "../db/schema";
@@ -9,6 +9,29 @@ import type {
   FocusSession,
   ManualFocusEntry
 } from "../../shared/types";
+
+export const FOCUS_CHANGED_CHANNEL = "focusTimer:changed";
+
+/**
+ * Tells every open window that the session changed.
+ *
+ * The main window and the pinned widget are separate renderer processes with
+ * separate query caches, so a mutation in one is invisible to the other. Polling
+ * papered over it at the cost of up to a second of drift — and left the two
+ * clocks disagreeing about whether the timer was running. A broadcast from the
+ * one process that owns the data keeps them exact.
+ */
+function broadcastFocusChange(): void {
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed()) win.webContents.send(FOCUS_CHANGED_CHANNEL);
+  }
+}
+
+/** Wraps a mutation so no handler can change a session without announcing it. */
+function announce<T>(result: T): T {
+  broadcastFocusChange();
+  return result;
+}
 
 type Row = typeof focusSessions.$inferSelect;
 
@@ -76,7 +99,7 @@ export function startFocusSession(
     })
     .returning()
     .get();
-  return rowToSession(row);
+  return announce(rowToSession(row));
 }
 
 export function stopFocusSession(id: number): FocusSession {
@@ -100,7 +123,7 @@ export function stopFocusSession(id: number): FocusSession {
     .where(eq(focusSessions.id, id))
     .returning()
     .get();
-  return rowToSession(row);
+  return announce(rowToSession(row));
 }
 
 export function registerFocusTimerHandlers(): void {
@@ -125,7 +148,7 @@ export function registerFocusTimerHandlers(): void {
       .where(eq(focusSessions.id, id))
       .returning()
       .get();
-    return rowToSession(row);
+    return announce(rowToSession(row));
   });
 
   ipcMain.handle("focusTimer:resume", (_e, id: number): FocusSession => {
@@ -138,7 +161,7 @@ export function registerFocusTimerHandlers(): void {
       .where(eq(focusSessions.id, id))
       .returning()
       .get();
-    return rowToSession(row);
+    return announce(rowToSession(row));
   });
 
   ipcMain.handle("focusTimer:stop", (_e, id: number): FocusSession => stopFocusSession(id));
@@ -163,7 +186,7 @@ export function registerFocusTimerHandlers(): void {
         })
         .returning()
         .get();
-      return rowToSession(row);
+      return announce(rowToSession(row));
     }
   );
 
@@ -195,7 +218,7 @@ export function registerFocusTimerHandlers(): void {
           .where(eq(focusSessions.id, id))
           .returning()
           .get();
-        return rowToSession(row);
+        return announce(rowToSession(row));
       }
 
       // Completed sessions derive their duration from the edited bounds.
@@ -207,9 +230,9 @@ export function registerFocusTimerHandlers(): void {
           .where(eq(focusSessions.id, id))
           .returning()
           .get();
-        return rowToSession(row);
+        return announce(rowToSession(row));
       }
-      return rowToSession(updated);
+      return announce(rowToSession(updated));
     }
   );
 
@@ -239,11 +262,12 @@ export function registerFocusTimerHandlers(): void {
       .where(eq(focusSessions.id, id))
       .returning()
       .get();
-    return rowToSession(row);
+    return announce(rowToSession(row));
   });
 
   ipcMain.handle("focusTimer:remove", (_e, id: number): void => {
     db().delete(focusSessions).where(eq(focusSessions.id, id)).run();
+    broadcastFocusChange();
   });
 
   ipcMain.handle("focusTimer:recent", (_e, limit = 20): FocusSession[] =>

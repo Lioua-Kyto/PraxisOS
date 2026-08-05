@@ -7,14 +7,21 @@ import { registerMainWindow } from "./workout/workoutSessionEngine";
 import { registerMediaProtocolHandler, registerMediaScheme } from "./mediaProtocol";
 import { createTray, refreshTrayMenu } from "./tray";
 import { closeWidget } from "./widgetWindow";
-import { setShowMainWindow } from "./ipc/widget";
+import { setMainWindowControls } from "./ipc/widget";
 
-// In dev this resolves to <root>/build/icon.png (out/main -> up two levels
-// -> project root -> build/icon.png). Packaged builds don't ship the
-// build/ directory (it's electron-builder's own icon source), so there we
-// read the copy electron-builder places under resources/ via extraResources
-// (see package.json's build.extraResources).
-const iconPath = app.isPackaged ? join(process.resourcesPath, "icon.png") : join(__dirname, "../../build/icon.png");
+// In dev these resolve to <root>/build/ (out/main -> up two levels -> project
+// root). Packaged builds don't ship the build/ directory (it's
+// electron-builder's own icon source), so there we read the copies
+// electron-builder places under resources/ via extraResources.
+function assetPath(name: string): string {
+  return app.isPackaged ? join(process.resourcesPath, name) : join(__dirname, "../../", "build", name);
+}
+
+// Windows wants the .ico: it carries every size the shell asks for, so the
+// taskbar button and Alt-Tab get a crisp icon instead of a downscaled PNG.
+// Everywhere else the PNG is the right choice.
+const windowIconPath = process.platform === "win32" ? assetPath("icon.ico") : assetPath("icon.png");
+const trayIconPath = assetPath("icon.png");
 
 let mainWindow: BrowserWindow | null = null;
 /** Distinguishes "user closed the window" from "user chose Quit". */
@@ -29,7 +36,7 @@ function createWindow(): void {
     show: false,
     backgroundColor: "#0b0d10",
     autoHideMenuBar: true,
-    icon: iconPath,
+    icon: windowIconPath,
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       contextIsolation: true,
@@ -37,6 +44,11 @@ function createWindow(): void {
       sandbox: false
     }
   });
+
+  // Setting it again after construction is not redundant on Windows: the
+  // constructor icon is applied before the window has a native handle, and the
+  // taskbar button can otherwise keep Electron's default.
+  win.setIcon(windowIconPath);
 
   win.on("ready-to-show", () => win.show());
 
@@ -94,11 +106,11 @@ if (!app.requestSingleInstanceLock()) {
     initDb();
     registerMediaProtocolHandler();
     registerAllIpcHandlers();
-    setShowMainWindow(showMainWindow);
+    setMainWindowControls({ show: showMainWindow, hide: () => mainWindow?.hide() });
 
     createWindow();
     createTray({
-      iconPath,
+      iconPath: trayIconPath,
       showMainWindow,
       quit: () => {
         quitting = true;

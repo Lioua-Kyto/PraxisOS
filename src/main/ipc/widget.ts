@@ -1,20 +1,29 @@
-import { BrowserWindow, ipcMain } from "electron";
+import { ipcMain } from "electron";
 import { closeWidget, isWidgetOpen, openWidget } from "../widgetWindow";
 import { refreshTrayMenu } from "../tray";
 
 /**
- * Called by main once the window exists, so the widget handlers can bring the
- * main window forward without importing from index.ts (which would be a cycle).
+ * Supplied by main once the window exists, so these handlers can drive the main
+ * window without importing from index.ts (which would be a cycle).
  */
 let showMain: () => void = () => {};
+let hideMain: () => void = () => {};
 
-export function setShowMainWindow(fn: () => void): void {
-  showMain = fn;
+export function setMainWindowControls(controls: { show: () => void; hide: () => void }): void {
+  showMain = controls.show;
+  hideMain = controls.hide;
 }
 
 export function registerWidgetHandlers(): void {
+  /**
+   * Pinning the timer replaces the main window rather than sitting on top of
+   * it: the point of the widget is to keep the clock visible while working in
+   * something else, so leaving the full app open behind it just means two
+   * copies of the same timer competing for screen space.
+   */
   ipcMain.handle("widget:open", () => {
     openWidget();
+    hideMain();
     refreshTrayMenu();
   });
 
@@ -25,16 +34,10 @@ export function registerWidgetHandlers(): void {
 
   ipcMain.handle("widget:isOpen", (): boolean => isWidgetOpen());
 
-  // From the widget: surface the main window (and drop the widget's own focus).
-  ipcMain.handle("widget:openMain", (event) => {
+  /** The widget's way back: dismiss it and bring the app forward. */
+  ipcMain.handle("widget:restoreMain", () => {
+    closeWidget();
     showMain();
-    BrowserWindow.fromWebContents(event.sender)?.blur();
-  });
-
-  // Minimise-to-tray from the UI, so the behaviour is discoverable rather than
-  // only happening when the window's close button is used.
-  ipcMain.handle("widget:hideMain", () => {
-    const [main] = BrowserWindow.getAllWindows().filter((w) => !w.isAlwaysOnTop());
-    main?.hide();
+    refreshTrayMenu();
   });
 }

@@ -1,11 +1,13 @@
 import {
   Banknote,
   BookOpen,
+  Bug,
   Dumbbell,
   Flame,
   GraduationCap,
   LayoutDashboard,
   ListChecks,
+  MessageSquarePlus,
   NotebookText,
   PanelLeftClose,
   PanelLeftOpen,
@@ -32,37 +34,80 @@ export type PageKey =
   | "settings";
 
 const NAV: Array<{ key: PageKey; label: string; icon: typeof LayoutDashboard }> = [
-  { key: "dashboard", label: "Overview", icon: LayoutDashboard },
+  { key: "dashboard", label: "Nexus", icon: LayoutDashboard },
   { key: "todo", label: "Tasks", icon: ListChecks },
-  { key: "habits", label: "Habit Matrix", icon: Flame },
-  { key: "courses", label: "Courses", icon: GraduationCap },
+  { key: "habits", label: "Discipline", icon: Flame },
+  { key: "courses", label: "Mastery", icon: GraduationCap },
   { key: "workout", label: "Workout", icon: Dumbbell },
   { key: "nutrition", label: "Nutrition", icon: Salad },
-  { key: "timer", label: "Focus Timer", icon: Timer },
-  { key: "budget", label: "Budget", icon: Banknote },
-  { key: "journal", label: "Daily Log", icon: BookOpen },
-  { key: "notes", label: "Knowledge Base", icon: NotebookText }
+  { key: "timer", label: "Flow", icon: Timer },
+  { key: "budget", label: "Ledger", icon: Banknote },
+  { key: "journal", label: "Journal", icon: BookOpen },
+  { key: "notes", label: "Codex", icon: NotebookText }
 ];
 
 /**
- * Live marker on the Focus Timer link. It exists so the user can tell from any
- * panel whether the clock is still running — a session left running by mistake
- * is otherwise invisible until they navigate back.
+ * Live marker on the Flow link, so the user can tell from any panel whether the
+ * clock is still running — a session left running by mistake is otherwise
+ * invisible until they navigate back. Static rather than pulsing: it sits in
+ * peripheral vision the whole time the timer runs, and a blinking dot there is
+ * a distraction, not information.
  */
-function TimerPulse({ paused }: { paused: boolean }) {
+function TimerDot({ paused }: { paused: boolean }) {
   const label = paused ? "Focus session paused" : "Focus session running";
   return (
-    <span className="relative flex h-2 w-2" title={label} aria-label={label} role="status">
-      {!paused && (
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-70" />
-      )}
-      <span
-        className={cn(
-          "relative inline-flex h-2 w-2 rounded-full",
-          paused ? "bg-warning" : "bg-success"
-        )}
-      />
-    </span>
+    <span
+      role="status"
+      title={label}
+      aria-label={label}
+      className={cn("inline-flex h-2 w-2 rounded-full", paused ? "bg-warning" : "bg-success")}
+    />
+  );
+}
+
+const REPO = "https://github.com/Lioua-Kyto/Praxis-OS";
+
+const SUPPORT_LINKS = [
+  {
+    key: "bug",
+    label: "Bug",
+    title: "Report a bug on GitHub",
+    icon: Bug,
+    href: `${REPO}/issues/new?labels=bug&title=${encodeURIComponent("[Bug] ")}`
+  },
+  {
+    key: "feedback",
+    label: "Feedback",
+    title: "Share feedback or request a feature",
+    icon: MessageSquarePlus,
+    href: `${REPO}/issues/new?labels=enhancement&title=${encodeURIComponent("[Feedback] ")}`
+  }
+] as const;
+
+/**
+ * Bug and Feedback sit side by side on one row so the pair costs the same
+ * vertical space as a single nav link — they're utilities, not destinations,
+ * and shouldn't read as another two panels.
+ */
+function SupportButtons({ collapsed }: { collapsed: boolean }) {
+  return (
+    <div className={cn("mb-1 flex gap-1", collapsed ? "flex-col items-center" : "px-0")}>
+      {SUPPORT_LINKS.map(({ key, label, title, icon: Icon, href }) => (
+        <button
+          key={key}
+          onClick={() => void window.api.updates.openRelease(href)}
+          title={title}
+          aria-label={title}
+          className={cn(
+            "flex items-center justify-center gap-1.5 rounded-md border border-border-soft py-1.5 text-[11.5px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+            collapsed ? "w-full px-0" : "flex-1 px-2"
+          )}
+        >
+          <Icon className="h-3.5 w-3.5 shrink-0" />
+          {!collapsed && <span className="truncate">{label}</span>}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -163,11 +208,13 @@ export function Sidebar({
           label={item.label}
           icon={item.icon}
           onClick={() => onNavigate(item.key)}
-          badge={item.key === "timer" && timerState ? <TimerPulse paused={timerState === "paused"} /> : undefined}
+          badge={item.key === "timer" && timerState ? <TimerDot paused={timerState === "paused"} /> : undefined}
         />
       ))}
 
       <div className="flex-1" />
+
+      <SupportButtons collapsed={collapsed} />
 
       <NavButton
         active={page === "settings"}

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { FocusSession, ManualFocusEntry } from "@shared/types";
 
@@ -17,7 +18,21 @@ function invalidateAll(qc: ReturnType<typeof useQueryClient>) {
 // it lives in SQLite (main process), not component state, so switching tabs
 // or remounting the panel never resets or duplicates it.
 export function useActiveFocusSession() {
+  useFocusSync();
   return useQuery({ queryKey: ACTIVE_KEY, queryFn: () => window.api.focusTimer.getActive() });
+}
+
+/**
+ * Keeps this window's cache in step with the other one.
+ *
+ * The pinned widget and the main window are separate renderer processes, so
+ * neither sees the other's mutations. Main broadcasts after every change and
+ * both windows refetch on it — which is why the two clocks agree immediately
+ * rather than up to a poll interval later.
+ */
+export function useFocusSync(): void {
+  const qc = useQueryClient();
+  useEffect(() => window.api.events.onFocusChanged(() => invalidateAll(qc)), [qc]);
 }
 
 export function useRecentFocusSessions(limit = 20) {

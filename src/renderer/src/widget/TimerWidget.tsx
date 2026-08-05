@@ -1,8 +1,8 @@
-import { Pause, Play, Square, X } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Maximize2, Pause, Play, Square } from "lucide-react";
 import { TimerDisplay } from "../components/timer/TimerDisplay";
 import { focusCategoryMeta } from "../components/timer/focusCategories";
 import {
+  useActiveFocusSession,
   usePauseFocusSession,
   useResumeFocusSession,
   useStopFocusSession
@@ -11,29 +11,28 @@ import {
 /**
  * The pinned mini timer.
  *
- * It polls rather than sharing the main window's query cache: these are two
- * separate renderer processes, so a mutation in one can't invalidate the
- * other's cache. A once-a-second read of a local SQLite row is cheap, and it
- * means the widget stays correct when the timer is driven from the main window.
+ * It reads the same query key the main window uses and subscribes to the main
+ * process's change broadcast (see useActiveFocusSession), so pausing here and
+ * pausing there are the same operation as far as both clocks are concerned —
+ * no polling interval, no drift, no window showing "running" while the other
+ * shows "paused".
  */
 export function TimerWidget() {
-  const { data: session } = useQuery({
-    queryKey: ["widget", "activeFocusSession"],
-    queryFn: () => window.api.focusTimer.getActive(),
-    refetchInterval: 1000
-  });
-
+  const { data: session } = useActiveFocusSession();
   const pause = usePauseFocusSession();
   const resume = useResumeFocusSession();
   const stop = useStopFocusSession();
 
   const running = session?.status === "running";
   const meta = session ? focusCategoryMeta(session.category) : null;
+  const busy = pause.isPending || resume.isPending;
+
+  const noDrag = { WebkitAppRegion: "no-drag" } as React.CSSProperties;
 
   return (
     <div
       className="flex h-screen w-screen select-none flex-col justify-between rounded-xl border border-border bg-popover/95 px-3 py-2 shadow-2xl backdrop-blur"
-      // Whole surface drags the frameless window; controls opt back out below.
+      // The whole surface drags the frameless window; controls opt back out.
       style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
     >
       <div className="flex items-center justify-between gap-2">
@@ -47,29 +46,27 @@ export function TimerWidget() {
           </span>
         </div>
         <button
-          onClick={() => window.api.widget.close()}
-          aria-label="Close widget"
-          title="Close widget"
+          onClick={() => void window.api.widget.restoreMain()}
+          aria-label="Back to PraxisOS"
+          title="Back to PraxisOS"
           className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
-          style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
+          style={noDrag}
         >
-          <X className="h-3 w-3" />
+          <Maximize2 className="h-3 w-3" />
         </button>
       </div>
 
       <TimerDisplay session={session ?? null} className="text-center font-display text-2xl tabular leading-none" />
 
-      <div
-        className="flex items-center justify-center gap-1"
-        style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
-      >
+      <div className="flex items-center justify-center gap-1" style={noDrag}>
         {session ? (
           <>
             <button
+              disabled={busy}
               onClick={() => (running ? pause.mutate(session.id) : resume.mutate(session.id))}
               aria-label={running ? "Pause session" : "Resume session"}
               title={running ? "Pause" : "Resume"}
-              className="rounded px-2 py-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="rounded px-2 py-1 text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
             >
               {running ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
             </button>
@@ -84,10 +81,10 @@ export function TimerWidget() {
           </>
         ) : (
           <button
-            onClick={() => window.api.widget.openMain()}
+            onClick={() => void window.api.widget.restoreMain()}
             className="rounded px-2 py-1 text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground"
           >
-            Open PraxisOS
+            Back to PraxisOS
           </button>
         )}
       </div>

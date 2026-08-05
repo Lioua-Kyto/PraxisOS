@@ -204,12 +204,25 @@ const api = {
     acknowledge: () => invoke<void>("updates:acknowledge"),
     releaseNotes: () => invoke<WhatsNew>("updates:releaseNotes")
   },
+  events: {
+    /** Fires in every window whenever the focus session changes anywhere. */
+    onFocusChanged: (callback: () => void) => {
+      const listener = () => callback();
+      ipcRenderer.on("focusTimer:changed", listener);
+      // Returns void, not the IpcRenderer that .off() hands back, so it can be
+      // used directly as a useEffect cleanup.
+      return () => {
+        ipcRenderer.off("focusTimer:changed", listener);
+      };
+    }
+  },
   widget: {
+    /** Opens the pinned timer and hides the main window. */
     open: () => invoke<void>("widget:open"),
     close: () => invoke<void>("widget:close"),
     isOpen: () => invoke<boolean>("widget:isOpen"),
-    openMain: () => invoke<void>("widget:openMain"),
-    hideMain: () => invoke<void>("widget:hideMain")
+    /** From the widget: dismiss it and bring the app back. */
+    restoreMain: () => invoke<void>("widget:restoreMain")
   }
 };
 

@@ -51,22 +51,15 @@ const today = () => localDateString();
  * Pops the timer out into a small always-on-top window so it stays readable
  * while working in another app — the main reason to keep PraxisOS in the tray.
  */
+/**
+ * Swaps the full app for the pinned timer. There is no "hide" state to show
+ * here — the window is gone the moment the widget opens, and the way back is
+ * the widget's own restore button (or the tray).
+ */
 function WidgetToggle() {
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    void window.api.widget.isOpen().then(setOpen);
-  }, []);
-
-  const toggle = async () => {
-    if (open) await window.api.widget.close();
-    else await window.api.widget.open();
-    setOpen(await window.api.widget.isOpen());
-  };
-
   return (
-    <Button variant="outline" size="sm" onClick={() => void toggle()}>
-      <PictureInPicture2 className="h-3.5 w-3.5" /> {open ? "Hide mini timer" : "Pin mini timer"}
+    <Button variant="outline" size="sm" onClick={() => void window.api.widget.open()}>
+      <PictureInPicture2 className="h-3.5 w-3.5" /> Pin mini timer
     </Button>
   );
 }
@@ -146,8 +139,8 @@ export function TimerPanel() {
   return (
     <div>
       <PageHeader
-        kicker="Time allocation"
-        title="Focus Timer"
+        title="Flow"
+        description="Clock in against a category to see where your attention actually goes. Pin the mini timer to keep it visible while you work elsewhere."
         action={<WidgetToggle />}
       />
 
