@@ -4,7 +4,10 @@
   "version": "0.1.0",
   "description": "A local-first personal management desktop app.",
   "main": "./out/main/index.js",
-  "author": "Lioua Zeddam",
+  "author": {
+    "name": "Lioua-Kyto",
+    "email": "liwaazeddam@gmail.com"
+  },
   "private": true,
   "scripts": {
     "dev": "electron-vite dev",
@@ -95,6 +98,10 @@
         "to": "icon.png"
       },
       {
+        "from": "build/icon.ico",
+        "to": "icon.ico"
+      },
+      {
         "from": "drizzle",
         "to": "drizzle"
       },
@@ -108,7 +115,8 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "nsis": {
       "installerIcon": "build/icon.ico",
@@ -127,7 +135,20 @@
       "target": "AppImage",
       "icon": "build/icon.png",
       "category": "Utility"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Lioua-Kyto",
+        "repo": "Praxis-OS",
+        "releaseType": "release"
+      }
+    ],
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
   },
-  "license": "SEE LICENSE IN build/license.txt"
+  "license": "SEE LICENSE IN build/license.txt",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lioua-Kyto/Praxis-OS.git"
+  }
 }
