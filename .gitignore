@@ -13,3 +13,6 @@ TASKS.md
 tasks.md
 CLAUDE.md
 .claude/
+
+# Demo output is committed; scratch copies are not
+demo/*.sqlite3
