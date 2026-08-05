@@ -142,9 +142,11 @@ export function registerHabitHandlers(): void {
     if (!habitRow) throw new Error("Habit not found");
     const habit = rowToHabit(habitRow);
 
-    if (!isScheduledOn(habit, date)) {
-      const dayName = new Date(`${date}T00:00:00`).toLocaleDateString(undefined, { weekday: "long" });
-      throw new Error(`"${habit.name}" isn't scheduled on ${dayName}.`);
+    // Off-schedule check-ins are allowed on purpose. A workout done outside or
+    // at a gym still counts, so the schedule decides what the app asks for, not
+    // what the user is permitted to record. Only the future is refused.
+    if (date > localDateString()) {
+      throw new Error("You can't check in for a day that hasn't happened yet.");
     }
 
     const existing = db()

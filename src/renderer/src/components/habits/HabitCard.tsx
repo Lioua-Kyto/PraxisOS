@@ -27,6 +27,12 @@ export function HabitCard({ habit, month }: { habit: HabitWithLogs; month: strin
   const scheduledToday = habit.scheduledDates.includes(today);
   const doneCount = habit.scheduledDates.filter((d) => completed.has(d)).length;
 
+  // Days done outside the schedule still belong on the grid — a workout taken
+  // outside or at a gym is a real check-in, not an anomaly to hide.
+  const scheduled = new Set(habit.scheduledDates);
+  const gridDates = [...new Set([...habit.scheduledDates, ...habit.completedDates])].sort();
+  const bonusCount = habit.completedDates.filter((d) => !scheduled.has(d)).length;
+
   const check = (date: string) => {
     setError("");
     toggle.mutate({ id: habit.id, date }, { onError: (e) => setError((e as Error).message) });
@@ -41,7 +47,7 @@ export function HabitCard({ habit, month }: { habit: HabitWithLogs; month: strin
               <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color }} />
               <span className="truncate font-display text-base">{habit.name}</span>
               {habit.managedBy && (
-                <span title="Managed by your workout schedule in Settings">
+                <span title="Its schedule follows your workout plan in Settings — you can still check in any day">
                   <Lock className="h-3 w-3 shrink-0 text-muted-foreground" />
                 </span>
               )}
@@ -57,6 +63,14 @@ export function HabitCard({ habit, month }: { habit: HabitWithLogs; month: strin
               <span className="tabular">
                 {doneCount}/{habit.scheduledDates.length} this month
               </span>
+              {bonusCount > 0 && (
+                <>
+                  <span>·</span>
+                  <span className="tabular" title="Check-ins on days the schedule didn't ask for">
+                    +{bonusCount} extra
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
@@ -65,8 +79,13 @@ export function HabitCard({ habit, month }: { habit: HabitWithLogs; month: strin
               size="sm"
               variant={doneToday ? "default" : "outline"}
               style={doneToday ? { background: color, borderColor: color } : undefined}
-              disabled={!scheduledToday}
-              title={scheduledToday ? (doneToday ? "Undo today's check-in" : "Check in for today") : "Not scheduled today"}
+              title={
+                doneToday
+                  ? "Undo today's check-in"
+                  : scheduledToday
+                    ? "Check in for today"
+                    : "Not scheduled today — check in anyway if you did it"
+              }
               onClick={() => check(today)}
             >
               <Check className="h-3.5 w-3.5" /> {doneToday ? "Done" : "Check in"}
@@ -88,17 +107,18 @@ export function HabitCard({ habit, month }: { habit: HabitWithLogs; month: strin
 
         {/* One square per scheduled day this month, filling the card width. */}
         <div className="flex flex-wrap gap-1.5">
-          {habit.scheduledDates.map((date) => {
+          {gridDates.map((date) => {
             const isDone = completed.has(date);
             const isToday = date === today;
             const isFuture = date > today;
+            const isBonus = !scheduled.has(date);
             const dayNum = Number(date.slice(-2));
             return (
               <button
                 key={date}
                 type="button"
                 disabled={isFuture}
-                title={`${date}${isFuture ? " — upcoming" : ""}`}
+                title={`${date}${isFuture ? " — upcoming" : isBonus ? " — extra, not scheduled" : ""}`}
                 aria-label={`${habit.name} on ${date}: ${isDone ? "completed" : isFuture ? "upcoming" : "not completed"}`}
                 aria-pressed={isDone}
                 onClick={() => check(date)}
@@ -106,6 +126,7 @@ export function HabitCard({ habit, month }: { habit: HabitWithLogs; month: strin
                   "flex h-8 min-w-8 flex-1 items-center justify-center rounded-md border text-[10px] tabular transition-transform",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   isFuture ? "cursor-default opacity-40" : "hover:scale-105",
+                  isBonus && "border-dashed",
                   isToday && "ring-2 ring-offset-1 ring-offset-background"
                 )}
                 style={{
