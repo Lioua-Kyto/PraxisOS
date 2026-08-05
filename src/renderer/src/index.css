@@ -285,6 +285,14 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
+
+  /* Pinned timer window: transparent frame, no scrollbars, no text selection. */
+  .widget-mode,
+  .widget-mode body,
+  .widget-mode #root {
+    background: transparent;
+    overflow: hidden;
+  }
 }
 
 @layer base {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play, RotateCcw, Square } from "lucide-react";
+import { Pause, PictureInPicture2, Play, RotateCcw, Square } from "lucide-react";
 import { PageHeader } from "../layout/PageHeader";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
@@ -46,6 +46,30 @@ function timeToHour(stored: string | null): number {
 }
 
 const today = () => localDateString();
+
+/**
+ * Pops the timer out into a small always-on-top window so it stays readable
+ * while working in another app — the main reason to keep PraxisOS in the tray.
+ */
+function WidgetToggle() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    void window.api.widget.isOpen().then(setOpen);
+  }, []);
+
+  const toggle = async () => {
+    if (open) await window.api.widget.close();
+    else await window.api.widget.open();
+    setOpen(await window.api.widget.isOpen());
+  };
+
+  return (
+    <Button variant="outline" size="sm" onClick={() => void toggle()}>
+      <PictureInPicture2 className="h-3.5 w-3.5" /> {open ? "Hide mini timer" : "Pin mini timer"}
+    </Button>
+  );
+}
 
 export function TimerPanel() {
   const { data: active } = useActiveFocusSession();
@@ -121,7 +145,11 @@ export function TimerPanel() {
 
   return (
     <div>
-      <PageHeader kicker="Time allocation" title="Focus Timer" />
+      <PageHeader
+        kicker="Time allocation"
+        title="Focus Timer"
+        action={<WidgetToggle />}
+      />
 
       <Card className="mb-5">
         <CardContent className="flex flex-wrap items-end justify-between gap-6 pt-5">

@@ -13,6 +13,8 @@ import { registerTaskHandlers } from "./tasks";
 import { registerThemePresetHandlers } from "./themePresets";
 import { registerWorkoutHandlers } from "./workouts";
 import { registerWorkoutSessionHandlers } from "./workoutSession";
+import { registerWidgetHandlers } from "./widget";
+import { registerUpdateHandlers } from "./updates";
 
 export function registerAllIpcHandlers(): void {
   registerTaskHandlers();
@@ -30,4 +32,6 @@ export function registerAllIpcHandlers(): void {
   registerJournalHandlers();
   registerNoteHandlers();
   registerThemePresetHandlers();
+  registerWidgetHandlers();
+  registerUpdateHandlers();
 }
