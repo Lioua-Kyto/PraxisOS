@@ -41,7 +41,10 @@ function createWindow(): void {
       preload: join(__dirname, "../preload/index.js"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
+      sandbox: false,
+      // The focus timer keeps counting while the user works in another app, so
+      // the clock must not be throttled just because this window lost focus.
+      backgroundThrottling: false
     }
   });
 

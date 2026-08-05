@@ -46,7 +46,12 @@ export function openWidget(): void {
       preload: join(__dirname, "../preload/index.js"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
+      sandbox: false,
+      // Chromium throttles timers in windows that aren't focused, so an
+      // unfocused clock starts ticking every two seconds instead of every one
+      // — which is exactly what a pinned timer is unfocused for. This window
+      // runs one setTimeout; there is nothing here worth throttling.
+      backgroundThrottling: false
     }
   });
 
