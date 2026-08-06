@@ -6,7 +6,7 @@ import { WhatsNewDialog } from "../updates/WhatsNewDialog";
 import { useState } from "react";
 import type { WhatsNew } from "@shared/types";
 
-const REPO = "https://github.com/Lioua-Kyto/Praxis-OS";
+const REPO = "https://github.com/Lioua-Kyto/PraxisOS";
 
 const DOCUMENTS = [
   { label: "Privacy policy", href: `${REPO}/blob/main/PRIVACY.md`, icon: Shield },

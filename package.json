@@ -140,7 +140,7 @@
       {
         "provider": "github",
         "owner": "Lioua-Kyto",
-        "repo": "Praxis-OS",
+        "repo": "PraxisOS",
         "releaseType": "release"
       }
     ],
@@ -149,6 +149,6 @@
   "license": "SEE LICENSE IN build/license.txt",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Lioua-Kyto/Praxis-OS.git"
+    "url": "https://github.com/Lioua-Kyto/PraxisOS.git"
   }
 }

@@ -59,7 +59,7 @@ two situations, both of which you can avoid:
 **a) Update check.** On launch, the application asks the GitHub Releases API
 whether a newer version has been published:
 
-`https://api.github.com/repos/Lioua-Kyto/Praxis-OS/releases/latest`
+`https://api.github.com/repos/Lioua-Kyto/PraxisOS/releases/latest`
 
 This request sends no personal data and no content from your database. As with
 any HTTP request, GitHub will see your IP address and a generic user agent.

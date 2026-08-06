@@ -65,7 +65,7 @@ function TimerDot({ paused }: { paused: boolean }) {
   );
 }
 
-const REPO = "https://github.com/Lioua-Kyto/Praxis-OS";
+const REPO = "https://github.com/Lioua-Kyto/PraxisOS";
 
 const SUPPORT_LINKS = [
   {

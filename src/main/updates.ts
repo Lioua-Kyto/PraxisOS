@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { ReleaseInfo, UpdateCheck } from "../shared/types";
 
-const REPO = "Lioua-Kyto/Praxis-OS";
+const REPO = "Lioua-Kyto/PraxisOS";
 const LATEST_RELEASE_URL = `https://api.github.com/repos/${REPO}/releases/latest`;
 const REQUEST_TIMEOUT_MS = 8000;
 
