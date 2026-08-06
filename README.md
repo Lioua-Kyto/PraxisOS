@@ -13,6 +13,22 @@ All data is stored locally in a SQLite database under your OS's app-data folder 
 - [End User Licence Agreement](build/license.txt) — shown by the installer; you must accept it before installation proceeds.
 - [Changelog](CHANGELOG.md) — what changed in each release.
 
+## Installing
+
+Download the latest `PraxisOS-Setup-x.y.z.exe` from the [Releases page](https://github.com/Lioua-Kyto/PraxisOS/releases) and run it. The installer shows the licence agreement and requires you to tick the acceptance box before it will continue.
+
+### About the Windows security warning
+
+**PraxisOS is not code-signed yet, so Windows will warn you the first time you run the installer.** You'll see a blue *"Windows protected your PC"* dialog from SmartScreen. To continue: **More info** → **Run anyway**.
+
+This is worth understanding rather than clicking past:
+
+- The warning does **not** mean the file is malicious. It means the publisher is unverified — a code-signing certificate costs a few hundred euro a year, and this is a pre-1.0 project that hasn't bought one.
+- It also means Windows cannot prove the file wasn't tampered with in transit. **Only download it from the Releases page linked above.** An installer for this app from anywhere else is one you have no way to verify.
+- If you'd rather not bypass a security prompt at all — a perfectly reasonable position — build it yourself from source with `npm run dist`. The result is the same application.
+
+Signing is on the roadmap before any wider promotion of the app.
+
 ## Stack
 
 - **TypeScript** end to end — main process, preload bridge, and renderer.

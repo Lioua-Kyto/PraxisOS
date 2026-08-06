@@ -44,6 +44,15 @@ Do not use the Software as the only record of anything you cannot afford to
 lose. Export a backup regularly (*Settings → Export backup*) and keep it
 somewhere safe.
 
+**The Software is not code-signed.** Windows SmartScreen will warn you that the
+publisher is unverified when you run the installer. Because the build is
+unsigned, neither you nor your operating system can cryptographically verify
+that a copy came from us or that it was not altered after it was published. You
+should therefore obtain the Software **only** from the project's official GitHub
+Releases page, and you accept that choosing to run an unverified installer is
+your own decision. We accept no responsibility for a copy obtained anywhere
+else.
+
 ## 4. Your data and your responsibility for it
 
 All data you create stays on your own device. See [PRIVACY.md](PRIVACY.md).

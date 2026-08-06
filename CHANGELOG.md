@@ -55,3 +55,6 @@ First public early-access release.
 - Early access: expect edge-case defects. Export a backup regularly.
 - Updates are checked but not installed automatically — the release page opens
   in your browser.
+- The installer is not code-signed, so Windows SmartScreen will warn on first
+  run. Choose More info, then Run anyway. Only download the installer from the
+  project's GitHub Releases page.
