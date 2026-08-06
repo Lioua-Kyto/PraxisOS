@@ -16,3 +16,6 @@ CLAUDE.md
 
 # Demo output is committed; scratch copies are not
 demo/*.sqlite3
+
+# Personal release walkthrough — kept local, not published
+docs/RELEASING.md

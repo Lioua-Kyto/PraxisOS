@@ -12,7 +12,6 @@ All data is stored locally in a SQLite database under your OS's app-data folder 
 - [Terms of Use](TERMS.md) — licence, early-access warning, and the limits of liability.
 - [End User Licence Agreement](build/license.txt) — shown by the installer; you must accept it before installation proceeds.
 - [Changelog](CHANGELOG.md) — what changed in each release.
-- [Releasing](docs/RELEASING.md) — how a new version is published.
 
 ## Stack
 
