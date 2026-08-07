@@ -405,19 +405,20 @@ export interface ImportSummary {
   upgradedThrough: number[];
 }
 
-export interface ReleaseInfo {
-  version: string;
-  name: string;
-  notes: string;
-  url: string;
-  publishedAt: string | null;
-}
-
-export interface UpdateCheck {
-  currentVersion: string;
-  latest: ReleaseInfo | null;
-  updateAvailable: boolean;
-}
+/**
+ * The auto-updater's state, broadcast from main to every window. A discriminated
+ * union so the renderer renders exactly one thing per state with no impossible
+ * combinations (e.g. a percent while idle).
+ */
+export type UpdaterStatus =
+  | { state: "idle" }
+  | { state: "checking" }
+  | { state: "available"; version: string; notes: string }
+  | { state: "not-available"; version: string }
+  | { state: "downloading"; percent: number; transferred: number; total: number; bytesPerSecond: number }
+  | { state: "downloaded"; version: string }
+  | { state: "unsupported" }
+  | { state: "error"; message: string };
 
 export interface WhatsNew {
   version: string;

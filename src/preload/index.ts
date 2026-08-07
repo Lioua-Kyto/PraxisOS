@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type {
   AppSettings,
-  UpdateCheck,
+  UpdaterStatus,
   WhatsNew,
   BrainDump,
   BudgetCategory,
@@ -198,11 +198,26 @@ const api = {
   },
   updates: {
     version: () => invoke<string>("updates:version"),
-    check: () => invoke<UpdateCheck>("updates:check"),
     openRelease: (url: string) => invoke<void>("updates:openRelease", url),
     whatsNew: () => invoke<WhatsNew>("updates:whatsNew"),
     acknowledge: () => invoke<void>("updates:acknowledge"),
     releaseNotes: () => invoke<WhatsNew>("updates:releaseNotes")
+  },
+  updater: {
+    /** Current updater state, for a window mounting mid-flow. */
+    getStatus: () => invoke<UpdaterStatus>("updater:getStatus"),
+    check: () => invoke<void>("updater:check"),
+    download: () => invoke<void>("updater:download"),
+    /** Quit, install the downloaded update silently, and relaunch. */
+    install: () => invoke<void>("updater:install"),
+    /** Subscribe to updater state; returns an unsubscribe for effect cleanup. */
+    onStatus: (callback: (status: UpdaterStatus) => void) => {
+      const listener = (_e: unknown, status: UpdaterStatus) => callback(status);
+      ipcRenderer.on("updater:status", listener);
+      return () => {
+        ipcRenderer.off("updater:status", listener);
+      };
+    }
   },
   events: {
     /** Fires in every window whenever the focus session changes anywhere. */

@@ -1,11 +1,7 @@
-import { app, net } from "electron";
+import { app } from "electron";
 import fs from "node:fs";
 import path from "node:path";
-import type { ReleaseInfo, UpdateCheck } from "../shared/types";
 
-const REPO = "Lioua-Kyto/PraxisOS";
-const LATEST_RELEASE_URL = `https://api.github.com/repos/${REPO}/releases/latest`;
-const REQUEST_TIMEOUT_MS = 8000;
 
 /**
  * Compares two dotted numeric versions. Returns >0 when `a` is newer.
@@ -71,50 +67,3 @@ export function currentVersion(): string {
   return app.getVersion();
 }
 
-/**
- * Asks GitHub for the newest published release. Failure is not an error worth
- * surfacing — the app works offline by design, so a failed check just reports
- * "no update known" and the user is none the wiser.
- */
-export async function checkForUpdate(): Promise<UpdateCheck> {
-  const version = currentVersion();
-  const offline: UpdateCheck = { currentVersion: version, latest: null, updateAvailable: false };
-
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-    const response = await net.fetch(LATEST_RELEASE_URL, {
-      headers: { Accept: "application/vnd.github+json", "User-Agent": "PraxisOS" },
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
-    if (!response.ok) return offline;
-
-    const body = (await response.json()) as {
-      tag_name?: string;
-      name?: string;
-      body?: string;
-      html_url?: string;
-      published_at?: string;
-      draft?: boolean;
-      prerelease?: boolean;
-    };
-    if (!body.tag_name || body.draft) return offline;
-
-    const latest: ReleaseInfo = {
-      version: body.tag_name.replace(/^v/, ""),
-      name: body.name ?? body.tag_name,
-      notes: (body.body ?? "").trim(),
-      url: body.html_url ?? `https://github.com/${REPO}/releases`,
-      publishedAt: body.published_at ?? null
-    };
-
-    return {
-      currentVersion: version,
-      latest,
-      updateAvailable: compareVersions(latest.version, version) > 0
-    };
-  } catch {
-    return offline;
-  }
-}

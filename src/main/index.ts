@@ -9,6 +9,7 @@ import { createTray, refreshTrayMenu } from "./tray";
 import { closeWidget } from "./widgetWindow";
 import { setMainWindowControls } from "./ipc/widget";
 import { installAppMenu } from "./appMenu";
+import { registerUpdater } from "./updater";
 
 // In dev these resolve to <root>/build/ (out/main -> up two levels -> project
 // root). Packaged builds don't ship the build/ directory (it's
@@ -123,6 +124,7 @@ if (!app.requestSingleInstanceLock()) {
     registerMediaProtocolHandler();
     registerAllIpcHandlers();
     installAppMenu();
+    registerUpdater();
     setMainWindowControls({ show: showMainWindow, hide: () => mainWindow?.hide() });
 
     createWindow();

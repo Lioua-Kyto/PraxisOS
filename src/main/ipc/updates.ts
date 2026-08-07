@@ -1,8 +1,8 @@
 import { ipcMain, shell } from "electron";
 import { db } from "../db/client";
 import { settings } from "../db/schema";
-import { checkForUpdate, compareVersions, currentVersion, readReleaseNotes } from "../updates";
-import type { UpdateCheck, WhatsNew } from "../../shared/types";
+import { compareVersions, currentVersion, readReleaseNotes } from "../updates";
+import type { WhatsNew } from "../../shared/types";
 
 const LAST_SEEN_KEY = "lastSeenVersion";
 
@@ -22,8 +22,9 @@ function writeLastSeen(version: string): void {
 export function registerUpdateHandlers(): void {
   ipcMain.handle("updates:version", (): string => currentVersion());
 
-  ipcMain.handle("updates:check", (): Promise<UpdateCheck> => checkForUpdate());
-
+  // Opens external links (docs, bug/feedback) in the browser. The old
+  // "download the update in a browser" flow is gone — updates install in-app
+  // via electron-updater now (see src/main/updater.ts).
   ipcMain.handle("updates:openRelease", (_e, url: string): Promise<void> => shell.openExternal(url));
 
   /**

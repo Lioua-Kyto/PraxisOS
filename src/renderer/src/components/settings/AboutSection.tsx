@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ExternalLink, FileText, RefreshCw, Scale, ScrollText, Shield } from "lucide-react";
+import { AlertTriangle, ExternalLink, FileText, Scale, ScrollText, Shield } from "lucide-react";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
 import { WhatsNewDialog } from "../updates/WhatsNewDialog";
+import { UpdaterControl } from "../updates/UpdaterControl";
 import { useState } from "react";
 import type { WhatsNew } from "@shared/types";
 
@@ -11,7 +12,7 @@ const REPO = "https://github.com/Lioua-Kyto/PraxisOS";
 const DOCUMENTS = [
   { label: "Privacy policy", href: `${REPO}/blob/main/PRIVACY.md`, icon: Shield },
   { label: "Terms of use", href: `${REPO}/blob/main/TERMS.md`, icon: FileText },
-  { label: "Licence agreement", href: `${REPO}/blob/main/build/license.txt`, icon: Scale },
+  { label: "Licence agreement", href: `${REPO}/blob/main/build/license.txt`, icon: Scale }
 ];
 
 export function AboutSection() {
@@ -22,30 +23,19 @@ export function AboutSection() {
     staleTime: Infinity
   });
 
-  const { data: check, refetch, isFetching } = useQuery({
-    queryKey: ["updates", "check"],
-    queryFn: () => window.api.updates.check(),
-    staleTime: Infinity,
-    retry: false
-  });
-
   return (
     <>
       <div className="mb-3 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">About</div>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+      <div className="flex items-center gap-x-3">
         <span className="font-display text-lg">PraxisOS</span>
         <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] tabular">v{version ?? "—"}</span>
-        {check?.updateAvailable && check.latest ? (
-          <Button size="sm" onClick={() => void window.api.updates.openRelease(check.latest!.url)}>
-            Update to {check.latest.version}
-          </Button>
-        ) : (
-          <Button size="sm" variant="outline" onClick={() => void refetch()} disabled={isFetching}>
-            <RefreshCw className={isFetching ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
-            {isFetching ? "Checking…" : check ? "Up to date" : "Check for updates"}
-          </Button>
-        )}
+      </div>
+
+      {/* The updater installs in-app — check, download, then restart into the
+          new version, all without leaving the app. */}
+      <div className="mt-2.5">
+        <UpdaterControl />
       </div>
 
       <div className="mt-3 flex items-start gap-2.5 rounded-md border border-warning/40 bg-warning/10 p-3">
@@ -68,11 +58,7 @@ export function AboutSection() {
             <ExternalLink className="h-3 w-3 opacity-60" />
           </Button>
         ))}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={async () => setNotes(await window.api.updates.releaseNotes())}
-        >
+        <Button variant="outline" size="sm" onClick={async () => setNotes(await window.api.updates.releaseNotes())}>
           <ScrollText className="h-3.5 w-3.5" /> What's new in this version
         </Button>
       </div>
