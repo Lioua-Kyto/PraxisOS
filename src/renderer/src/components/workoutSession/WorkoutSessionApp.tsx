@@ -106,10 +106,16 @@ export function WorkoutSessionApp({ onReturn }: { onReturn: () => void }) {
   const finishedNow = currentGroup ? finishedExercisesForSet(currentGroup, state.currentSet) : [];
 
   return (
-    <div className="scrollbar-thin h-screen overflow-y-auto bg-background">
-      <div className="mx-auto flex max-w-3xl flex-col gap-5 px-6 py-6">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-4">
+    <div className="flex h-screen flex-col bg-background">
+      {/* This view replaces the app shell (and its title bar), so it carries
+          its own draggable strip — otherwise the window couldn't be moved from
+          the top during a session. Native window controls still sit at the
+          top-right over it. */}
+      <div className="h-10 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties} />
+      <div className="scrollbar-thin flex-1 overflow-y-auto">
+        <div className="mx-auto flex max-w-3xl flex-col gap-5 px-6 pb-6">
+          {/* Header */}
+          <div className="flex items-center justify-between gap-4">
           <Button variant="ghost" size="sm" onClick={onReturn}>
             <ArrowLeft className="h-4 w-4" /> Return
           </Button>
@@ -332,6 +338,7 @@ export function WorkoutSessionApp({ onReturn }: { onReturn: () => void }) {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

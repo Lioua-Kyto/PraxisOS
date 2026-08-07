@@ -15,6 +15,7 @@ import { registerWorkoutHandlers } from "./workouts";
 import { registerWorkoutSessionHandlers } from "./workoutSession";
 import { registerWidgetHandlers } from "./widget";
 import { registerUpdateHandlers } from "./updates";
+import { registerWindowHandlers } from "./window";
 
 export function registerAllIpcHandlers(): void {
   registerTaskHandlers();
@@ -34,4 +35,5 @@ export function registerAllIpcHandlers(): void {
   registerThemePresetHandlers();
   registerWidgetHandlers();
   registerUpdateHandlers();
+  registerWindowHandlers();
 }

@@ -223,6 +223,13 @@ const api = {
     isOpen: () => invoke<boolean>("widget:isOpen"),
     /** From the widget: dismiss it and bring the app back. */
     restoreMain: () => invoke<void>("widget:restoreMain")
+  },
+  window: {
+    /** Pops the native application menu just below the burger button (x, y). */
+    showMenu: (x: number, y: number) => invoke<void>("window:showMenu", x, y),
+    /** Repaints the Windows window-control overlay to match the theme. */
+    setTitleBarOverlay: (overlay: { color: string; symbolColor: string }) =>
+      invoke<void>("window:setTitleBarOverlay", overlay)
   }
 };
 

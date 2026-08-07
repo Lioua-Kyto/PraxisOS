@@ -9,8 +9,6 @@ import {
   ListChecks,
   MessageSquarePlus,
   NotebookText,
-  PanelLeftClose,
-  PanelLeftOpen,
   Salad,
   Settings as SettingsIcon,
   Timer
@@ -163,13 +161,11 @@ function NavButton({
 export function Sidebar({
   page,
   onNavigate,
-  collapsed,
-  onToggleCollapsed
+  collapsed
 }: {
   page: PageKey;
   onNavigate: (page: PageKey) => void;
   collapsed: boolean;
-  onToggleCollapsed: () => void;
 }) {
   const { data: active } = useActiveFocusSession();
   const timerState = active?.status === "running" || active?.status === "paused" ? active.status : null;
@@ -181,23 +177,15 @@ export function Sidebar({
         collapsed ? "w-[64px] px-2" : "w-[220px] px-3"
       )}
     >
-      <div className={cn("mb-5 flex items-center", collapsed ? "flex-col gap-2" : "justify-between gap-2 px-1.5")}>
-        <div className="flex min-w-0 items-center gap-2">
-          <img src={logoUrl} alt="" className="h-7 w-7 shrink-0" />
-          {!collapsed && (
-            <span className="truncate font-display text-xl">
-              Praxis<em className="not-italic text-primary">OS</em>
-            </span>
-          )}
-        </div>
-        <button
-          onClick={onToggleCollapsed}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-        </button>
+      {/* Branding stays in the sidebar; the collapse toggle moved to the title
+          bar, so the header is just the logo and wordmark. */}
+      <div className={cn("mb-5 flex items-center gap-2 px-1.5", collapsed && "justify-center")}>
+        <img src={logoUrl} alt="" className="h-7 w-7 shrink-0" />
+        {!collapsed && (
+          <span className="truncate font-display text-xl">
+            Praxis<em className="not-italic text-primary">OS</em>
+          </span>
+        )}
       </div>
 
       {NAV.map((item) => (

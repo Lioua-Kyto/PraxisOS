@@ -8,6 +8,7 @@ import { registerMediaProtocolHandler, registerMediaScheme } from "./mediaProtoc
 import { createTray, refreshTrayMenu } from "./tray";
 import { closeWidget } from "./widgetWindow";
 import { setMainWindowControls } from "./ipc/widget";
+import { installAppMenu } from "./appMenu";
 
 // In dev these resolve to <root>/build/ (out/main -> up two levels -> project
 // root). Packaged builds don't ship the build/ directory (it's
@@ -40,6 +41,15 @@ function createWindow(): void {
     backgroundColor: "#0b0d10",
     autoHideMenuBar: true,
     icon: windowIconPath,
+    // The custom title bar (a themed strip with a burger menu and the sidebar
+    // toggle) replaces the native one. On Windows we keep the native min/max/
+    // close via an overlay, tinted to match the dark theme at startup and
+    // repainted by the renderer when the theme changes. Other platforms just
+    // get the hidden title bar.
+    titleBarStyle: "hidden",
+    ...(process.platform === "win32"
+      ? { titleBarOverlay: { color: "#17140f", symbolColor: "#ece6d8", height: 40 } }
+      : {}),
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       contextIsolation: true,
@@ -112,6 +122,7 @@ if (!app.requestSingleInstanceLock()) {
     initDb();
     registerMediaProtocolHandler();
     registerAllIpcHandlers();
+    installAppMenu();
     setMainWindowControls({ show: showMainWindow, hide: () => mainWindow?.hide() });
 
     createWindow();
