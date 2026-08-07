@@ -102,6 +102,14 @@
         "to": "icon.ico"
       },
       {
+        "from": "build/tray.ico",
+        "to": "tray.ico"
+      },
+      {
+        "from": "build/tray.png",
+        "to": "tray.png"
+      },
+      {
         "from": "drizzle",
         "to": "drizzle"
       },

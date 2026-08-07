@@ -21,7 +21,10 @@ function assetPath(name: string): string {
 // taskbar button and Alt-Tab get a crisp icon instead of a downscaled PNG.
 // Everywhere else the PNG is the right choice.
 const windowIconPath = process.platform === "win32" ? assetPath("icon.ico") : assetPath("icon.png");
-const trayIconPath = assetPath("icon.png");
+// The tray uses its own small artwork (see build/tray.*), never the 1024 app
+// icon — a runtime downscale of that muddied the tray glyph. Windows takes the
+// multi-size .ico; other platforms take a 32px png.
+const trayIconPath = process.platform === "win32" ? assetPath("tray.ico") : assetPath("tray.png");
 
 let mainWindow: BrowserWindow | null = null;
 /** Distinguishes "user closed the window" from "user chose Quit". */

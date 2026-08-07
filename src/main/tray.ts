@@ -1,4 +1,4 @@
-import { app, Menu, nativeImage, Tray } from "electron";
+import { app, Menu, Tray } from "electron";
 import { isWidgetOpen, toggleWidget } from "./widgetWindow";
 
 let tray: Tray | null = null;
@@ -35,10 +35,12 @@ export function createTray(next: TrayHandlers): void {
   handlers = next;
   if (tray) return;
 
-  // Windows tray slots are 16px; handing it the full app icon leaves a blurry
-  // downscale, so resize explicitly.
-  const image = nativeImage.createFromPath(next.iconPath).resize({ width: 16, height: 16 });
-  tray = new Tray(image);
+  // Hand Electron the icon *path* rather than a runtime-resized nativeImage. On
+  // Windows this is a multi-size .ico (16-48px, each rasterised at build time),
+  // so the shell picks a crisp per-DPI representation. The previous version
+  // loaded the 1024px app png and downscaled it here, which turned the thin
+  // gradient glyph into dark, muddy pixels.
+  tray = new Tray(next.iconPath);
   tray.setToolTip("PraxisOS");
   tray.setContextMenu(buildMenu());
   tray.on("click", () => handlers?.showMainWindow());
