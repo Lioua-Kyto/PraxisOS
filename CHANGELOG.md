@@ -7,6 +7,21 @@ All notable changes to PraxisOS are recorded here. The format follows
 The section for the running version is shown in-app the first time you open a
 new release, so entries here are written for users, not for the commit log.
 
+## 0.1.1 — 2026-08-07
+
+### Changed
+
+- New hexagon logo, shown in the window, taskbar and system tray.
+- Redesigned the top bar: it now takes the current theme's colour, drops the
+  duplicated app name and logo (they stay in the sidebar), and puts the
+  File / Edit / View / Help menu behind a single button, with the sidebar
+  collapse toggle beside it.
+
+### Fixed
+
+- The system tray icon rendered with muddy, dark colours; it is now a crisp,
+  purpose-sized icon.
+
 ## 0.1.0 — 2026-08-05
 
 First public early-access release.
