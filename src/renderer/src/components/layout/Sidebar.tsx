@@ -18,7 +18,7 @@ import {
 import { motion } from "framer-motion";
 import { useActiveFocusSession } from "../../queries/focusTimer";
 import { cn } from "../../lib/utils";
-import logoUrl from "../../assets/logo.svg";
+import logoUrl from "../../assets/logo.png";
 
 export type PageKey =
   | "dashboard"
