@@ -126,21 +126,23 @@ const tasks = TASK_SEED.map(([text, priority, status, due], i) => {
 // ----------------------------------------------------------------- courses
 
 const courses = [
-  ["AWS Cloud Technical Essentials", "AWS / Coursera", "Cloud & DevOps", 1, "completed"],
-  ["AWS Cloud Engineering, Architecture & DevOps", "AWS / Coursera", "Cloud & DevOps", 1, "in_progress"],
-  ["IBM DevOps and Software Engineering", "IBM / Coursera", "Cloud & DevOps", 1, "planned"],
-  ["Algorithms Specialization", "Stanford / Coursera", "System Design & DSA", 2, "in_progress"],
-  ["Software Design and Architecture", "UAlberta / Coursera", "System Design & DSA", 2, "planned"],
-  ["Meta Front-End Developer", "Meta / Coursera", "Frontend Depth", 3, "completed"],
-  ["Software Testing and Automation", "Coursera", "Frontend Depth", 3, "planned"],
-  ["IBM Full Stack Software Developer", "IBM / Coursera", "Full Software Engineering", 4, "planned"],
-  ["IBM AI Engineering", "IBM / Coursera", "AI Engineering", 5, "planned"]
-].map(([title, provider, category, phase, status], i) => ({
+  ["AWS Cloud Technical Essentials", "course", "AWS / Coursera", "Cloud & DevOps", "completed"],
+  ["AWS Cloud Engineering & DevOps", "course", "AWS / Coursera", "Cloud & DevOps", "in_progress"],
+  ["Designing Data-Intensive Applications", "book", "M. Kleppmann", "System Design", "in_progress"],
+  ["Algorithms Specialization", "course", "Stanford / Coursera", "System Design", "in_progress"],
+  ["Build a URL shortener from scratch", "project", "Personal", "System Design", "planned"],
+  ["Meta Front-End Developer", "course", "Meta / Coursera", "Frontend", "completed"],
+  ["Rebuild portfolio in Next.js", "project", "Personal", "Frontend", "in_progress"],
+  ["Daily LeetCode — 30 min", "practice", "LeetCode", "Interview Prep", "in_progress"],
+  ["The Pragmatic Programmer", "book", "Hunt & Thomas", "Craft", "planned"],
+  ["IBM AI Engineering", "course", "IBM / Coursera", "AI Engineering", "planned"]
+].map(([title, kind, provider, category, status], i) => ({
   id: id(),
   title,
+  kind,
   provider,
   category,
-  phase,
+  phase: 1,
   url: null,
   status,
   notes: "",

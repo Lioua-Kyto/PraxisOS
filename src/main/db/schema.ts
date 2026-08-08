@@ -27,9 +27,13 @@ export const foods = sqliteTable("foods", {
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`)
 });
 
+// Despite the table name, this tracks any skill-building activity — a course,
+// a book, a project, deliberate practice — not just courses. `kind` records
+// which, and `category` is the user's own skill area used to group them.
 export const courses = sqliteTable("courses", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull(),
+  kind: text("kind").notNull().default("course"),
   provider: text("provider"),
   category: text("category"),
   phase: integer("phase").notNull().default(1),

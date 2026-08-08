@@ -6,7 +6,7 @@ import { reseedCourses } from "../db/seed";
 import type { Course, NewCourse } from "../../shared/types";
 
 function rowToCourse(row: typeof courses.$inferSelect): Course {
-  return { ...row, status: row.status as Course["status"] };
+  return { ...row, status: row.status as Course["status"], kind: row.kind as Course["kind"] };
 }
 
 export function registerCourseHandlers(): void {
@@ -19,6 +19,7 @@ export function registerCourseHandlers(): void {
       .insert(courses)
       .values({
         title: input.title,
+        kind: input.kind ?? "course",
         provider: input.provider ?? "",
         category: input.category ?? "",
         phase: input.phase ?? 1,

@@ -1,0 +1,1 @@
+ALTER TABLE `courses` ADD `kind` text DEFAULT 'course' NOT NULL;
