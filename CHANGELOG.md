@@ -7,6 +7,30 @@ All notable changes to PraxisOS are recorded here. The format follows
 The section for the running version is shown in-app the first time you open a
 new release, so entries here are written for users, not for the commit log.
 
+## 0.1.2 — 2026-08-08
+
+### Added
+
+- A setting for what closing the window does: keep running in the tray (the
+  default) or quit. When quit is chosen, PraxisOS warns first if a focus timer
+  is still running.
+- Automatic in-app updates: PraxisOS now downloads and installs updates itself
+  and restarts into the new version, instead of opening the download in a
+  browser.
+
+### Changed
+
+- Custom window controls and menu replace the native title bar, so the
+  minimise / maximise / close buttons and the menu follow the app's theme
+  instead of a fixed dark style.
+- Mastery is no longer only about finishing courses — track books, projects and
+  deliberate practice too, grouped by the skill area you choose.
+
+### Fixed
+
+- The line under the top bar now runs the full width of the window.
+- Hovering a window control no longer shows two overlapping tooltips.
+
 ## 0.1.1 — 2026-08-07
 
 ### Changed
