@@ -25,12 +25,12 @@ jobs:
 
     steps:
       - name: Check out the tagged commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.tag || github.ref }}
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -57,7 +57,14 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Build and publish
+      # Compile main, preload and renderer into out/ BEFORE packaging.
+      # electron-builder only packs what already exists — locally this is the
+      # first half of `npm run dist`; without it the app.asar has no entry file
+      # and packaging fails with "out/main/index.js was not found".
+      - name: Build
+        run: npm run build
+
+      - name: Package and publish
         run: npx electron-builder --win --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -66,7 +73,7 @@ jobs:
       # a transient release-API error.
       - name: Upload installer as a workflow artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: praxisos-windows
           path: |
