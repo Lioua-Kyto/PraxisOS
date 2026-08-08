@@ -64,13 +64,14 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Package and publish
-        run: npx electron-builder --win --publish always
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Package only — do NOT let electron-builder publish. Its GitHub uploader
+      # silently dropped the 100 MB+ installer while uploading the tiny blockmap
+      # and still exiting 0, leaving a release with no usable download. We hand
+      # the finished files to a dedicated release action instead.
+      - name: Package
+        run: npx electron-builder --win --publish never
 
-      # A copy that outlives a failed publish, so a green build is never lost to
-      # a transient release-API error.
+      # A copy that outlives a failed publish, so a green build is never lost.
       - name: Upload installer as a workflow artifact
         if: always()
         uses: actions/upload-artifact@v5
@@ -82,3 +83,16 @@ jobs:
             release/latest.yml
           if-no-files-found: ignore
           retention-days: 14
+
+      # Publish the built files to the tag's Release. latest.yml is what the
+      # in-app auto-updater reads, so all three must land together. This action
+      # handles large assets reliably and updates an existing release in place.
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          fail_on_unmatched_files: true
+          files: |
+            release/PraxisOS-Setup-*.exe
+            release/PraxisOS-Setup-*.exe.blockmap
+            release/latest.yml
