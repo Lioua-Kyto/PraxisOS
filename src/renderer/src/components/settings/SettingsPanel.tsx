@@ -30,6 +30,7 @@ interface SettingsDraft {
   confirmBeforeEndingWorkout: boolean;
   habitRemindersEnabled: boolean;
   habitReminderTime: string;
+  closeToTray: boolean;
 }
 
 const EMPTY_DRAFT: SettingsDraft = {
@@ -43,7 +44,8 @@ const EMPTY_DRAFT: SettingsDraft = {
   weekStartsOn: 1,
   confirmBeforeEndingWorkout: true,
   habitRemindersEnabled: false,
-  habitReminderTime: "20:00"
+  habitReminderTime: "20:00",
+  closeToTray: true
 };
 
 const DRAFT_KEYS = Object.keys(EMPTY_DRAFT) as Array<keyof SettingsDraft>;
@@ -231,6 +233,18 @@ export function SettingsPanel() {
           <Separator className="my-4" />
 
           <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-0.5">
+              <label className="flex items-center gap-2.5 text-[13px]">
+                <Switch checked={draft.closeToTray} onCheckedChange={(checked) => set("closeToTray", checked)} />
+                Keep running in the tray when I close the window
+              </label>
+              <span className="ml-[46px] text-[11px] text-muted-foreground">
+                {draft.closeToTray
+                  ? "Closing hides PraxisOS to the tray; quit it from the tray icon. A running focus timer keeps counting."
+                  : "Closing quits PraxisOS. You'll be warned first if a focus timer is still running."}
+              </span>
+            </div>
+
             <label className="flex items-center gap-2.5 text-[13px]">
               <Switch
                 checked={draft.confirmBeforeEndingWorkout}

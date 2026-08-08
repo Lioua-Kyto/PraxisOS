@@ -36,7 +36,9 @@ function rowsToSettings(rows: Array<{ key: string; value: string }>): AppSetting
     currencySymbol: map.currencySymbol ?? "",
     confirmBeforeEndingWorkout: map.confirmBeforeEndingWorkout !== "false",
     habitRemindersEnabled: map.habitRemindersEnabled === "true",
-    habitReminderTime: map.habitReminderTime ?? "20:00"
+    habitReminderTime: map.habitReminderTime ?? "20:00",
+    // Default true keeps the existing behaviour: closing parks it in the tray.
+    closeToTray: map.closeToTray !== "false"
   };
 }
 

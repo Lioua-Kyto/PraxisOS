@@ -3,6 +3,7 @@ import type {
   AppSettings,
   UpdaterStatus,
   WhatsNew,
+  WindowMenuCommand,
   BrainDump,
   BudgetCategory,
   BudgetSummary,
@@ -240,11 +241,21 @@ const api = {
     restoreMain: () => invoke<void>("widget:restoreMain")
   },
   window: {
-    /** Pops the native application menu just below the burger button (x, y). */
-    showMenu: (x: number, y: number) => invoke<void>("window:showMenu", x, y),
-    /** Repaints the Windows window-control overlay to match the theme. */
-    setTitleBarOverlay: (overlay: { color: string; symbolColor: string }) =>
-      invoke<void>("window:setTitleBarOverlay", overlay)
+    minimize: () => invoke<void>("window:minimize"),
+    /** Toggle maximise/restore; resolves to the new maximised state. */
+    toggleMaximize: () => invoke<boolean>("window:toggleMaximize"),
+    close: () => invoke<void>("window:close"),
+    isMaximized: () => invoke<boolean>("window:isMaximized"),
+    /** Runs a burger-menu command (reload, zoom, quit, edit roles, …). */
+    menu: (command: WindowMenuCommand) => invoke<void>("window:menu", command),
+    /** Fires when the window is maximised or restored, for the control's icon. */
+    onMaximizeChanged: (callback: (maximized: boolean) => void) => {
+      const listener = (_e: unknown, maximized: boolean) => callback(maximized);
+      ipcRenderer.on("window:maximizeChanged", listener);
+      return () => {
+        ipcRenderer.off("window:maximizeChanged", listener);
+      };
+    }
   }
 };
 

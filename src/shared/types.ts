@@ -31,9 +31,13 @@ export interface NewTask {
 
 export type CourseStatus = "planned" | "in_progress" | "completed";
 
+/** What kind of skill-building activity a Mastery item is. */
+export type CourseKind = "course" | "book" | "project" | "practice" | "other";
+
 export interface Course {
   id: number;
   title: string;
+  kind: CourseKind;
   provider: string | null;
   category: string | null;
   phase: number;
@@ -265,6 +269,8 @@ export interface AppSettings {
   habitRemindersEnabled: boolean;
   /** 24h "HH:MM" — when to nudge about habits still open today. */
   habitReminderTime: string;
+  /** Closing the window keeps the app running in the tray (true) or quits it. */
+  closeToTray: boolean;
 }
 
 export interface ThemePreset {
@@ -426,3 +432,20 @@ export interface WhatsNew {
   notes: string;
   show: boolean;
 }
+
+/** Commands the custom title-bar burger menu dispatches to the main process. */
+export type WindowMenuCommand =
+  | "reload"
+  | "toggleDevTools"
+  | "zoomIn"
+  | "zoomOut"
+  | "zoomReset"
+  | "toggleFullscreen"
+  | "undo"
+  | "redo"
+  | "cut"
+  | "copy"
+  | "paste"
+  | "selectAll"
+  | "about"
+  | "quit";

@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog, Menu, shell } from "electron";
 
 const REPO = "https://github.com/Lioua-Kyto/PraxisOS";
 
-function showAbout(): void {
+export function showAbout(): void {
   const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
   const detail = `Version ${app.getVersion()}\nA local-first personal management desktop app.\n\n© Lioua-Kyto`;
   if (win) dialog.showMessageBox(win, { type: "info", title: "About PraxisOS", message: "PraxisOS", detail, buttons: ["OK"] });
@@ -36,17 +36,12 @@ function template(): Electron.MenuItemConstructorOptions[] {
 let appMenu: Menu | null = null;
 
 /**
- * Builds the standard application menu and installs it. It stays the app menu
- * so its accelerators keep working, but the bar is hidden (Windows uses a hidden
- * title bar; elsewhere autoHideMenuBar). The burger button in the custom title
- * bar pops this same menu up on demand.
+ * Builds the standard application menu and installs it purely for its keyboard
+ * accelerators (copy/paste, reload, zoom, devtools). The bar itself is hidden
+ * — the custom title bar's burger renders its own themed dropdown that dispatches
+ * the same actions over IPC (see src/main/ipc/window.ts).
  */
 export function installAppMenu(): void {
   appMenu = Menu.buildFromTemplate(template());
   Menu.setApplicationMenu(appMenu);
-}
-
-export function popupAppMenu(win: BrowserWindow, x: number, y: number): void {
-  if (!appMenu) installAppMenu();
-  appMenu?.popup({ window: win, x, y });
 }

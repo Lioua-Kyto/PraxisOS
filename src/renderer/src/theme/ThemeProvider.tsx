@@ -4,13 +4,6 @@ import { useSettings, useUpdateSettings } from "../queries/settings";
 import { useThemePresets } from "../queries/themePresets";
 import { derivePaletteOverrides } from "../lib/color";
 
-/** "rgb(23, 19, 15)" / "rgba(…)" → "#17130f". Empty string if it can't parse. */
-function rgbToHex(rgb: string): string {
-  const m = rgb.match(/\d+/g);
-  if (!m || m.length < 3) return "";
-  return "#" + m.slice(0, 3).map((n) => Number(n).toString(16).padStart(2, "0")).join("");
-}
-
 const OVERRIDE_PROPERTIES = [
   "--background",
   "--foreground",
@@ -75,22 +68,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const overrides = derivePaletteOverrides(activePreset.background, activePreset.accent, activePreset.foreground);
     for (const [prop, value] of Object.entries(overrides)) root.setProperty(prop, value);
   }, [activePreset]);
-
-  // Keep the Windows window-control overlay (min/max/close) on the same colour
-  // as the custom title bar. Read the resolved colours after the theme's CSS
-  // variables have painted, convert to hex (the overlay API wants hex, not the
-  // rgb() getComputedStyle returns), then hand them to main. The widget window
-  // has no overlay, so it skips this.
-  useEffect(() => {
-    if (window.location.hash === "#widget") return;
-    const id = requestAnimationFrame(() => {
-      const styles = getComputedStyle(document.body);
-      const color = rgbToHex(styles.backgroundColor);
-      const symbolColor = rgbToHex(styles.color);
-      if (color && symbolColor) void window.api.window.setTitleBarOverlay({ color, symbolColor });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [theme, font, activePreset]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({

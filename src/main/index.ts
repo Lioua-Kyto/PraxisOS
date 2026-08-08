@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell } from "electron";
+import { app, BrowserWindow, dialog, shell } from "electron";
 import { join } from "path";
 import { initDb, closeDb } from "./db/client";
 import { registerAllIpcHandlers } from "./ipc/registerAll";
@@ -8,8 +8,11 @@ import { registerMediaProtocolHandler, registerMediaScheme } from "./mediaProtoc
 import { createTray, refreshTrayMenu } from "./tray";
 import { closeWidget } from "./widgetWindow";
 import { setMainWindowControls } from "./ipc/widget";
+import { getSettings } from "./ipc/settings";
+import { hasActiveFocusSession } from "./ipc/focusTimer";
 import { installAppMenu } from "./appMenu";
 import { registerUpdater } from "./updater";
+import { setQuitHandler } from "./ipc/window";
 
 // In dev these resolve to <root>/build/ (out/main -> up two levels -> project
 // root). Packaged builds don't ship the build/ directory (it's
@@ -42,15 +45,12 @@ function createWindow(): void {
     backgroundColor: "#0b0d10",
     autoHideMenuBar: true,
     icon: windowIconPath,
-    // The custom title bar (a themed strip with a burger menu and the sidebar
-    // toggle) replaces the native one. On Windows we keep the native min/max/
-    // close via an overlay, tinted to match the dark theme at startup and
-    // repainted by the renderer when the theme changes. Other platforms just
-    // get the hidden title bar.
+    // The custom title bar (a themed strip with a burger menu, sidebar toggle
+    // and our own min/max/close buttons) fully replaces the native one. We use
+    // no titleBarOverlay: its native buttons can't be themed, its tooltips
+    // double up, and its backdrop paints over the ribbon's bottom border. The
+    // renderer draws the controls instead — see TitleBar.tsx.
     titleBarStyle: "hidden",
-    ...(process.platform === "win32"
-      ? { titleBarOverlay: { color: "#17140f", symbolColor: "#ece6d8", height: 40 } }
-      : {}),
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       contextIsolation: true,
@@ -69,13 +69,28 @@ function createWindow(): void {
 
   win.on("ready-to-show", () => win.show());
 
-  // Closing the window parks the app in the tray instead of ending it — a
-  // running focus timer and the habit reminders have to survive the user
-  // clearing their desktop. Quit is an explicit choice from the tray menu.
+  // Tell the renderer when the maximise state changes, so the custom control's
+  // icon (maximise vs restore) stays in sync however the window got there —
+  // our button, a double-click on the drag strip, or a Windows snap gesture.
+  win.on("maximize", () => win.webContents.send("window:maximizeChanged", true));
+  win.on("unmaximize", () => win.webContents.send("window:maximizeChanged", false));
+
+  // What closing the window does is the user's choice (Settings → When I close
+  // the window). Default: park in the tray so a running timer and the habit
+  // reminders survive. If they've chosen to quit instead, warn first when a
+  // focus session is still running, since quitting stops it.
   win.on("close", (event) => {
     if (quitting) return;
     event.preventDefault();
-    win.hide();
+
+    if (getSettings().closeToTray) {
+      win.hide();
+      return;
+    }
+    if (confirmQuit(win)) {
+      quitting = true;
+      app.quit();
+    }
   });
 
   win.webContents.setWindowOpenHandler((details) => {
@@ -103,6 +118,33 @@ function showMainWindow(): void {
   mainWindow.focus();
 }
 
+/**
+ * Guards an explicit quit. Returns true to proceed. When a focus session is
+ * still running, a modal asks whether to quit anyway — because quitting stops
+ * the timer, and staying in the tray would have kept it going.
+ */
+function confirmQuit(win: BrowserWindow): boolean {
+  if (!hasActiveFocusSession()) return true;
+  const choice = dialog.showMessageBoxSync(win, {
+    type: "warning",
+    buttons: ["Cancel", "Quit anyway"],
+    defaultId: 0,
+    cancelId: 0,
+    title: "A focus timer is still running",
+    message: "A focus timer is still running.",
+    detail: "Quitting will stop the running session. Minimise to the tray instead to keep it counting."
+  });
+  return choice === 1;
+}
+
+/** Called from the tray Quit and the title-bar close when tray-minimise is off. */
+function requestQuit(): void {
+  const win = mainWindow && !mainWindow.isDestroyed() ? mainWindow : BrowserWindow.getAllWindows()[0];
+  if (win && !confirmQuit(win)) return;
+  quitting = true;
+  app.quit();
+}
+
 // Windows drops toast notifications from a process with no AppUserModelID —
 // silently, with no error. It has to match the installer's appId, and it has
 // to be set before anything tries to notify.
@@ -128,14 +170,8 @@ if (!app.requestSingleInstanceLock()) {
     setMainWindowControls({ show: showMainWindow, hide: () => mainWindow?.hide() });
 
     createWindow();
-    createTray({
-      iconPath: trayIconPath,
-      showMainWindow,
-      quit: () => {
-        quitting = true;
-        app.quit();
-      }
-    });
+    createTray({ iconPath: trayIconPath, showMainWindow, quit: requestQuit });
+    setQuitHandler(requestQuit);
     refreshTrayMenu();
     startHabitReminders();
 

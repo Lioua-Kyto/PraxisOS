@@ -60,6 +60,11 @@ function getActiveRow(): Row | undefined {
     .get();
 }
 
+/** True while a session is running or paused — used to warn before quitting. */
+export function hasActiveFocusSession(): boolean {
+  return getActiveRow()?.status === "running";
+}
+
 function secondsSince(stored: string): number {
   return Math.max(0, Math.floor((Date.now() - parseStoredDateTime(stored).getTime()) / 1000));
 }

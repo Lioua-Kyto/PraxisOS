@@ -1,28 +1,99 @@
-import { BrowserWindow, ipcMain } from "electron";
-import { popupAppMenu } from "../appMenu";
+import { app, BrowserWindow, ipcMain } from "electron";
+import { showAbout } from "../appMenu";
 
-const OVERLAY_HEIGHT = 40;
+/**
+ * Commands the burger menu can run. Edit and View items map to webContents
+ * roles so their behaviour (and the app-menu accelerators) stay identical to a
+ * native menu; the rest are app-level actions.
+ */
+type MenuCommand =
+  | "reload"
+  | "toggleDevTools"
+  | "zoomIn"
+  | "zoomOut"
+  | "zoomReset"
+  | "toggleFullscreen"
+  | "undo"
+  | "redo"
+  | "cut"
+  | "copy"
+  | "paste"
+  | "selectAll"
+  | "about"
+  | "quit";
+
+// Supplied by main so the "Quit" command routes through the same warning-and-
+// tray logic as the window's close button, instead of a bare app.quit().
+let quitHandler: () => void = () => app.quit();
+export function setQuitHandler(fn: () => void): void {
+  quitHandler = fn;
+}
 
 export function registerWindowHandlers(): void {
-  // The burger button asks main to pop the native application menu just below
-  // it, so the standard File/Edit/View/Help items live in one place.
-  ipcMain.handle("window:showMenu", (event, x: number, y: number) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (win) popupAppMenu(win, Math.round(x), Math.round(y));
+  const senderWindow = (event: Electron.IpcMainInvokeEvent) => BrowserWindow.fromWebContents(event.sender);
+
+  ipcMain.handle("window:minimize", (e) => senderWindow(e)?.minimize());
+
+  ipcMain.handle("window:toggleMaximize", (e) => {
+    const win = senderWindow(e);
+    if (!win) return false;
+    if (win.isMaximized()) win.unmaximize();
+    else win.maximize();
+    return win.isMaximized();
   });
 
-  // Repaints the native window-control overlay (Windows) to match the active
-  // theme, so the min/max/close buttons sit on the same colour as the custom
-  // title bar rather than a fixed backdrop.
-  ipcMain.handle("window:setTitleBarOverlay", (event, overlay: { color: string; symbolColor: string }) => {
-    if (process.platform !== "win32") return;
-    const win = BrowserWindow.fromWebContents(event.sender);
-    // Throws on any window not created with a hidden title bar (e.g. the
-    // frameless widget), which is harmless — that window simply has no overlay.
-    try {
-      win?.setTitleBarOverlay({ color: overlay.color, symbolColor: overlay.symbolColor, height: OVERLAY_HEIGHT });
-    } catch {
-      /* window has no overlay */
+  // Routes through the window's own close handler, so it respects the
+  // minimise-to-tray setting and the running-timer warning.
+  ipcMain.handle("window:close", (e) => senderWindow(e)?.close());
+
+  ipcMain.handle("window:isMaximized", (e) => senderWindow(e)?.isMaximized() ?? false);
+
+  ipcMain.handle("window:menu", (e, command: MenuCommand) => {
+    const win = senderWindow(e);
+    const wc = win?.webContents;
+    switch (command) {
+      case "reload":
+        wc?.reload();
+        break;
+      case "toggleDevTools":
+        wc?.toggleDevTools();
+        break;
+      case "zoomIn":
+        if (wc) wc.setZoomLevel(wc.getZoomLevel() + 0.5);
+        break;
+      case "zoomOut":
+        if (wc) wc.setZoomLevel(wc.getZoomLevel() - 0.5);
+        break;
+      case "zoomReset":
+        wc?.setZoomLevel(0);
+        break;
+      case "toggleFullscreen":
+        if (win) win.setFullScreen(!win.isFullScreen());
+        break;
+      case "undo":
+        wc?.undo();
+        break;
+      case "redo":
+        wc?.redo();
+        break;
+      case "cut":
+        wc?.cut();
+        break;
+      case "copy":
+        wc?.copy();
+        break;
+      case "paste":
+        wc?.paste();
+        break;
+      case "selectAll":
+        wc?.selectAll();
+        break;
+      case "about":
+        showAbout();
+        break;
+      case "quit":
+        quitHandler();
+        break;
     }
   });
 }
