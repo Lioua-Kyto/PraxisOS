@@ -11,6 +11,7 @@ release/
 # Local working notes — not part of the published project
 TASKS.md
 tasks.md
+!landing/TASKS.md
 CLAUDE.md
 .claude/
 

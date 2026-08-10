@@ -36,7 +36,8 @@
         d.classList.add("js");
         try {
           var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-          var wide = innerWidth > 900;
+          // Desktop only: phones and tablets get the plain layout, no shader/pins.
+          var wide = innerWidth > 1024;
           var gl = false;
           try {
             var c = document.createElement("canvas");
@@ -88,29 +89,29 @@
 
       <!-- ================= MODULES (logo breakout) ================= -->
       <section class="section" id="modules">
-        <div class="section-head">
-          <div>
-            <p class="overline anim-head">01 · The system</p>
-            <h2 class="anim-head">Every moving part,<br /><em>in its place.</em></h2>
+        <div class="modules__pin">
+          <div class="section-head pin-head">
+            <p class="overline">01 · The system</p>
+            <h2>Every moving part,<br /><em>in its place.</em></h2>
+            <p class="pin-head__sub">Praxis gives your days a shared surface. No accounts, no sync layer.</p>
           </div>
-          <p class="anim-head">Praxis gives your days a shared surface. No accounts, no sync layer, no scattered tabs.</p>
-        </div>
-        <div class="module-grid">
+          <div class="module-grid">
           <article class="module-card"><span>01</span><div><h3>Tasks</h3><p>Put momentum behind the work that matters.</p></div></article>
           <article class="module-card"><span>02</span><div><h3>Habits</h3><p>Build a history of promises you keep.</p></div></article>
           <article class="module-card"><span>03</span><div><h3>Focus</h3><p>Make room for undivided attention.</p></div></article>
           <article class="module-card"><span>04</span><div><h3>Money</h3><p>Know where your resources are going.</p></div></article>
           <article class="module-card"><span>05</span><div><h3>Health</h3><p>Keep your routines close to hand.</p></div></article>
           <article class="module-card"><span>06</span><div><h3>Notes</h3><p>Hold on to ideas worth returning to.</p></div></article>
+          </div>
         </div>
       </section>
 
       <!-- ================= TIDE ================= -->
       <section class="section tide" id="tide">
         <div class="tide__pin">
-          <div class="section-head">
-            <p class="overline anim-head">02 · In motion</p>
-            <h2 class="anim-head">Everything moves<br /><em>together.</em></h2>
+          <div class="section-head pin-head">
+            <p class="overline">02 · In motion</p>
+            <h2>Everything moves<br /><em>together.</em></h2>
           </div>
           <div class="tide__viewport" aria-hidden="true">
             <div class="tide__track" id="tide-track"><!-- injected by JS --></div>
@@ -121,9 +122,9 @@
       <!-- ================= GALLERY (screenshot carousel) ================= -->
       <section class="section section--center gallery" id="gallery">
         <div class="gallery__pin">
-          <div class="section-head gallery__head">
-            <p class="overline anim-head">03 · The views</p>
-            <h2 class="anim-head">One current,<br /><em>twelve views.</em></h2>
+          <div class="section-head gallery__head pin-head">
+            <p class="overline">03 · The views</p>
+            <h2>One current,<br /><em>twelve views.</em></h2>
           </div>
           <div class="gallery__viewport">
             <div class="gallery__track" id="gallery-track"><!-- injected by JS --></div>

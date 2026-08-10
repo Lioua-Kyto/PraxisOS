@@ -205,6 +205,9 @@ body::after {
   line-height: 1.7;
 }
 .section--center { text-align: center; }
+/* Pinned sections: the 100vh pin owns the vertical rhythm, so drop the section
+   padding that would otherwise push pinned content below centre. */
+.anim #modules, .anim #tide, .anim #gallery { padding: 0; }
 
 /* module + feature grids (1px hairline via gap over line-coloured bg) */
 .module-grid, .feature-grid {
@@ -239,31 +242,57 @@ body::after {
 }
 .module-card:hover {
   transform: translateY(-6px);
-  border-color: #5b8cd8;
-  box-shadow: 0 10px 30px -10px rgba(91, 140, 216, 0.3);
+  border-color: #e8843a;
+  box-shadow: 0 10px 30px -10px rgba(232, 132, 58, 0.35);
 }
 .anim .module-card { opacity: 0; }
 .module-card > span, .feature-card > span {
   font: 400 0.61rem "DM Mono", ui-monospace, monospace;
   color: var(--gold);
 }
-/* glowing blue step index */
+/* glowing orange step index */
 .module-card > span {
-  color: #5b8cd8;
-  text-shadow: 0 0 12px rgba(91, 140, 216, 0.6);
+  color: #e8843a;
+  text-shadow: 0 0 12px rgba(232, 132, 58, 0.6);
 }
 
-/* Section 1 header: heading left, tagline right, grid sits higher. */
-#modules .section-head {
+/* Section 1 pinned wrapper: grid centred in the viewport, header floats above. */
+.modules__pin {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 2rem;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
 }
-#modules .section-head h2 { margin: 1rem 0 0; }
-#modules .section-head > p { max-width: 34ch; text-align: right; margin-bottom: 0.4rem; }
-#modules .module-grid { margin-top: 2rem; }
+.modules__pin .module-grid { margin: 0; }
+
+/* Pinned-section header: centred + large by default; JS shrinks it into the
+   top-right corner while the section is pinned so content owns the middle. */
+.pin-head {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: center;
+  width: max-content;
+  max-width: 92vw;
+  margin: 0;
+  text-align: center;
+  z-index: 3;
+  pointer-events: none;
+  will-change: transform;
+}
+.pin-head h2 { margin: 1rem 0 0; }
+.pin-head__sub { margin-top: 1rem; color: var(--muted); font-size: 0.9rem; }
+/* Fallback: header flows normally, no corner move. */
+:not(.anim) .pin-head {
+  position: static;
+  transform: none;
+  width: auto;
+  max-width: none;
+  text-align: left;
+}
 .module-card h3 { font-size: 1.1rem; letter-spacing: -0.05em; }
 .module-card p { max-width: 25ch; margin-top: 0.4rem; color: var(--muted); font-size: 0.74rem; line-height: 1.55; }
 
@@ -282,7 +311,6 @@ body::after {
   overflow: hidden;
 }
 .tide__pin { overflow: hidden; }
-.tide__pin .section-head { position: relative; z-index: 2; margin-bottom: 3.5rem; }
 .tide__viewport { width: 100%; overflow: hidden; }
 .tide__track { display: flex; gap: 18px; padding-inline: clamp(1.5rem, 4vw, 4rem); width: max-content; will-change: transform; }
 .tide__card {
@@ -341,14 +369,15 @@ body::after {
 
 /* ------------------------------- cta ----------------------------------- */
 .cta { position: relative; padding: 0; background: var(--gold); color: #18140c; text-align: center; }
+/* Grid keeps the copy centred and the footer flush to the bottom (no gap). */
 .cta__pin {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 1fr auto;
   padding: 0;
 }
-/* auto margins centre the copy in the space above the bottom-pinned footer */
-.cta__inner { max-width: 760px; margin: auto; padding: 5rem 1.5rem; }
+.cta__inner { justify-self: center; align-self: center; max-width: 760px; padding: 4rem 1.5rem; }
+.cta footer { align-self: end; }
 .cta .overline { color: var(--gold-deep); }
 .cta h2 { margin: 1.5rem 0; font-size: clamp(3.8rem, 8vw, 8.3rem); }
 .cta h2 em { color: #55401c; }
@@ -393,6 +422,10 @@ footer > a:last-child { color: var(--gold); }
 .anim .anim-card { opacity: 0; transform: translateY(24px); will-change: transform, opacity; }
 .anim .cta__inner { opacity: 0; transform: translateY(20px); }
 
+/* Fallback scroll-reveal (JS adds .reveal-fb only when the shader is off). */
+.reveal-fb { opacity: 0; transform: translateY(24px); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
+.reveal-fb.in { opacity: 1; transform: none; }
+
 :not(.anim) .tide__viewport,
 :not(.anim) .gallery__viewport {
   overflow-x: auto;
@@ -404,8 +437,9 @@ footer > a:last-child { color: var(--gold); }
 :not(.anim) .gallery__viewport::-webkit-scrollbar { display: none; }
 :not(.anim) .tide__card, :not(.anim) .gallery__card { scroll-snap-align: center; }
 :not(.anim) .tide__card { transform: none; }
+:not(.anim) .modules__pin { display: block; min-height: 0; overflow: visible; }
 :not(.anim) .tide__pin, :not(.anim) .gallery__pin { min-height: 0; }
-:not(.anim) .cta__pin { min-height: 0; padding: 0; }
+:not(.anim) .cta__pin { min-height: 0; padding: 0; display: block; }
 :not(.anim) .cta__inner { padding: 9rem 1.5rem 5rem; }
 
 /* ------------------------- responsive collapse ------------------------- */
@@ -419,10 +453,7 @@ footer > a:last-child { color: var(--gold); }
   .hero h1 { font-size: clamp(3.4rem, 14vw, 5rem); }
   .hero__actions { align-items: flex-start; flex-direction: column; gap: 1rem; }
   .section { padding: 6rem 0; }
-  .module-grid { grid-template-columns: repeat(2, 1fr); margin-top: 3rem; }
-  #modules .section-head { flex-direction: column; align-items: flex-start; }
-  #modules .section-head > p { text-align: left; }
-  #modules .module-grid { margin-top: 2rem; }
+  .module-grid { grid-template-columns: repeat(2, 1fr); margin-top: 2rem; }
   .module-card { height: 170px; }
   .feature-grid { grid-template-columns: 1fr; margin-top: 3rem; }
   .feature-card { min-height: 190px; }
