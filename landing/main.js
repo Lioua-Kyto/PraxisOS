@@ -80,8 +80,8 @@
   /* ---- nav scrolled state --------------------------------------------- */
   function initNav() {
     var nav = document.getElementById("nav");
-    var onScroll = function () { nav.classList.toggle("is-scrolled", window.scrollY > 40); };
-    if (ScrollTrigger) ScrollTrigger.create({ start: 40, end: 1e9, onUpdate: onScroll, onToggle: onScroll });
+    var onScroll = function () { nav.classList.toggle("is-scrolled", window.scrollY > 50); };
+    if (ScrollTrigger) ScrollTrigger.create({ start: 50, end: 1e9, onUpdate: onScroll, onToggle: onScroll });
     else document.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
   }
@@ -169,8 +169,8 @@
     u_blob_rot: { value: 0 },
     u_opacity: { value: 1 },
     u_flood: { value: 0 },
-    u_colorA: { value: new THREE.Color(0.69, 0.49, 0.18) },
-    u_colorB: { value: new THREE.Color(0.925, 0.769, 0.478) }
+    u_colorA: { value: new THREE.Color(0.2, 0.34, 0.6) },
+    u_colorB: { value: new THREE.Color(0.357, 0.549, 0.847) }
   };
   scene.add(new THREE.Mesh(
     new THREE.PlaneGeometry(2, 2),
@@ -216,7 +216,9 @@
   function lerp(a, b, t) { return a + (b - a) * t; }
   function smoothstep(a, b, x) { var t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
 
-  var OFF_L = -3.4, OFF_R = 3.4;
+  // Sweep centres go past the viewport edges (~ -0.5 / 1.5 in screen fraction)
+  // with margin for the blob radius+stretch, so no fluid edge clips on screen.
+  var OFF_L = -4.0, OFF_R = 4.0;
 
   /* ---- logo rest position (fluid rests behind the right-column logo) --- */
   var heroRest = [0.6, 0.05];
@@ -229,6 +231,9 @@
     heroRest = [((px / w) * 2 - 1) * (w / h), 1 - (py / h) * 2];
   }
   measureLogo();
+  // Start the blob behind the logo on first paint (before any scroll update).
+  target.cx = heroRest[0];
+  target.cy = heroRest[1];
 
   /* =======================================================================
      REVEALS (heads + feature cards, independent of the fluid phases)
@@ -264,23 +269,39 @@
 
   var moduleCards = document.querySelectorAll(".module-card");
   var colFx = [0.2, 0.5, 0.8];
+  var gridCy = -0.3;
   function measureModules() {
     var vw = window.innerWidth;
     var gridW = Math.min(1100, vw - 48);
     var gridLeft = (vw - gridW) / 2;
     colFx = [0, 1, 2].map(function (c) { return (gridLeft + (c + 0.5) * gridW / 3) / vw; });
+    var grid = document.querySelector("#modules .module-grid");
+    if (grid) {
+      var yc = grid.offsetTop + grid.offsetHeight / 2; // section pins top-top, so this is the on-screen y
+      gridCy = Math.max(-0.62, Math.min(0.2, 1 - 2 * (yc / window.innerHeight)));
+    }
   }
   function moduleReact(p) {
-    var waveFx = lerp(-0.35, 1.35, p);
+    var waveFx = lerp(-0.4, 1.4, p);
     for (var i = 0; i < moduleCards.length; i++) {
       var cf = colFx[i % 3];
       var passed = smoothstep(cf - 0.05, cf + 0.05, waveFx);
-      var bell = 1 - smoothstep(0, 0.16, Math.abs(waveFx - cf));
+      var bell = 1 - smoothstep(0, 0.18, Math.abs(waveFx - cf));
       var card = moduleCards[i];
-      card.style.opacity = passed.toFixed(3);
-      card.style.transform = "translateY(" + ((1 - passed) * 22 - bell * 15).toFixed(1) + "px) scale(" + (1 + bell * 0.02).toFixed(3) + ")";
-      card.style.boxShadow = "inset 0 0 0 1px rgba(216,167,91," + bell.toFixed(3) + ")";
-      card.style.zIndex = bell > 0.15 ? 2 : 1;
+      if (passed > 0.999 && bell < 0.02) {
+        // Settled: clear inline so CSS :hover governs the same lit state.
+        card.style.opacity = "1";
+        card.style.transform = "";
+        card.style.boxShadow = "";
+        card.style.borderColor = "";
+        card.style.zIndex = "";
+      } else {
+        card.style.opacity = passed.toFixed(3);
+        card.style.transform = "translateY(" + ((1 - passed) * 20 - bell * 6).toFixed(1) + "px)";
+        card.style.borderColor = bell > 0.05 ? "#5B8CD8" : "";
+        card.style.boxShadow = bell > 0.05 ? "0 10px 30px -10px rgba(91,140,216," + (0.3 * bell).toFixed(2) + ")" : "";
+        card.style.zIndex = bell > 0.15 ? 2 : 1;
+      }
     }
   }
   gsap.timeline({
@@ -289,7 +310,7 @@
       onRefresh: measureModules,
       onUpdate: function (self) {
         var p = self.progress;
-        target.cx = lerp(OFF_L, OFF_R, p); target.cy = 0;
+        target.cx = lerp(OFF_L, OFF_R, p); target.cy = gridCy; // through the grid's vertical centre
         target.sx = 2.6; target.sy = 0.72; target.radius = 0.5; target.edge = 0.03;
         target.rot = 0; target.flood = 0; target.opacity = 1;
         moduleReact(p);
@@ -301,20 +322,30 @@
      PHASE 2 — THE TIDE (thick surge right -> left, sweeps the train)
      ===================================================================== */
   var tideTrack = document.getElementById("tide-track");
-  gsap.timeline({
-    scrollTrigger: {
-      trigger: "#tide", start: "top top", end: "+=200%", pin: ".tide__pin", scrub: 1, anticipatePin: 1,
-      onUpdate: function (self) {
-        var p = self.progress;
-        target.cx = lerp(OFF_R, OFF_L, p); target.cy = 0;
-        target.sx = 3.2; target.sy = 1.3; target.radius = 0.72; target.edge = 0.04;
-        target.rot = 0; target.flood = 0; target.opacity = 1;
+  var tideCards = tideTrack.children;
+  // Fixed per-load scatter: each card rides the fluid with its own Y offset and tilt.
+  var tideScatter = [].map.call(tideCards, function () {
+    return { y: (Math.random() * 2 - 1) * 25, r: (Math.random() * 2 - 1) * 5 };
+  });
+  ScrollTrigger.create({
+    trigger: "#tide", start: "top top", end: "+=200%", pin: ".tide__pin", scrub: 1, anticipatePin: 1,
+    onUpdate: function (self) {
+      var p = self.progress;
+      target.cx = lerp(OFF_R, OFF_L, p); target.cy = 0;
+      target.sx = 3.2; target.sy = 1.3; target.radius = 0.72; target.edge = 0.04;
+      target.rot = 0; target.flood = 0; target.opacity = 1;
+      // Cards cluster around the blob's screen X and sweep across with it.
+      var vw = window.innerWidth, vh = window.innerHeight;
+      var cx = ((target.cx / uniforms.u_aspect.value) + 1) / 2 * vw;
+      var n = tideCards.length;
+      for (var i = 0; i < n; i++) {
+        var x = cx + (i - (n - 1) / 2) * 150 - 90;
+        var y = vh * 0.5 - 68 + tideScatter[i].y;
+        tideCards[i].style.transform =
+          "translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px) rotate(" + tideScatter[i].r.toFixed(2) + "deg)";
       }
     }
-  })
-    .fromTo(tideTrack,
-      { x: function () { return window.innerWidth; } },
-      { x: function () { return -tideTrack.scrollWidth; }, ease: "none", duration: 1 }, 0);
+  });
 
   /* =======================================================================
      PHASE 3 — THE GALLERY (no shader; carousel, centre scales up)
@@ -338,20 +369,27 @@
     for (var i = 0; i < n; i++) {
       var cx = tx + gPadL + i * gStride + gCardW / 2;
       var bell = 1 - smoothstep(0, vw * 0.42, Math.abs(cx - vw / 2));
+      var focused = bell > 0.6;
       var card = galleryCards[i];
-      card.style.transform = "scale(" + (0.7 + 0.5 * bell).toFixed(4) + ")";
-      card.style.opacity = (0.4 + 0.6 * bell).toFixed(3);
+      card.style.transform = "scale(" + (0.8 + 0.32 * bell).toFixed(4) + ")";
+      card.style.opacity = (0.25 + 0.75 * bell).toFixed(3);
       card.style.zIndex = Math.round(bell * 100);
-      card.style.boxShadow = "0 " + (20 * bell).toFixed(0) + "px " + (50 * bell).toFixed(0) +
-        "px rgba(0,0,0," + (0.8 * bell).toFixed(2) + ")";
+      card.style.filter = focused ? "none" : "blur(1px)";
+      card.style.boxShadow = focused ? "0 20px 50px rgba(0,0,0,0.8)" : "none";
+      card.style.borderColor = focused ? "#5B8CD8" : "";
     }
   }
+  var galleryHead = document.querySelector(".gallery__head");
   ScrollTrigger.create({
     trigger: "#gallery", start: "top top", end: "+=260%", pin: ".gallery__pin", scrub: 1, anticipatePin: 1,
     onRefresh: measureGallery,
     onUpdate: function (self) {
-      galleryLayout(self.progress);
-      target.opacity = 1 - smoothstep(0, 0.1, self.progress);
+      var p = self.progress;
+      galleryLayout(p);
+      target.opacity = 1 - smoothstep(0, 0.1, p);
+      var dim = smoothstep(0.05, 0.2, p); // dim the header once cards start passing centre
+      galleryHead.style.opacity = (1 - 0.6 * dim).toFixed(3);
+      galleryHead.style.transform = "scale(" + (1 - 0.05 * dim).toFixed(3) + ")";
     }
   });
   galleryLayout(0);
@@ -373,7 +411,7 @@
       }
     }
   })
-    .fromTo(".cta__inner", { opacity: 0, y: 20 },
+    .fromTo(".cta__inner, .cta footer", { opacity: 0, y: 20 },
       { opacity: 1, y: 0, duration: 0.28, ease: "power3.out" }, 0.58);
 
   /* ---- resize + refresh ----------------------------------------------- */
