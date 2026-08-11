@@ -732,7 +732,6 @@ void main() {
       '<p class="face-title"></p>' +
       '<p class="face-description"></p>' +
       '<div class="view-expand" hidden>' +
-      '<img class="view-expand__img" alt="" />' +
       '<button class="view-expand__close" type="button" aria-label="Back to the sphere"></button>' +
       "</div>";
 
@@ -740,8 +739,8 @@ void main() {
     var titleEl = container.querySelector(".face-title");
     var descEl = container.querySelector(".face-description");
     var expandEl = container.querySelector(".view-expand");
-    var expandImg = container.querySelector(".view-expand__img");
     var closeBtn = container.querySelector(".view-expand__close");
+    var expandImg = null;   // built on first open, never shipped without a src
     var activeIndex = -1;
 
     // The expanded view uses the original file, not the atlas texture, so it is
@@ -749,6 +748,12 @@ void main() {
     function openExpanded() {
       var item = items[activeIndex % items.length];
       if (!item) return;
+      if (!expandImg) {
+        expandImg = document.createElement("img");
+        expandImg.className = "view-expand__img";
+        expandImg.decoding = "async";
+        expandEl.insertBefore(expandImg, closeBtn);   // image above the ring
+      }
       expandImg.src = item.image;
       expandImg.alt = item.title ? "PraxisOS " + item.title + " screen" : "";
       expandEl.hidden = false;
