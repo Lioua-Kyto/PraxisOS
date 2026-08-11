@@ -4,6 +4,35 @@ Change log for the PraxisOS landing page (`landing/`). Newest round on top.
 
 ---
 
+## Round: three regressions from the pinned-views round
+
+### The fluid vanished from section 2
+The hero pins the liquid body to the logo with a `lock` flag, and the ticker
+re-asserts that position every frame while it is set. Clearing it was left to
+each later phase, and the modules handler was missing the line, so the body
+stayed pinned to a logo that was by then far above the viewport: present, but
+never on screen. Modules clears it explicitly again, and the hero trigger now
+also releases it via `onToggle`, so leaving the hero is enough on its own.
+
+### The sphere could not be dragged or clicked
+`.view-expand` is `display: flex`, which beats the user-agent rule for the
+`hidden` attribute. The overlay was therefore laid out at `inset: 0` over the
+whole section at zero opacity, and swallowed every pointer event before it
+reached the canvas. `.view-expand[hidden] { display: none }` fixes it.
+
+Worth recording why this was missed: the earlier check dispatched pointer events
+directly on the canvas element, which bypasses hit-testing entirely and passes
+whatever is stacked above it. The check now reads `elementFromPoint` first and
+dispatches on whatever a real cursor would actually hit.
+
+### Caption and hint overlapped
+The drag hint sat at `bottom: 3.2rem` with the title and description at 2.6rem
+and 1.2rem, so the description fell below the hint and the title crossed it.
+The hint is at the very bottom now with the caption stacked above it: title
+578-631, description 649-663, hint 690-703.
+
+---
+
 ## Round: the views, pinned and full-bleed
 
 ### The section now introduces itself

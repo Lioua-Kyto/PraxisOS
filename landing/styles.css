@@ -848,7 +848,7 @@ html:not(.anim) .cta__inner {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 3.2rem;
+  bottom: 1.1rem;
   margin: 0;
   opacity: 0;
   z-index: 3;
@@ -871,6 +871,9 @@ html:not(.anim) .cta__inner {
   background: rgba(9, 10, 10, 0.94);
   opacity: 0;
   transition: opacity 0.25s var(--ease);
+}
+.view-expand[hidden] {
+  display: none;
 }
 .view-expand.is-open {
   opacity: 1;
@@ -944,14 +947,14 @@ html:not(.anim) .cta__inner {
   margin: 0;
 }
 .face-title {
-  bottom: 2.6rem;
+  bottom: 5.6rem;
   font-size: clamp(1.6rem, 3vw, 2.4rem);
   font-weight: 700;
   letter-spacing: -0.05em;
   color: var(--ink);
 }
 .face-description {
-  bottom: 1.2rem;
+  bottom: 3.6rem;
   font:
     500 0.7rem "DM Mono",
     ui-monospace,

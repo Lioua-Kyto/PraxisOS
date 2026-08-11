@@ -375,6 +375,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
   ScrollTrigger.create({
     trigger: "#top", start: "top top", end: "bottom top",
     onRefresh: function () { measureLogo(); target.lock = true; target.cx = heroRest[0]; target.cy = heroRest[1]; },
+    onToggle: function (self) { target.lock = self.isActive; },
     onUpdate: function (self) {
       var p = self.progress;
       // Track the logo's live position so the body stays pinned behind it as
@@ -426,6 +427,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
     onRefresh: measureModules,
     onUpdate: function (self) {
       var p = self.progress;
+      target.lock = false;                              // release the hero pin
       target.cx = lerp(OFF_L, OFF_R, p); target.cy = 0; // through the centred grid
       target.sx = 2.6; target.sy = 0.78; target.radius = 0.5; target.edge = 0.03; target.rot = 0; target.flood = 0;
       target.opacity = smoothstep(0, 0.1, p) * (1 - smoothstep(0.94, 1, p)); // gone at both edges
