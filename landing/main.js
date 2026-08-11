@@ -45,13 +45,13 @@
   var TIDE = [
     ["Nexus", "nexus"], ["Tasks", "tasks"], ["Discipline", "flame"], ["Mastery", "cap"],
     ["Workout", "dumbbell"], ["Nutrition", "apple"], ["Flow", "timer"], ["Ledger", "wallet"],
-    ["Journal", "book"], ["Codex", "library"], ["Food Library", "utensils"], ["Settings", "gear"]
+    ["Journal", "book"], ["Codex", "library"], ["Settings", "gear"]
   ];
   var GALLERY = [
     ["Nexus", "Nexus.png"], ["Tasks", "Tasks.png"], ["Discipline", "Discipline.png"],
     ["Flow", "Flow.png"], ["Ledger", "Ledger.png"], ["Nutrition", "Nutrition.png"],
     ["Workout", "Workout.png"], ["Mastery", "Mastery.png"], ["Codex", "Codex.png"],
-    ["Journal", "Journal.png"], ["Food Library", "Food Library.png"], ["Settings", "Settings.png"]
+    ["Journal", "Journal.png"], ["Settings", "Settings.png"]
   ];
   (function buildCards() {
     var tt = document.getElementById("tide-track");
@@ -131,6 +131,15 @@
 
   gsap.registerPlugin(ScrollTrigger);
   initNav();
+
+  // Inline styles cannot rely on var() surviving every engine's CSSOM, so read
+  // the palette out of :root once and reuse the resolved values.
+  var CSSVAR = (function () {
+    var cs = getComputedStyle(document.documentElement);
+    var get = function (n, fallback) { return (cs.getPropertyValue(n) || "").trim() || fallback; };
+    return { gold: get("--gold", "#d8a75b"), goldRgb: get("--gold-rgb", "216, 167, 91"),
+             blue: get("--blue", "#5b8cd8") };
+  })();
 
   /* =======================================================================
      THREE.JS FLUID  (defined liquid body via SDF, not noise fog)
@@ -316,8 +325,12 @@
      ===================================================================== */
   ScrollTrigger.create({
     trigger: "#top", start: "top top", end: "bottom top",
+    onRefresh: function () { measureLogo(); target.cx = heroRest[0]; target.cy = heroRest[1]; },
     onUpdate: function (self) {
       var p = self.progress;
+      // Track the logo's live position so the body stays pinned behind it as
+      // the hero scrolls, instead of being left behind at its load position.
+      measureLogo();
       target.cx = heroRest[0]; target.cy = heroRest[1];
       target.sx = 1; target.sy = 1; target.rot = 0; target.flood = 0;
       target.radius = lerp(0.42, 0.34, p);
@@ -352,8 +365,10 @@
       } else {
         card.style.opacity = passed.toFixed(3);
         card.style.transform = "translateY(" + ((1 - passed) * 20 - bell * 6).toFixed(1) + "px)";
-        card.style.borderColor = bell > 0.05 ? "#e8843a" : "";
-        card.style.boxShadow = bell > 0.05 ? "0 10px 30px -10px rgba(232,132,58," + (0.35 * bell).toFixed(2) + ")" : "";
+        card.style.borderColor = bell > 0.05 ? CSSVAR.gold : "";
+        card.style.boxShadow = bell > 0.05
+          ? "0 10px 30px -10px rgba(" + CSSVAR.goldRgb + "," + (0.35 * bell).toFixed(2) + ")"
+          : "";
         card.style.zIndex = bell > 0.15 ? 2 : 1;
       }
     }
@@ -394,7 +409,7 @@
       if (m && Math.abs(lanes[m] - lanes[m - 1]) < 0.45) lanes[m] += lanes[m] > lanes[m - 1] ? 0.45 : -0.45;
       out.push({
         y: Math.max(-1, Math.min(1, lanes[m] + (Math.random() * 2 - 1) * 0.12)),
-        x: (Math.random() * 2 - 1) * 70,
+        x: (Math.random() * 2 - 1) * 42,
         r: (Math.random() * 2 - 1) * 6
       });
     }
@@ -414,7 +429,7 @@
       var spreadY = Math.min(230, vh * 0.30);
       for (var i = 0; i < n; i++) {
         var s = tideScatter[i];
-        var x = cx + (i - (n - 1) / 2) * 178 - 90 + s.x;
+        var x = cx + (i - (n - 1) / 2) * 108 - 60 + s.x;
         var y = vh * 0.5 - 68 + s.y * spreadY;
         tideCards[i].style.transform =
           "translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px) rotate(" + s.r.toFixed(2) + "deg)";
@@ -450,41 +465,51 @@
       var ad = Math.abs(d);
       var near = Math.min(1, ad);
       var card = galleryCards[i];
-      // Focused card sits at full size and full opacity; the rest drop back.
+      // Cards more than a few slots away are invisible anyway; skipping them
+      // keeps the number of composited layers small, which is what makes the
+      // step feel instant rather than syrupy.
+      if (ad > 2.6) { card.style.visibility = "hidden"; continue; }
+      card.style.visibility = "visible";
       var scale = 1 - 0.38 * near - 0.04 * Math.max(0, ad - 1);
       card.style.transform =
         "translate3d(" + (d * gStride).toFixed(1) + "px,0,0) scale(" + scale.toFixed(4) + ")";
       card.style.opacity = (1 - 0.72 * near - 0.12 * Math.max(0, ad - 1)).toFixed(3);
-      card.style.filter = ad > 0.5 ? "blur(2px)" : "none";
       card.style.zIndex = String(200 - Math.round(ad * 10));
-      card.style.borderColor = ad < 0.5 ? "#5B8CD8" : "";
+      card.style.borderColor = ad < 0.5 ? CSSVAR.blue : "";
       card.style.boxShadow = ad < 0.5 ? "0 26px 70px rgba(0,0,0,0.8)" : "none";
     }
-    // One shared label under the carousel, cross-fading to whichever screen
-    // holds the spotlight, and fading out once the last one passes.
     if (galLabel) {
-      var idx = Math.max(0, Math.min(n - 1, Math.round(pos)));
-      var frac = Math.abs(pos - idx);                  // 0 on a card, 0.5 between
+      var nearest = Math.round(pos);
+      var frac = Math.abs(pos - nearest);
+      var inRange = nearest >= 0 && nearest <= n - 1;
+      var idx = Math.max(0, Math.min(n - 1, nearest));
       if (galLabel.textContent !== GALLERY[idx][0]) galLabel.textContent = GALLERY[idx][0];
-      galLabel.style.opacity = Math.max(0, 1 - frac * 2.4).toFixed(3);
+      galLabel.style.opacity = inRange ? Math.max(0, 1 - frac * 2.4).toFixed(3) : "0";
     }
   }
   var gN = galleryCards.length;
+  // pos runs -1 .. gN: the first screen starts one slot off to the side and
+  // slides in (so it never sits on top of the section title), and the last one
+  // slides out the other side rather than parking in the middle.
+  var gSteps = gN + 1;
   ScrollTrigger.create({
-    trigger: "#gallery", start: "top top", end: "+=" + (gN * 55) + "%",
-    pin: ".gallery__pin", scrub: 1, anticipatePin: 1,
-    snap: gN > 1
-      ? { snapTo: 1 / (gN - 1), duration: { min: 0.15, max: 0.4 }, delay: 0.02, ease: "power2.inOut" }
+    trigger: "#gallery", start: "top top", end: "+=" + (gSteps * 48) + "%",
+    pin: ".gallery__pin", anticipatePin: 1,
+    // A short scrub plus a quick snap: long scrub smoothing was what made a
+    // single wheel tick nudge the row, pause, then drift to the next slot.
+    scrub: 0.25,
+    snap: gSteps > 1
+      ? { snapTo: 1 / gSteps, duration: { min: 0.12, max: 0.28 }, delay: 0, ease: "power2.out", inertia: false }
       : false,
     onRefresh: measureGallery,
     onUpdate: function (self) {
       var p = self.progress;
-      galleryLayout(p * (gN - 1));
+      galleryLayout(-1 + p * gSteps);
       target.opacity = 0; // shader hidden through the gallery
       placeHead(galHead, p);
     }
   });
-  galleryLayout(0);
+  galleryLayout(-1);
 
   /* =======================================================================
      PHASE 5 — CTA (the flood): stream enters from the left and expands until

@@ -4,6 +4,42 @@ Change log for the PraxisOS landing page (`landing/`). Newest round on top.
 
 ---
 
+## Round: colour tokens, hero pinning, gallery entry and step feel
+
+### Colour
+- Every colour on the page now comes from a `:root` variable. Added the ones
+  that were being written inline: `--blue`, `--blue-deep`, `--blue-ink`,
+  `--blue-ink-soft`, `--blue-ink-dim`, `--blue-overline`, `--gold-soft`,
+  `--gold-rgb`, plus surface and button tokens. No raw hex remains outside the
+  `:root` block.
+- The wave accent on the module cards is `--gold`; it had been a one-off orange.
+- JS reads the palette out of `:root` once and reuses the resolved values,
+  rather than writing `var(...)` into inline styles.
+
+### Section 1 — Hero
+- The liquid body now follows the logo's live position as the hero scrolls, so
+  it stays behind the mark while it dissolves instead of being left at the
+  spot it occupied on load.
+
+### Section 3 — In Motion
+- Card spacing tightened (108px step, smaller jitter) so the train stays inside
+  the liquid body and reads as being carried by it.
+- Card icons are `--gold`.
+
+### Section 4 — The Views
+- The first screen now starts one slot off to the side and slides in, so it no
+  longer sits on top of the section title while the title is still fading.
+  The last one slides out rather than parking in the middle.
+- The step is much crisper: scrub cut from 1 to 0.25 and the snap shortened
+  with no delay. The long scrub was what made one wheel tick nudge the row,
+  pause, then drift to the next slot.
+- Cards more than ~2.5 slots from centre are `visibility: hidden`, which keeps
+  the composited layer count low and the step feeling instant.
+- Food Library dropped: it is a Nutrition screen, not a separate view. Eleven
+  views now, in the gallery, the tide, and the headline.
+
+---
+
 ## Round: headers, gallery spotlight, tide scatter, CTA contrast
 
 ### Pinned section headers
