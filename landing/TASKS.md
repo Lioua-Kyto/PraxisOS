@@ -4,6 +4,32 @@ Change log for the PraxisOS landing page (`landing/`). Newest round on top.
 
 ---
 
+## Round: calm hero body, flood clipped to its section, centred grid
+
+### The hero body drifting off the mark
+The anchor was already exact, so the remaining movement was coming from the
+shader itself. The boundary radius carries a positional noise term,
+`fbm(q * 1.3 + t * 0.6) * 0.24`, which deforms the shape asymmetrically and
+therefore walks its visual centre around over time, by up to a sizeable
+fraction of the body's own radius. A `u_calm` uniform now scales both that
+noise and the angular wobble: 0.2 while the hero holds the body, 1 everywhere
+else, so the aura reads as a steady disc behind the mark while the sweeps keep
+their full liquid character.
+
+### The flood spilling onto the section above
+`u_clipTop` gives the shader a hard top edge, and the closing section's phases
+set it from that section's own `getBoundingClientRect().top`. Nothing paints
+above it, so the flood is bounded by its container instead of washing over the
+features section on the way in. Verified against the measured rect at three
+scroll positions on both paths.
+
+### Module grid sat against the left edge
+`.modules__pin .module-grid { margin: 0 }` zeroed the auto side margins along
+with the top one, so the grid was left-aligned inside a full-width pin. The
+mobile rule sets `margin: 2.75rem auto 0`: 24px either side now.
+
+---
+
 ## Round: mobile gets the fluid back
 
 ### A lite fluid path for small screens

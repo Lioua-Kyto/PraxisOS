@@ -203,7 +203,7 @@
   var FRAG = [
     "precision highp float;",
     "varying vec2 vUv;",
-    "uniform float u_time,u_aspect,u_blob_radius,u_blob_edge,u_blob_rot,u_opacity,u_flood;",
+    "uniform float u_time,u_aspect,u_blob_radius,u_blob_edge,u_blob_rot,u_opacity,u_flood,u_calm,u_clipTop;",
     "uniform vec2 u_blob_center,u_blob_stretch;",
     "uniform vec3 u_colorA,u_colorB;",
     "vec3 permute(vec3 x){return mod(((x*34.0)+1.0)*x,289.0);}",
@@ -230,8 +230,8 @@
     "  float len = length(q);",
     "  float ang = atan(q.y, q.x);",
     // organic wobble of the boundary radius -> a cohesive, moving liquid body
-    "  float wob = 0.16*sin(ang*3.0 + t*1.3) + 0.10*sin(ang*5.0 - t*0.9) + 0.08*sin(ang*2.0 + t*0.5);",
-    "  float nr = fbm(q*1.3 + t*0.6)*0.24;",
+    "  float wob = (0.16*sin(ang*3.0 + t*1.3) + 0.10*sin(ang*5.0 - t*0.9) + 0.08*sin(ang*2.0 + t*0.5)) * u_calm;",
+    "  float nr = fbm(q*1.3 + t*0.6)*0.24*u_calm;",
     "  float rr = u_blob_radius*(1.0 + wob) + nr;",
     "  float sdf = len - rr;",
     // crisp SDF boundary (liquid edge), not a soft haze
@@ -245,6 +245,8 @@
     "  vec3 col = mix(u_colorA, u_colorB, clamp(0.32 + core*0.42 + drift, 0.0, 1.0));",
     "  col += u_colorB * rim * 0.25;",
     "  float alpha = clamp(body, 0.0, 1.0) * u_opacity;",
+    // Nothing paints above u_clipTop, so the flood can be held inside its section.
+    "  alpha *= 1.0 - smoothstep(u_clipTop - 0.015, u_clipTop + 0.015, p.y);",
     "  gl_FragColor = vec4(col, alpha);",
     "}"
   ].join("\n");
@@ -268,6 +270,8 @@
     u_blob_rot: { value: 0 },
     u_opacity: { value: 1 },
     u_flood: { value: 0 },
+    u_calm: { value: 1 },
+    u_clipTop: { value: 2 },
     u_colorA: { value: new THREE.Color(0.141, 0.251, 0.435) },
     u_colorB: { value: new THREE.Color(0.247, 0.427, 0.71) }
   };
@@ -290,7 +294,7 @@
   // `lock` pins the centre to the target with no easing. The smoothing that
 // gives the sweeps their liquid drag is exactly what made the body trail the
 // logo and then catch up, so the hero turns it off.
-var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, opacity: 1, flood: 0, lock: false };
+var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, opacity: 1, flood: 0, calm: 1, clip: 2, lock: false };
   var SMOOTH = 7;
   gsap.ticker.add(function (time, deltaMS) {
     if (document.hidden) return;
@@ -318,6 +322,8 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
     u.u_blob_rot.value += (target.rot - u.u_blob_rot.value) * k;
     u.u_opacity.value += (target.opacity - u.u_opacity.value) * k;
     u.u_flood.value += (target.flood - u.u_flood.value) * k;
+    u.u_calm.value += (target.calm - u.u_calm.value) * k;
+    u.u_clipTop.value = target.clip;   // a layout edge, so no easing
     renderer.render(scene, camera);
   });
   gsap.ticker.lagSmoothing(1000, 16);
@@ -328,6 +334,14 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
   // Sweep centres go past the viewport edges (~ -0.5 / 1.5 in screen fraction)
   // with margin for the blob radius+stretch, so no fluid edge clips on screen.
   var OFF_L = -4.0, OFF_R = 4.0;
+
+  // Top edge of an element in shader Y (+1 top, -1 bottom), used to hold the
+  // flood inside its own section instead of letting it wash over the one above.
+  function topEdgeY(sel) {
+    var el = document.querySelector(sel);
+    if (!el) return 2;
+    return 1 - 2 * (el.getBoundingClientRect().top / window.innerHeight);
+  }
 
   /* ---- logo rest position (fluid rests behind the right-column logo) --- */
   var heroRest = [0.6, 0.05];
@@ -400,6 +414,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
         measureLogo();
         target.cx = heroRest[0]; target.cy = heroRest[1];
         target.sx = 1; target.sy = 1; target.rot = 0; target.flood = 0;
+        target.calm = 0.2; target.clip = 2;
         target.radius = 0.42; target.edge = 0.03;
         target.opacity = 1 - smoothstep(0.4, 0.95, p);
       }
@@ -411,6 +426,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
         target.lock = false;
         target.cx = 0; target.cy = 0; target.rot = 0;
         target.sx = 1.8; target.sy = 1.6; target.radius = 2.6; target.edge = 0.05;
+        target.calm = 1; target.clip = topEdgeY("#download");
         target.flood = 1;
         target.opacity = smoothstep(0, 0.25, p);
       }
@@ -435,6 +451,8 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
       measureLogo();                             // and re-anchor on every update
       target.cx = heroRest[0]; target.cy = heroRest[1];
       target.sx = 1; target.sy = 1; target.rot = 0; target.flood = 0;
+      target.calm = 0.2;   // the positional noise is what made it drift off-centre
+      target.clip = 2;
       target.radius = lerp(0.42, 0.34, p);
       target.edge = lerp(0.03, 0.16, p);              // soften as it dissolves
       target.opacity = 1 - smoothstep(0.12, 0.7, p);  // dissolve into nothing
@@ -483,6 +501,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
       target.lock = false;                              // release the hero pin
       target.cx = lerp(OFF_L, OFF_R, p); target.cy = 0; // through the centred grid
       target.sx = 2.6; target.sy = 0.78; target.radius = 0.5; target.edge = 0.03; target.rot = 0; target.flood = 0;
+        target.calm = 1; target.clip = 2;
       target.opacity = smoothstep(0, 0.1, p) * (1 - smoothstep(0.94, 1, p)); // gone at both edges
       moduleReact(p);
       placeHead(modHead, p);
@@ -531,6 +550,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
       target.lock = false;
         target.cx = lerp(OFF_R, OFF_L, p); target.cy = 0;
       target.sx = 3.0; target.sy = 1.25; target.radius = 0.7; target.edge = 0.04; target.rot = 0; target.flood = 0;
+        target.calm = 1; target.clip = 2;
       target.opacity = smoothstep(0, 0.08, p) * (1 - smoothstep(0.9, 1, p)); // no lingering edge at boundaries
       var vw = window.innerWidth, vh = window.innerHeight;
       var cx = ((target.cx / uniforms.u_aspect.value) + 1) / 2 * vw;
@@ -560,6 +580,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
     onUpdate: function (self) {
       var p = self.progress;
       target.lock = false;
+      target.calm = 1; target.clip = 2;
       target.opacity = 0;                       // the sphere owns this section
       placeHead(galHead, p);                    // title fades, overline docks
       // Sphere fades up once the heading has cleared the middle; the hint
@@ -581,6 +602,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
         target.lock = false;
         target.rot = 0; target.cx = lerp(OFF_L, 0, smoothstep(0, 0.6, p)); target.cy = 0;
         target.sx = 1.8; target.sy = 1.6;
+        target.calm = 1; target.clip = topEdgeY("#download");
         target.radius = lerp(0.4, 2.6, p);
         target.edge = 0.05; target.flood = smoothstep(0.25, 1, p);
         target.opacity = smoothstep(0, 0.15, p);
