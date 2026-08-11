@@ -58,13 +58,18 @@
     Mastery: "What you are learning",
     Codex: "Notes worth returning to",
     Journal: "The day in your words",
-    Settings: "Yours to shape"
+    Settings: "Yours to shape",
+    "Food Library": "Your foods, ready to log",
+    Exercise: "Start a session",
+    Theme: "Make it look like yours"
   };
   var GALLERY = [
     ["Nexus", "Nexus.png"], ["Tasks", "Tasks.png"], ["Discipline", "Discipline.png"],
     ["Flow", "Flow.png"], ["Ledger", "Ledger.png"], ["Nutrition", "Nutrition.png"],
     ["Workout", "Workout.png"], ["Mastery", "Mastery.png"], ["Codex", "Codex.png"],
-    ["Journal", "Journal.png"], ["Settings", "Settings.png"]
+    ["Journal", "Journal.png"], ["Settings", "Settings.png"],
+    ["Food Library", "Food Library.png"], ["Exercise", "Exercise.png"],
+    ["Theme", "Theme.png"]
   ];
   (function buildCards() {
     var tt = document.getElementById("tide-track");
@@ -97,7 +102,7 @@
         description: VIEW_BLURBS[c[0]] || ""
       };
     });
-    if (window.mountInfiniteMenu(stage, items, 1.0)) {
+    if (window.mountInfiniteMenu(stage, items, 1.35)) {
       document.documentElement.classList.add("has-sphere");
       stage.removeAttribute("aria-hidden");
     }
@@ -490,9 +495,22 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
      PHASE 4 — THE VIEWS: the sphere owns this section and is driven by drag,
      not scroll, so the only job here is to keep the fluid out of its way.
      ===================================================================== */
+  var galHead = document.querySelector("#gallery .section-head");
+  var menuStage = document.getElementById("menu-stage");
+  var dragHint = document.getElementById("drag-hint");
   ScrollTrigger.create({
-    trigger: "#gallery", start: "top 70%", end: "bottom 30%",
-    onUpdate: function () { target.lock = false; target.opacity = 0; }
+    trigger: "#gallery", start: "top top", end: "+=140%",
+    pin: ".gallery__pin", scrub: 1, anticipatePin: 1,
+    onUpdate: function (self) {
+      var p = self.progress;
+      target.lock = false;
+      target.opacity = 0;                       // the sphere owns this section
+      placeHead(galHead, p);                    // title fades, overline docks
+      // Sphere fades up once the heading has cleared the middle; the hint
+      // follows it so the reader knows it can be dragged.
+      if (menuStage) menuStage.style.opacity = smoothstep(0.16, 0.42, p).toFixed(3);
+      if (dragHint) dragHint.style.opacity = smoothstep(0.44, 0.62, p).toFixed(3);
+    }
   });
 
   /* =======================================================================

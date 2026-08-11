@@ -183,13 +183,17 @@
 
       <!-- ================= GALLERY (InfiniteMenu sphere) ================= -->
       <section class="section section--center gallery" id="gallery">
-        <div class="section-head">
-          <p class="overline anim-head">03 · The views</p>
-          <h2 class="anim-head">One current,<br /><em>eleven views.</em></h2>
+        <div class="gallery__pin">
+          <div class="section-head pin-head">
+            <p class="overline">03 · The views</p>
+            <h2>One current,<br /><em>fourteen views.</em></h2>
+            <p class="pin-head__sub">Every screen in the app, on one sphere.</p>
+          </div>
+          <!-- The sphere mounts here; the grid below is the no-WebGL2 fallback. -->
+          <div class="menu-stage" id="menu-stage" aria-hidden="true"></div>
+          <p class="drag-hint" id="drag-hint">Drag to explore · click a screen to open it</p>
+          <div class="shot-grid" id="shot-grid"><!-- injected by JS --></div>
         </div>
-        <!-- The sphere mounts here; the grid below is the no-WebGL2 fallback. -->
-        <div class="menu-stage" id="menu-stage" aria-hidden="true"></div>
-        <div class="shot-grid" id="shot-grid"><!-- injected by JS --></div>
       </section>
 
       <!-- ================= FEATURES ================= -->

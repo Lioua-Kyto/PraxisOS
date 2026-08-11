@@ -818,6 +818,109 @@ html:not(.anim) .cta__inner {
   height: min(70vh, 620px);
   margin: 3rem auto 0;
 }
+/* Pinned: the section itself is the sphere's container, edge to edge. */
+.anim .gallery__pin {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+.anim .menu-stage {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  opacity: 0;
+  z-index: 1;
+}
+.drag-hint {
+  margin: 1.6rem auto 0;
+  text-align: center;
+  font:
+    500 0.66rem "DM Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.anim .drag-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 3.2rem;
+  margin: 0;
+  opacity: 0;
+  z-index: 3;
+}
+.is-expanded ~ .drag-hint {
+  opacity: 0 !important;
+}
+
+/* Tapping a disc opens the original file at full resolution. */
+.view-expand {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  padding: 2.2vh 2vw;
+  background: rgba(9, 10, 10, 0.94);
+  opacity: 0;
+  transition: opacity 0.25s var(--ease);
+}
+.view-expand.is-open {
+  opacity: 1;
+}
+.view-expand__img {
+  max-width: 100%;
+  /* Reserve just the close ring and its gap; the screen takes the rest. */
+  max-height: calc(100% - 88px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.7);
+}
+/* Gold ring below the image, separated by the page background. */
+.view-expand__close {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--gold);
+  cursor: pointer;
+  position: relative;
+  transition:
+    transform 0.2s var(--ease),
+    background 0.2s var(--ease);
+}
+.view-expand__close::before,
+.view-expand__close::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 15px;
+  height: 2px;
+  background: var(--ink-dark);
+  border-radius: 2px;
+}
+.view-expand__close::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.view-expand__close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+.view-expand__close:hover {
+  transform: scale(1.08);
+  background: var(--gold-soft);
+}
 #infinite-grid-menu-canvas {
   cursor: grab;
   width: 100%;
@@ -909,6 +1012,10 @@ html:not(.anim) .cta__inner {
   background: linear-gradient(0deg, rgba(9, 10, 10, 0.8), transparent);
 }
 @media (max-width: 900px) {
-  .menu-stage { height: 62vh; }
-  .shot-grid { grid-template-columns: repeat(2, 1fr); }
+  .menu-stage {
+    height: 62vh;
+  }
+  .shot-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

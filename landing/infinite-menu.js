@@ -532,16 +532,21 @@ void main() {
     initTexture() {
       var gl = this.gl;
       var self = this;
-      this.tex = createAndSetupTexture(gl, gl.LINEAR, gl.LINEAR, gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE);
+      this.tex = createAndSetupTexture(gl, gl.LINEAR_MIPMAP_LINEAR, gl.LINEAR, gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE);
 
       var itemCount = Math.max(1, this.items.length);
       this.atlasSize = Math.ceil(Math.sqrt(itemCount));
       var canvas = document.createElement("canvas");
       var ctx = canvas.getContext("2d");
-      var cellSize = 512;
+      // Cells were 512px, which was the ceiling on how sharp a disc could get.
+      // Take as much as the GPU allows, capped at 1024 per cell.
+      var maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE) || 4096;
+      var cellSize = Math.min(1024, Math.floor(maxTex / this.atlasSize));
 
       canvas.width = this.atlasSize * cellSize;
       canvas.height = this.atlasSize * cellSize;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
 
       Promise.all(this.items.map(function (item) {
         return new Promise(function (resolve) {
@@ -725,12 +730,50 @@ void main() {
     container.innerHTML =
       '<canvas id="infinite-grid-menu-canvas"></canvas>' +
       '<p class="face-title"></p>' +
-      '<p class="face-description"></p>';
+      '<p class="face-description"></p>' +
+      '<div class="view-expand" hidden>' +
+      '<img class="view-expand__img" alt="" />' +
+      '<button class="view-expand__close" type="button" aria-label="Back to the sphere"></button>' +
+      "</div>";
 
     var canvas = container.querySelector("#infinite-grid-menu-canvas");
     var titleEl = container.querySelector(".face-title");
     var descEl = container.querySelector(".face-description");
+    var expandEl = container.querySelector(".view-expand");
+    var expandImg = container.querySelector(".view-expand__img");
+    var closeBtn = container.querySelector(".view-expand__close");
     var activeIndex = -1;
+
+    // The expanded view uses the original file, not the atlas texture, so it is
+    // shown at full source resolution.
+    function openExpanded() {
+      var item = items[activeIndex % items.length];
+      if (!item) return;
+      expandImg.src = item.image;
+      expandImg.alt = item.title ? "PraxisOS " + item.title + " screen" : "";
+      expandEl.hidden = false;
+      requestAnimationFrame(function () { expandEl.classList.add("is-open"); });
+      container.classList.add("is-expanded");
+    }
+    function closeExpanded() {
+      expandEl.classList.remove("is-open");
+      container.classList.remove("is-expanded");
+      setTimeout(function () { if (!expandEl.classList.contains("is-open")) expandEl.hidden = true; }, 260);
+    }
+    closeBtn.addEventListener("click", closeExpanded);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !expandEl.hidden) closeExpanded();
+    });
+
+    // A press that neither moved nor lingered is a tap, not a drag.
+    var downX = 0, downY = 0, downT = 0;
+    canvas.addEventListener("pointerdown", function (e) {
+      downX = e.clientX; downY = e.clientY; downT = Date.now();
+    });
+    canvas.addEventListener("pointerup", function (e) {
+      var moved = Math.hypot(e.clientX - downX, e.clientY - downY);
+      if (moved < 6 && Date.now() - downT < 400) openExpanded();
+    });
 
     function setMoving(isMoving) {
       var cls = isMoving ? "inactive" : "active";

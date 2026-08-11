@@ -4,6 +4,43 @@ Change log for the PraxisOS landing page (`landing/`). Newest round on top.
 
 ---
 
+## Round: the views, pinned and full-bleed
+
+### The section now introduces itself
+The sphere used to appear the moment the section arrived, with no heading beat.
+It is pinned now and runs the same choreography as the others: title and
+sub-line centred and large, then they fade in place while the overline docks to
+the top left, then the sphere fades up, then the drag hint. Measured across the
+pin: overline (580,247) to (37,109), heading opacity 1 to 0 without moving,
+stage 0 to 1, hint 0 to 1.
+
+### The section is the container
+`.menu-stage` was a boxed 1100x620 panel sitting low in the section. On the
+pinned path it is now `position: absolute; inset: 0`, so the sphere fills the
+whole viewport, and the camera pulls back (`scale: 1.35`) so the discs read
+smaller against that larger stage.
+
+### Three more screens
+Food Library, Exercise and Theme are in, so the sphere and the fallback grid
+both carry fourteen views, and the headline says so. Food Library was deleted
+in an earlier round and has been restored from history.
+
+### Click a screen to open it
+A tap on a disc (a press that neither moved more than 6px nor lasted longer
+than 400ms, so dragging still rotates) opens that screen over the section at
+83% of the viewport in both axes, with a solid gold ring below it, separated by
+a gap that shows the page background. The ring, or Escape, closes it.
+
+### Sharpness
+Two things were softening the discs: atlas cells were fixed at 512px, and the
+minification filter ignored the mipmaps it was generating. Cells now take
+`min(1024, MAX_TEXTURE_SIZE / atlasSize)` (1024 here, against a 16384 limit),
+drawn with high-quality smoothing, and the filter is trilinear. The expanded
+view sidesteps the texture altogether and loads the original file: 1920x1080
+shown at 1066px, a 1.8x downscale, so it is never upscaled.
+
+---
+
 ## Round: InfiniteMenu sphere, hero drift, stranded card, scroll restore
 
 ### Section 4 — The Views is now an InfiniteMenu sphere
