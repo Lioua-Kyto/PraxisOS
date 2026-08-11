@@ -556,6 +556,7 @@ html:not(.anim) .pin-head {
   width: auto;
   padding: 0;
 }
+.anim .tide__track { visibility: hidden; }
 .anim .tide__card {
   position: absolute;
   top: 0;
@@ -570,77 +571,13 @@ html:not(.anim) .pin-head {
 }
 
 /* ---------------------------- the gallery ------------------------------ */
-.gallery__pin {
-  position: relative;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  overflow: hidden;
-}
-.gallery__head {
-  margin-bottom: 3rem;
-}
-.gallery__viewport {
-  width: 100%;
-  overflow: hidden;
-}
-.gallery__track {
-  display: flex;
-  align-items: center;
-  gap: 34px;
-  padding-inline: 42px;
-  width: max-content;
-  will-change: transform;
-}
 /* Animated path: every card is centred and offset by JS, so the spotlight card
    is always exactly at the middle of the viewport. */
 /* The base track carries `will-change: transform`, which makes it a containing
    block for the absolutely positioned cards. Collapsed to height 0 that turns
    the cards' `top: 50%` into `0px`, so give it the full box here. */
-.anim .gallery__track {
-  display: block;
-  position: absolute;
-  inset: 0;
-  width: auto;
-  padding: 0;
-  transform: none;
-}
+.anim .anim /* One shared caption under the carousel; JS cross-fades it to the spotlit screen. */
 .anim .gallery__card {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  margin: 0;
-  transform-origin: center;
-  translate: -50% -50%;
-}
-.anim .gallery__viewport {
-  position: absolute;
-  inset: 0;
-  overflow: visible;
-}
-/* One shared caption under the carousel; JS cross-fades it to the spotlit screen. */
-.gallery__label {
-  margin: 2.2rem auto 0;
-  text-align: center;
-  font:
-    500 0.72rem "DM Mono",
-    ui-monospace,
-    monospace;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--ink);
-  min-height: 1.2em;
-}
-.anim .gallery__label {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 7vh;
-  z-index: 210;
-  margin: 0;
-}
-.gallery__card {
   flex: none;
   width: min(64vw, 940px);
   /* Matches the 1920x1080 source, so `cover` never crops or resamples oddly.
@@ -791,18 +728,10 @@ footer > a:last-child {
 }
 
 html:not(.anim) .tide__viewport,
-html:not(.anim) .gallery__viewport {
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-html:not(.anim) .tide__viewport::-webkit-scrollbar,
-html:not(.anim) .gallery__viewport::-webkit-scrollbar {
+html:not(.anim) html:not(.anim) .tide__viewport::-webkit-scrollbar {
   display: none;
 }
-html:not(.anim) .tide__card,
-html:not(.anim) .gallery__card {
+html:not(.anim) .tide__card {
   scroll-snap-align: center;
 }
 html:not(.anim) .tide__card {
@@ -814,10 +743,7 @@ html:not(.anim) .modules__pin {
   overflow: visible;
 }
 html:not(.anim) .tide__pin,
-html:not(.anim) .gallery__pin {
-  min-height: 0;
-}
-html:not(.anim) .cta__pin {
+html:not(.anim) html:not(.anim) .cta__pin {
   min-height: 0;
   padding: 0;
   display: block;
@@ -880,4 +806,109 @@ html:not(.anim) .cta__inner {
     align-items: flex-start;
     flex-direction: column;
   }
+}
+
+/* ---------------------- the views: InfiniteMenu ------------------------ */
+/* Sphere stage. Styles adapted from the component's reference CSS: the
+   title/description sit under the sphere rather than at the sides, and the
+   original's 1500px hide-breakpoint is dropped so they read on laptops. */
+.menu-stage {
+  position: relative;
+  width: min(1100px, calc(100% - 3rem));
+  height: min(70vh, 620px);
+  margin: 3rem auto 0;
+}
+#infinite-grid-menu-canvas {
+  cursor: grab;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  outline: none;
+}
+#infinite-grid-menu-canvas:active {
+  cursor: grabbing;
+}
+.face-title,
+.face-description {
+  user-select: none;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  width: max-content;
+  max-width: 90%;
+  margin: 0;
+}
+.face-title {
+  bottom: 2.6rem;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  color: var(--ink);
+}
+.face-description {
+  bottom: 1.2rem;
+  font:
+    500 0.7rem "DM Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.face-title.active,
+.face-description.active {
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+.face-title.inactive,
+.face-description.inactive {
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+/* Static grid of the same screens, shown when the sphere cannot run. */
+.shot-grid {
+  width: min(var(--maxw), calc(100% - 3rem));
+  margin: 3.5rem auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.has-sphere .shot-grid {
+  display: none;
+}
+.shot-grid .gallery__card {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--frame);
+}
+.shot-grid .gallery__card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+.shot-grid figcaption {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  font:
+    500 0.6rem "DM Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: linear-gradient(0deg, rgba(9, 10, 10, 0.8), transparent);
+}
+@media (max-width: 900px) {
+  .menu-stage { height: 62vh; }
+  .shot-grid { grid-template-columns: repeat(2, 1fr); }
 }

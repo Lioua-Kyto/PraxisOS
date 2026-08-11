@@ -4,6 +4,49 @@ Change log for the PraxisOS landing page (`landing/`). Newest round on top.
 
 ---
 
+## Round: InfiniteMenu sphere, hero drift, stranded card, scroll restore
+
+### Section 4 — The Views is now an InfiniteMenu sphere
+Replaced the scroll carousel with the React Bits **InfiniteMenu** component
+(JavaScript + CSS variant). The page has no bundler, so the component was
+ported rather than installed: its rendering core (`Geometry`, `ArcballControl`,
+`InfiniteGridMenu`) is framework-agnostic and is kept faithful in
+`infinite-menu.js`; only the React wrapper is replaced by a vanilla
+`mountInfiniteMenu(container, items, scale)`. `gl-matrix` loads from jsDelivr as
+a UMD global.
+
+Three deliberate deviations, all noted in the file header:
+- the context is created with `alpha: true` and cleared transparent, so the
+  sphere sits over the page instead of on an opaque black box;
+- atlas cells are filled with a centre-crop of each screenshot, since the
+  sources are 16:9 and the cells are square;
+- the title and description sit under the sphere, and the reference CSS's
+  `max-width: 1500px` rule that hid them is dropped, so they read on laptops.
+
+The sphere needs WebGL2 and is only mounted above 900px: its canvas sets
+`touch-action: none`, which would trap a vertical swipe on a phone. Anything
+narrower, or without WebGL2, gets a static grid of the same eleven screens.
+
+### Hero fluid drift
+The body dipped for a moment on the first scroll and came to rest about 10px
+high. Both came from the same place: the position was only refreshed when
+ScrollTrigger reported progress, and the live uniform still eased toward it.
+While locked, the ticker now measures the logo and assigns the centre each
+frame, and the live uniform is seeded on the logo at startup, so there is no
+opening catch-up and no offset at rest.
+
+### A card stranded in the corner
+Before the tide section's first update its cards have no transform yet, so all
+eleven stacked at the container origin and the last one (Settings) showed in
+the corner until the section pinned. The track now starts hidden and is
+revealed by the trigger.
+
+### Reload position
+`history.scrollRestoration` is `manual`, so a reload lands at the top of the
+hero rather than part-way into a pinned section.
+
+---
+
 ## Round: hero lag, stranded tide card, black icons
 
 ### Hero fluid trailed the logo

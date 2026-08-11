@@ -38,6 +38,9 @@
       // WebGL/GSAP libraries fail to load.
       (function () {
         var d = document.documentElement;
+        // Scrollytelling relies on pinned sections, so a restored mid-page
+        // scroll position lands the reader inside a half-built pin.
+        if ("scrollRestoration" in history) history.scrollRestoration = "manual";
         d.classList.remove("no-js");
         d.classList.add("js");
         try {
@@ -178,20 +181,15 @@
         </div>
       </section>
 
-      <!-- ================= GALLERY (screenshot carousel) ================= -->
+      <!-- ================= GALLERY (InfiniteMenu sphere) ================= -->
       <section class="section section--center gallery" id="gallery">
-        <div class="gallery__pin">
-          <div class="section-head gallery__head pin-head">
-            <p class="overline">03 · The views</p>
-            <h2>One current,<br /><em>eleven views.</em></h2>
-          </div>
-          <div class="gallery__viewport">
-            <div class="gallery__track" id="gallery-track">
-              <!-- injected by JS -->
-            </div>
-          </div>
-          <p class="gallery__label" id="gallery-label"></p>
+        <div class="section-head">
+          <p class="overline anim-head">03 · The views</p>
+          <h2 class="anim-head">One current,<br /><em>eleven views.</em></h2>
         </div>
+        <!-- The sphere mounts here; the grid below is the no-WebGL2 fallback. -->
+        <div class="menu-stage" id="menu-stage" aria-hidden="true"></div>
+        <div class="shot-grid" id="shot-grid"><!-- injected by JS --></div>
       </section>
 
       <!-- ================= FEATURES ================= -->
@@ -287,6 +285,8 @@
       src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"
       defer
     ></script>
+    <script src="https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/gl-matrix-min.js" defer></script>
+    <script src="infinite-menu.js" defer></script>
     <script src="main.js" defer></script>
   </body>
 </html>

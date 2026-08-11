@@ -47,6 +47,19 @@
     ["Workout", "dumbbell"], ["Nutrition", "apple"], ["Flow", "timer"], ["Ledger", "wallet"],
     ["Journal", "book"], ["Codex", "library"], ["Settings", "gear"]
   ];
+  var VIEW_BLURBS = {
+    Nexus: "Your day at a glance",
+    Tasks: "Work worth finishing",
+    Discipline: "Promises you keep",
+    Flow: "Undivided attention",
+    Ledger: "Where money goes",
+    Nutrition: "What you ate today",
+    Workout: "Training, logged",
+    Mastery: "What you are learning",
+    Codex: "Notes worth returning to",
+    Journal: "The day in your words",
+    Settings: "Yours to shape"
+  };
   var GALLERY = [
     ["Nexus", "Nexus.png"], ["Tasks", "Tasks.png"], ["Discipline", "Discipline.png"],
     ["Flow", "Flow.png"], ["Ledger", "Ledger.png"], ["Nutrition", "Nutrition.png"],
@@ -60,15 +73,33 @@
         return '<div class="tide__card">' + svg(c[1]) + "<b>" + c[0] + "</b></div>";
       }).join("");
     }
-    var gt = document.getElementById("gallery-track");
+    var gt = document.getElementById("shot-grid");
     if (gt) {
-      // No caption inside the frame: one shared label sits under the carousel
-      // and cross-fades to whichever screen holds the spotlight.
       gt.innerHTML = GALLERY.map(function (c) {
         var src = "assets/images/" + encodeURIComponent(c[1]);
         return '<figure class="gallery__card"><img loading="lazy" decoding="async" src="' +
-          src + '" alt="PraxisOS ' + c[0] + ' screen" /></figure>';
+          src + '" alt="PraxisOS ' + c[0] + ' screen" /><figcaption>' + c[0] + "</figcaption></figure>";
       }).join("");
+    }
+  })();
+
+  /* ---- the views: draggable sphere, static grid if WebGL2 is missing --- */
+  (function initViews() {
+    var stage = document.getElementById("menu-stage");
+    if (!stage || !window.mountInfiniteMenu) return;
+    // The sphere's canvas sets touch-action: none, so on a phone a vertical
+    // swipe over it would trap the page scroll. Narrow screens get the grid.
+    if (window.innerWidth < 900) return;
+    var items = GALLERY.map(function (c) {
+      return {
+        image: "assets/images/" + encodeURIComponent(c[1]),
+        title: c[0],
+        description: VIEW_BLURBS[c[0]] || ""
+      };
+    });
+    if (window.mountInfiniteMenu(stage, items, 1.0)) {
+      document.documentElement.classList.add("has-sphere");
+      stage.removeAttribute("aria-hidden");
     }
   })();
 
@@ -249,6 +280,10 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
     var cen = u.u_blob_center.value;
     // Ease normally, but snap the center across huge jumps: that only happens
     // at an off-screen wrap, so it must not be dragged across the viewport.
+    if (target.lock) {
+      measureLogo();
+      target.cx = heroRest[0]; target.cy = heroRest[1];
+    }
     var dx = target.cx - cen.x, dy = target.cy - cen.y;
     if (target.lock) { cen.x = target.cx; cen.y = target.cy; }
     else {
@@ -285,9 +320,12 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
     heroRest = [((px / w) * 2 - 1) * (w / h), 1 - (py / h) * 2];
   }
   measureLogo();
-  // Start the blob behind the logo on first paint (before any scroll update).
+  // Start the blob behind the logo on first paint (before any scroll update),
+  // live value included, so there is no opening catch-up drift.
   target.cx = heroRest[0];
   target.cy = heroRest[1];
+  target.lock = true;
+  uniforms.u_blob_center.value.set(heroRest[0], heroRest[1]);
 
   /* ---- hero intro reveal ---------------------------------------------- */
   gsap.to(".hero .reveal", { opacity: 1, y: 0, duration: 0.9, ease: "power3.out", stagger: 0.08, delay: 0.15 });
@@ -336,9 +374,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
       var p = self.progress;
       // Track the logo's live position so the body stays pinned behind it as
       // the hero scrolls, instead of being left behind at its load position.
-      measureLogo();
-      target.lock = true;                        // sit exactly on the logo
-      target.cx = heroRest[0]; target.cy = heroRest[1];
+      target.lock = true;                        // the ticker keeps it on the logo
       target.sx = 1; target.sy = 1; target.rot = 0; target.flood = 0;
       target.radius = lerp(0.42, 0.34, p);
       target.edge = lerp(0.03, 0.16, p);              // soften as it dissolves
@@ -451,79 +487,13 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
   });
 
   /* =======================================================================
-     PHASE 4 — THE GALLERY: no shader; centred carousel with a strong spotlight
-     (the middle card is much larger than the sides).
+     PHASE 4 — THE VIEWS: the sphere owns this section and is driven by drag,
+     not scroll, so the only job here is to keep the fluid out of its way.
      ===================================================================== */
-  var galleryTrack = document.getElementById("gallery-track");
-  var galleryCards = galleryTrack.children;
-  var galHead = document.querySelector("#gallery .section-head");
-  var galLabel = document.getElementById("gallery-label");
-  var gCardW = 0, gStride = 0;
-  function measureGallery() {
-    if (!galleryCards.length) return;
-    gCardW = galleryCards[0].offsetWidth;
-    // Neighbours tuck in behind the focused card, so the step is a fraction of
-    // the card width rather than card + gap.
-    gStride = gCardW * 0.64;
-  }
-  // pos is a floating card index: 0 = first screen centred, n-1 = last. The
-  // ScrollTrigger snaps it to whole numbers, so one scroll tick swaps the
-  // centred screen with its neighbour instead of nudging the whole row along.
-  function galleryLayout(pos) {
-    if (!gCardW) measureGallery();
-    var n = galleryCards.length;
-    for (var i = 0; i < n; i++) {
-      var d = i - pos;                       // signed distance in cards
-      var ad = Math.abs(d);
-      var near = Math.min(1, ad);
-      var card = galleryCards[i];
-      // Cards more than a few slots away are invisible anyway; skipping them
-      // keeps the number of composited layers small, which is what makes the
-      // step feel instant rather than syrupy.
-      if (ad > 2.6) { card.style.visibility = "hidden"; continue; }
-      card.style.visibility = "visible";
-      var scale = 1 - 0.38 * near - 0.04 * Math.max(0, ad - 1);
-      card.style.transform =
-        "translate3d(" + (d * gStride).toFixed(1) + "px,0,0) scale(" + scale.toFixed(4) + ")";
-      card.style.opacity = (1 - 0.72 * near - 0.12 * Math.max(0, ad - 1)).toFixed(3);
-      card.style.zIndex = String(200 - Math.round(ad * 10));
-      card.style.borderColor = ad < 0.5 ? CSSVAR.blue : "";
-      card.style.boxShadow = ad < 0.5 ? "0 26px 70px rgba(0,0,0,0.8)" : "none";
-    }
-    if (galLabel) {
-      var nearest = Math.round(pos);
-      var frac = Math.abs(pos - nearest);
-      var inRange = nearest >= 0 && nearest <= n - 1;
-      var idx = Math.max(0, Math.min(n - 1, nearest));
-      if (galLabel.textContent !== GALLERY[idx][0]) galLabel.textContent = GALLERY[idx][0];
-      galLabel.style.opacity = inRange ? Math.max(0, 1 - frac * 2.4).toFixed(3) : "0";
-    }
-  }
-  var gN = galleryCards.length;
-  // pos runs -1 .. gN: the first screen starts one slot off to the side and
-  // slides in (so it never sits on top of the section title), and the last one
-  // slides out the other side rather than parking in the middle.
-  var gSteps = gN + 1;
   ScrollTrigger.create({
-    trigger: "#gallery", start: "top top", end: "+=" + (gSteps * 48) + "%",
-    pin: ".gallery__pin", anticipatePin: 1,
-    onToggle: function (self) { galleryTrack.style.visibility = self.isActive ? "visible" : "hidden"; },
-    // A short scrub plus a quick snap: long scrub smoothing was what made a
-    // single wheel tick nudge the row, pause, then drift to the next slot.
-    scrub: 0.25,
-    snap: gSteps > 1
-      ? { snapTo: 1 / gSteps, duration: { min: 0.12, max: 0.28 }, delay: 0, ease: "power2.out", inertia: false }
-      : false,
-    onRefresh: measureGallery,
-    onUpdate: function (self) {
-      var p = self.progress;
-      galleryLayout(-1 + p * gSteps);
-      target.lock = false;
-      target.opacity = 0; // shader hidden through the gallery
-      placeHead(galHead, p);
-    }
+    trigger: "#gallery", start: "top 70%", end: "bottom 30%",
+    onUpdate: function () { target.lock = false; target.opacity = 0; }
   });
-  galleryLayout(-1);
 
   /* =======================================================================
      PHASE 5 — CTA (the flood): stream enters from the left and expands until
@@ -552,11 +522,11 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
     resize(); measureLogo();
     clearTimeout(resizeTO);
     resizeTO = setTimeout(function () {
-      measureModules(); measureTide(); measureGallery(); ScrollTrigger.refresh();
+      measureModules(); measureTide(); ScrollTrigger.refresh();
     }, 150);
   });
-  measureModules(); measureTide(); measureGallery();
+  measureModules(); measureTide();
   window.addEventListener("load", function () {
-    measureLogo(); measureModules(); measureTide(); measureGallery(); ScrollTrigger.refresh();
+    measureLogo(); measureModules(); measureTide(); ScrollTrigger.refresh();
   });
 })();
