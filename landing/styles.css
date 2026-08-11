@@ -331,7 +331,12 @@ body::after {
   margin: 1.4rem 0 1.7rem;
   font-size: clamp(3.1rem, 6.5vw, 6.6rem);
 }
+.section-head {
+  text-align: center;
+}
 .section-head > p:last-child {
+  margin-inline: auto;
+  text-align: center;
   max-width: 37ch;
   color: var(--muted);
   font-size: 0.88rem;
@@ -436,13 +441,13 @@ body::after {
 .pin-head .overline {
   width: max-content;
   margin-inline: auto;
-  will-change: transform;
 }
 .pin-head h2 {
   margin: 1rem 0 0;
 }
 .pin-head__sub {
-  margin-top: 1rem;
+  margin: 1rem auto 0;
+  text-align: center;
   color: var(--muted);
   font-size: 0.9rem;
 }
@@ -452,7 +457,7 @@ html:not(.anim) .pin-head {
   transform: none;
   width: auto;
   max-width: none;
-  text-align: left;
+  text-align: center;
 }
 .module-card h3 {
   font-size: 1.1rem;
@@ -727,14 +732,18 @@ footer > a:last-child {
   transform: none;
 }
 
-html:not(.anim) .tide__viewport,
-html:not(.anim) html:not(.anim) .tide__viewport::-webkit-scrollbar {
+/* Fallback: the tide becomes a touch carousel rather than a fluid-driven train. */
+html:not(.anim) .tide__viewport {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+html:not(.anim) .tide__viewport::-webkit-scrollbar {
   display: none;
 }
 html:not(.anim) .tide__card {
   scroll-snap-align: center;
-}
-html:not(.anim) .tide__card {
   transform: none;
 }
 html:not(.anim) .modules__pin {
@@ -743,7 +752,11 @@ html:not(.anim) .modules__pin {
   overflow: visible;
 }
 html:not(.anim) .tide__pin,
-html:not(.anim) html:not(.anim) .cta__pin {
+html:not(.anim) .gallery__pin {
+  min-height: 0;
+  overflow: visible;
+}
+html:not(.anim) .cta__pin {
   min-height: 0;
   padding: 0;
   display: block;
@@ -986,6 +999,8 @@ html:not(.anim) .cta__inner {
   display: none;
 }
 .shot-grid .gallery__card {
+  width: auto;
+  margin: 0;              /* <figure> carries a 40px UA margin */
   position: relative;
   aspect-ratio: 16 / 9;
   border: 1px solid var(--line-soft);
@@ -1020,5 +1035,109 @@ html:not(.anim) .cta__inner {
   }
   .shot-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* =========================================================================
+   Responsive pass. Everything below 900px runs the static path, so these
+   rules assume no shader, no pins, and no sphere.
+   ========================================================================= */
+@media (max-width: 900px) {
+  /* An empty stage is a tall blank gap when the sphere cannot run. */
+  .menu-stage:empty {
+    display: none;
+  }
+  /* `1fr` keeps a min-content floor, and the captions were forcing the columns
+     wider than the grid itself. */
+  .shot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 2.5rem;
+    gap: 10px;
+  }
+
+  /* Headings, copy and controls all read centred on a narrow screen. */
+  .hero__grid,
+  .hero__copy,
+  .section-head,
+  .pin-head {
+    text-align: center;
+  }
+  .hero__lede,
+  .section-head > p,
+  .pin-head__sub {
+    margin-inline: auto;
+  }
+  .hero__actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .hero__logo-wrap {
+    order: -1;
+  }
+  /* The docking transform belongs to the pinned path only. */
+  html:not(.anim) .pin-head {
+    position: static;
+    width: auto;
+    max-width: 100%;
+    transform: none;
+  }
+  html:not(.anim) .pin-head .overline {
+    transform: none;
+  }
+
+  .section {
+    padding: 4.5rem 0;
+  }
+  .section-head h2 {
+    font-size: clamp(2.4rem, 9vw, 3.4rem);
+    margin: 1rem 0 1.2rem;
+  }
+  .drag-hint {
+    margin-top: 1.2rem;
+  }
+
+  /* The tide keeps its carousel, with room to swipe from the edge. */
+  .tide__viewport {
+    padding-block: 0.5rem;
+  }
+  .tide__track {
+    gap: 12px;
+    padding-inline: 1.25rem;
+  }
+
+  footer {
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    gap: 0.9rem;
+    padding-inline: 1.25rem;
+  }
+}
+
+@media (max-width: 620px) {
+  .module-grid {
+    grid-template-columns: 1fr;
+  }
+  .module-card {
+    height: auto;
+    min-height: 132px;
+    gap: 0.8rem;
+  }
+  .shot-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hero h1 {
+    font-size: clamp(2.8rem, 12vw, 3.8rem);
+  }
+  .section-head h2 {
+    font-size: clamp(2.1rem, 10vw, 2.8rem);
+  }
+  .cta h2 {
+    font-size: clamp(2.4rem, 12vw, 3.4rem);
+  }
+  .button {
+    justify-content: space-between;
+    width: min(320px, 100%);
   }
 }

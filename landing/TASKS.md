@@ -4,6 +4,46 @@ Change log for the PraxisOS landing page (`landing/`). Newest round on top.
 
 ---
 
+## Round: responsive overhaul, tide speeds, crisp overline
+
+### Mobile was badly broken, and the cause was a mangled selector
+Section 3 was empty on phones because an earlier edit that stripped the gallery
+carousel merged two rules into
+`html:not(.anim) .tide__viewport, html:not(.anim) html:not(.anim) .tide__viewport::-webkit-scrollbar { display: none }`.
+That put `display: none` on the tide viewport itself for the whole static path,
+and lost the scroll-snap rules with it. Both are restored.
+
+The rest of the pass:
+- headings, copy and buttons all centre below 900px; the static path's header
+  was explicitly left-aligned, which is what made everything hug the left edge;
+- the empty sphere stage is `display: none` when the sphere cannot run, instead
+  of leaving a tall blank gap;
+- the fallback grid uses `minmax(0, 1fr)` (plain `1fr` keeps a min-content floor
+  and the captions were forcing columns wider than the grid) and drops the
+  `<figure>` UA margin, so cards now fill their column exactly;
+- one column under 620px, with the type scale stepped down.
+
+### A description for "In motion", and centred copy
+The section had a heading and nothing else. It has a sub-line now, and every
+section head except the hero centres its description.
+
+### Tide cards move at their own pace
+Each card carries a speed factor between 0.82 and 1.18 applied to the wave's
+position, so they no longer travel as one rigid block. Measured over the same
+scroll span: eleven distinct offsets, from -537 to -679px.
+
+### The docked overline is crisp
+It was landing on fractional pixels and sitting on a promoted layer. The
+translate is rounded to whole pixels and `will-change` is gone, so the text
+rasterises the same way docked as it does at rest.
+
+### Hero resting position
+The anchor is re-measured on every trigger update as well as every ticker frame
+while locked, and the logo's centre is rounded before conversion, so a
+fractional rect cannot leave the body a few pixels off where it started.
+
+---
+
 ## Round: three regressions from the pinned-views round
 
 ### The fluid vanished from section 2

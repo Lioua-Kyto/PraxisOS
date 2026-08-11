@@ -322,6 +322,9 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
     var r = el.getBoundingClientRect();
     var w = window.innerWidth, h = window.innerHeight;
     var px = r.left + r.width / 2, py = r.top + r.height / 2;
+    // Round to whole pixels first: a fractional rect (fonts settling, sub-pixel
+    // layout) is what left the body a few pixels off its resting spot.
+    px = Math.round(px); py = Math.round(py);
     heroRest = [((px / w) * 2 - 1) * (w / h), 1 - (py / h) * 2];
   }
   measureLogo();
@@ -362,7 +365,8 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
     var dyOff = over.offsetTop + over.offsetHeight / 2 - head.offsetHeight / 2;
     var tx = (padX + over.offsetWidth / 2) - vw / 2;
     var ty = (padY + over.offsetHeight / 2) - (vh / 2 + dyOff);
-    over.style.transform = "translate(" + (tx * hk).toFixed(1) + "px," + (ty * hk).toFixed(1) + "px)";
+    over.style.transform =
+      "translate(" + Math.round(tx * hk) + "px," + Math.round(ty * hk) + "px)";
     var fade = (1 - smoothstep(0.0, 0.12, p)).toFixed(3);
     var rest = head.querySelectorAll("h2, .pin-head__sub");
     for (var i = 0; i < rest.length; i++) rest[i].style.opacity = fade;
@@ -381,6 +385,8 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
       // Track the logo's live position so the body stays pinned behind it as
       // the hero scrolls, instead of being left behind at its load position.
       target.lock = true;                        // the ticker keeps it on the logo
+      measureLogo();                             // and re-anchor on every update
+      target.cx = heroRest[0]; target.cy = heroRest[1];
       target.sx = 1; target.sy = 1; target.rot = 0; target.flood = 0;
       target.radius = lerp(0.42, 0.34, p);
       target.edge = lerp(0.03, 0.16, p);              // soften as it dissolves
@@ -460,7 +466,8 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
       out.push({
         y: Math.max(-1, Math.min(1, lanes[m] + (Math.random() * 2 - 1) * 0.12)),
         x: (Math.random() * 2 - 1) * 42,
-        r: (Math.random() * 2 - 1) * 6
+        r: (Math.random() * 2 - 1) * 6,
+        spd: 0.82 + Math.random() * 0.36        // some cards lag the wave, some lead
       });
     }
     return out;
@@ -484,7 +491,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
       var spreadY = Math.min(230, vh * 0.30);
       for (var i = 0; i < n; i++) {
         var s = tideScatter[i];
-        var x = cx + (i - (n - 1) / 2) * 108 - 60 + s.x;
+        var x = cx * s.spd + (i - (n - 1) / 2) * 108 - 60 + s.x;
         var y = vh * 0.5 - 68 + s.y * spreadY;
         tideCards[i].style.transform =
           "translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px) rotate(" + s.r.toFixed(2) + "deg)";
