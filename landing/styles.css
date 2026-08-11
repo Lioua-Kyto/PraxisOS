@@ -1,50 +1,45 @@
 /* =========================================================================
-   PraxisOS landing — dark, technical, gold-accented.
-   One theme (dark). One accent (brand gold). One radius scale.
+   PraxisOS landing — layout & type from the GPT study, wired for a WebGL
+   fluid scrollytelling pass. One dark theme, one gold accent, Manrope + DM
+   Mono with Georgia italic accents (retained from the study on request).
    ========================================================================= */
 
 :root {
-  /* Surfaces (off-black, never pure #000) */
-  --bg: #0a0a0b;
-  --bg-soft: #0e0e10;
-  --surface: #141416;
-  --surface-2: #191a1d;
-
-  /* Hairlines */
-  --line: rgba(255, 255, 255, 0.08);
-  --line-strong: rgba(255, 255, 255, 0.14);
-
-  /* Text */
-  --text: #f4f3f1;
-  --text-muted: #a2a1a0;
-  --text-faint: #6f6e6d;
-
-  /* Brand gold (from the hexagon mark) */
-  --gold: #d8a24a;
-  --gold-bright: #ecc275;
-  --gold-deep: #a9772c;
-  --gold-ink: #14100a; /* dark text used on gold fills */
-
-  /* Radius scale: pills for interactive-round, 14px cards, 10px buttons */
-  --r-btn: 10px;
-  --r-card: 16px;
-  --r-pill: 999px;
-
-  --maxw: 1160px;
+  --ink: #f0eee8;
+  --muted: #a5a39b;
+  --gold: #d8a75b;
+  --gold-rgb: 216, 167, 91;          /* for alpha-composed glows */
+  --gold-deep: #705025;
+  --gold-soft: #ffe6bd;              /* gold that stays legible on the blue flood */
+  --black: #090a0a;
+  --surface: #111212;
+  --surface-2: #191b20;
+  --surface-3: #0e0f11;
+  --ink-dark: #101010;               /* text on light buttons */
+  --paper: #f2f1ec;                  /* light button face */
+  --ink-warm: #f2eee2;               /* text on the dark button */
+  --dark-btn: #17130d;
+  --footer-bg: #171816;
+  --frame: #0d0d0c;                  /* gallery card backing */
+  /* Shader blue, and the flood it settles into. */
+  --blue: #5b8cd8;
+  --blue-deep: #35619f;
+  --blue-ink: #f7faff;
+  --blue-ink-soft: #eef4ff;
+  --blue-ink-dim: #e9f0fb;
+  --blue-overline: #d7e6ff;
+  --line: rgba(240, 238, 232, 0.14);
+  --line-soft: rgba(240, 238, 232, 0.1);
+  --line-strong: rgba(240, 238, 232, 0.28);
+  --maxw: 1100px;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
-
-  --nav-h: 68px;
 }
 
-/* ------------------------------ reset ---------------------------------- */
-*,
-*::before,
-*::after {
+* {
   box-sizing: border-box;
-  margin: 0;
 }
 html {
-  -webkit-text-size-adjust: 100%;
+  background: var(--black);
   scroll-behavior: smooth;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -53,79 +48,85 @@ html {
   }
 }
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 16px;
-  line-height: 1.6;
+  margin: 0;
+  /* Transparent so the fixed #bg canvas shows through; html carries the base
+     black. An opaque body background paints over negative-z-index children. */
+  background: transparent;
+  color: var(--ink);
+  font-family: Manrope, system-ui, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
   overflow-x: hidden;
-}
-img {
-  max-width: 100%;
-  display: block;
 }
 a {
   color: inherit;
   text-decoration: none;
 }
+img {
+  display: block;
+  max-width: 100%;
+}
 h1,
 h2,
 h3,
-h4 {
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+p {
+  margin: 0;
+}
+h1,
+h2 {
+  letter-spacing: -0.075em;
+  line-height: 0.95;
   font-weight: 600;
 }
-
-/* ------------------------------ layout --------------------------------- */
-.container {
-  width: 100%;
-  max-width: var(--maxw);
-  margin-inline: auto;
-  padding-inline: 24px;
+em {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--gold);
 }
-.section {
-  padding-block: clamp(72px, 12vw, 140px);
-  border-top: 1px solid var(--line);
-}
-.section__head {
-  max-width: 640px;
-  margin-bottom: 56px;
-}
-.section__title {
-  font-size: clamp(1.75rem, 4vw, 2.6rem);
-}
-.section__lede {
-  margin-top: 18px;
-  color: var(--text-muted);
-  font-size: 1.05rem;
-  max-width: 56ch;
-}
-.eyebrow {
-  font-family: "Geist Mono", ui-monospace, monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
+.overline {
+  font:
+    500 0.64rem/1 "DM Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
   color: var(--gold);
 }
 
-.accent {
-  color: var(--gold);
+/* fixed WebGL canvas behind everything */
+#bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  display: block;
+  pointer-events: none;
+}
+/* Ambient vignette keeps copy readable when the fluid drifts behind it. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    130% 100% at 50% 0%,
+    transparent 45%,
+    rgba(9, 10, 10, 0.55) 100%
+  );
 }
 
-/* ---------------------------- a11y helpers ----------------------------- */
 .skip-link {
   position: absolute;
   left: 12px;
   top: -60px;
   z-index: 100;
   background: var(--gold);
-  color: var(--gold-ink);
+  color: var(--ink-dark);
   padding: 10px 16px;
-  border-radius: var(--r-btn);
-  font-weight: 600;
+  border-radius: 4px;
+  font-weight: 700;
   transition: top 0.2s var(--ease);
 }
 .skip-link:focus {
@@ -134,10 +135,400 @@ h4 {
 :focus-visible {
   outline: 2px solid var(--gold);
   outline-offset: 3px;
-  border-radius: 4px;
 }
 
-/* icons */
+/* ------------------------------- nav ----------------------------------- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(1.5rem, 4vw, 4.5rem);
+  border-bottom: 1px solid transparent;
+  transition:
+    background 0.3s var(--ease),
+    border-color 0.3s var(--ease);
+}
+.nav.is-scrolled {
+  background: rgba(9, 10, 10, 0.75);
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  border-bottom-color: rgba(240, 238, 232, 0.12);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.brand img {
+  width: 28px;
+  height: 28px;
+}
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2.8vw, 2.6rem);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.nav__links a {
+  color: var(--muted);
+  transition: color 0.15s var(--ease);
+}
+.nav__links a:hover {
+  color: var(--ink);
+}
+.nav__download {
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--ink);
+}
+.nav__download:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* ------------------------------ buttons -------------------------------- */
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1rem 1.2rem;
+  border-radius: 4px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  transition:
+    transform 0.15s var(--ease),
+    background 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+.button span {
+  font-size: 1rem;
+}
+.button--light {
+  color: var(--ink-dark);
+  background: var(--paper);
+}
+.button--light:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px -12px rgba(242, 241, 236, 0.4);
+}
+.button--light:active {
+  transform: scale(0.985);
+}
+.button--dark {
+  background: var(--dark-btn);
+  color: var(--ink-warm);
+}
+.button--dark:hover {
+  transform: translateY(-1px);
+}
+.button--dark:active {
+  transform: scale(0.985);
+}
+.text-link {
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+.text-link span {
+  margin-left: 0.45rem;
+  color: var(--gold);
+}
+
+/* ------------------------------- hero ---------------------------------- */
+.hero {
+  min-height: calc(100svh - 76px);
+  display: grid;
+  place-items: center;
+}
+.hero__grid {
+  width: min(1180px, calc(100% - 3rem));
+  display: grid;
+  grid-template-columns: 1.08fr 0.92fr;
+  align-items: center;
+  gap: clamp(3rem, 9vw, 9rem);
+}
+.hero h1 {
+  margin-top: 1.35rem;
+  font-size: clamp(3.5rem, 7.2vw, 7.9rem);
+}
+.hero__lede {
+  max-width: 35ch;
+  margin-top: 1.8rem;
+  color: var(--muted);
+  font-size: clamp(1rem, 1.5vw, 1.16rem);
+  line-height: 1.65;
+}
+.hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+.hero__meta {
+  margin-top: 1.4rem;
+  font:
+    400 0.68rem "DM Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  opacity: 0.72;
+}
+.hero__logo-wrap {
+  display: grid;
+  place-items: center;
+}
+.hero__logo {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+/* Fallback aura behind the bare logo. In the animated path the shader supplies
+   the glow, so this is hidden to avoid doubling it. */
+.hero__logo::before {
+  content: "";
+  position: absolute;
+  width: 78%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(216, 167, 91, 0.42) 0 32%,
+    rgba(216, 167, 91, 0.16) 56%,
+    transparent 72%
+  );
+  filter: blur(10px);
+}
+.anim .hero__logo::before {
+  display: none;
+}
+.hero__logo img {
+  position: relative;
+  width: min(32vw, 360px);
+  height: auto;
+  filter: drop-shadow(0 20px 40px rgba(216, 167, 91, 0.28));
+}
+
+/* ------------------------------ sections ------------------------------- */
+.section {
+  position: relative;
+  padding: 9rem 0;
+  border-top: 1px solid var(--line);
+}
+.section-head {
+  width: min(var(--maxw), calc(100% - 3rem));
+  margin: auto;
+}
+.section-head h2 {
+  margin: 1.4rem 0 1.7rem;
+  font-size: clamp(3.1rem, 6.5vw, 6.6rem);
+}
+.section-head {
+  text-align: center;
+}
+.section-head > p:last-child {
+  margin-inline: auto;
+  text-align: center;
+  max-width: 37ch;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+.section--center {
+  text-align: center;
+}
+/* Pinned sections: the 100vh pin owns the vertical rhythm, so drop the section
+   padding that would otherwise push pinned content below centre. */
+.anim #modules,
+.anim #tide,
+.anim #gallery {
+  padding: 0;
+}
+
+/* module + feature grids (1px hairline via gap over line-coloured bg) */
+.module-grid,
+.feature-grid {
+  display: grid;
+  width: min(var(--maxw), calc(100% - 3rem));
+  margin: 4rem auto 0;
+  border: 1px solid var(--line);
+  gap: 1px;
+  background: var(--line);
+}
+/* No framed grey grid: cards sit directly on the fluid, spaced by a real gap
+   so the wave shows between them as it delivers each card. */
+.module-grid {
+  grid-template-columns: repeat(3, 1fr);
+  border: 0;
+  background: transparent;
+  gap: 14px;
+}
+.module-card {
+  height: 205px;
+  padding: 1.35rem;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  will-change: transform, opacity;
+  transition:
+    transform 0.3s var(--ease),
+    border-color 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
+}
+.module-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--gold);
+  box-shadow: 0 10px 30px -10px var(--deep-gold);
+}
+.anim .module-card {
+  opacity: 0;
+}
+.module-card > span,
+.feature-card > span {
+  font:
+    400 0.61rem "DM Mono",
+    ui-monospace,
+    monospace;
+  color: var(--gold);
+}
+/* glowing orange step index */
+.module-card > span {
+  color: var(--gold);
+  text-shadow: 0 0 12px var(--deep-gold);
+}
+
+/* Section 1 pinned wrapper: grid centred in the viewport, header floats above. */
+.modules__pin {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modules__pin .module-grid {
+  margin: 0;
+}
+
+/* Pinned-section header: centred + large by default; JS shrinks it into the
+   top-right corner while the section is pinned so content owns the middle. */
+.pin-head {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: center;
+  width: max-content;
+  max-width: 92vw;
+  margin: 0;
+  text-align: center;
+  z-index: 3;
+  pointer-events: none;
+  will-change: transform;
+}
+.pin-head .overline {
+  width: max-content;
+  margin-inline: auto;
+}
+.pin-head h2 {
+  margin: 1rem 0 0;
+}
+.pin-head__sub {
+  margin: 1rem auto 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+/* Fallback: header flows normally, no corner move. */
+html:not(.anim) .pin-head {
+  position: static;
+  transform: none;
+  width: auto;
+  max-width: none;
+  text-align: center;
+}
+.module-card h3 {
+  font-size: 1.1rem;
+  letter-spacing: -0.05em;
+}
+.module-card p {
+  max-width: 25ch;
+  margin-top: 0.4rem;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.55;
+}
+
+.feature-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+.feature-card {
+  min-height: 235px;
+  padding: 1.6rem;
+  background: var(--surface);
+}
+.feature-card h3 {
+  margin: 3.7rem 0 0.75rem;
+  font-size: clamp(1.2rem, 2vw, 1.7rem);
+  letter-spacing: -0.055em;
+}
+.feature-card p {
+  max-width: 34ch;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+/* ------------------------------ the tide ------------------------------- */
+.tide__pin {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+.tide__pin {
+  overflow: hidden;
+}
+.tide__viewport {
+  width: 100%;
+  overflow: hidden;
+}
+.tide__track {
+  display: flex;
+  gap: 18px;
+  padding-inline: clamp(1.5rem, 4vw, 4rem);
+  width: max-content;
+  will-change: transform;
+}
+.tide__card {
+  flex: none;
+  width: 180px;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: linear-gradient(158deg, var(--surface-2), var(--surface-3));
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.05rem;
+}
 .ico {
   width: 20px;
   height: 20px;
@@ -148,522 +539,662 @@ h4 {
   stroke-linejoin: round;
   flex: none;
 }
-.ico--xs {
-  width: 14px;
-  height: 14px;
-}
-
-/* ------------------------------ buttons -------------------------------- */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  font-weight: 600;
-  font-size: 0.95rem;
-  border-radius: var(--r-btn);
-  padding: 11px 18px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: transform 0.15s var(--ease), background 0.2s var(--ease),
-    border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
-}
-.btn .ico {
-  width: 18px;
-  height: 18px;
-}
-.btn--sm {
-  padding: 8px 14px;
-  font-size: 0.88rem;
-}
-.btn--lg {
-  padding: 14px 24px;
-  font-size: 1rem;
-}
-.btn--primary {
-  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
-  color: var(--gold-ink);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
-}
-.btn--primary:hover {
-  transform: translateY(-1px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    0 10px 30px -10px rgba(216, 162, 74, 0.5);
-}
-.btn--primary:active {
-  transform: scale(0.985);
-}
-.btn--ghost {
-  background: var(--surface);
-  color: var(--text);
-  border-color: var(--line-strong);
-}
-.btn--ghost:hover {
-  transform: translateY(-1px);
-  background: var(--surface-2);
-  border-color: rgba(255, 255, 255, 0.24);
-}
-.btn--ghost:active {
-  transform: scale(0.985);
-}
-
-/* ------------------------------- nav ----------------------------------- */
-.nav {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  height: var(--nav-h);
-  display: flex;
-  align-items: center;
-  background: rgba(10, 10, 11, 0);
-  border-bottom: 1px solid transparent;
-  transition: background 0.3s var(--ease), border-color 0.3s var(--ease),
-    backdrop-filter 0.3s var(--ease);
-}
-.nav.is-scrolled {
-  background: rgba(10, 10, 11, 0.72);
-  backdrop-filter: saturate(180%) blur(12px);
-  -webkit-backdrop-filter: saturate(180%) blur(12px);
-  border-bottom-color: var(--line);
-}
-.nav__inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-}
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-.brand__mark {
-  width: 28px;
-  height: 28px;
-}
-.brand__name {
-  font-size: 1.05rem;
-}
-.nav__links {
-  display: flex;
-  gap: 30px;
-  margin-left: auto;
-  margin-right: 8px;
-}
-.nav__links a {
-  color: var(--text-muted);
-  font-size: 0.92rem;
-  transition: color 0.15s var(--ease);
-}
-.nav__links a:hover {
-  color: var(--text);
-}
-@media (max-width: 720px) {
-  .nav__links {
-    display: none;
-  }
-}
-
-/* ------------------------------- hero ---------------------------------- */
-.hero {
-  position: relative;
-  min-height: calc(100dvh - var(--nav-h));
-  display: flex;
-  align-items: center;
-  padding-block: 64px;
-  overflow: hidden;
-}
-.hero__grid-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-image: linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 60px 60px;
-  -webkit-mask-image: radial-gradient(
-    ellipse 80% 60% at 50% 40%,
-    #000 20%,
-    transparent 78%
-  );
-  mask-image: radial-gradient(
-    ellipse 80% 60% at 50% 40%,
-    #000 20%,
-    transparent 78%
-  );
-  opacity: 0.55;
-}
-.hero__inner {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 56px;
-  align-items: center;
-}
-.hero__title {
-  margin-top: 22px;
-  font-size: clamp(2.5rem, 6.4vw, 4.5rem);
-  font-weight: 600;
-  letter-spacing: -0.035em;
-}
-.hero__lede {
-  margin-top: 26px;
-  max-width: 30ch;
-  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
-  color: var(--text-muted);
-}
-.hero__actions {
-  margin-top: 36px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-}
-.hero__meta {
-  margin-top: 22px;
-  font-family: "Geist Mono", ui-monospace, monospace;
-  font-size: 0.82rem;
-  color: var(--text-faint);
-}
-
-/* hero visual: real brand mark on a dotted plate */
-.hero__visual {
-  display: flex;
-  justify-content: center;
-}
-.mark-plate {
-  position: relative;
-  width: 100%;
-  max-width: 380px;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: var(--r-card);
-  background: radial-gradient(
-      120% 120% at 50% 30%,
-      rgba(216, 162, 74, 0.08),
-      transparent 60%
-    ),
-    var(--bg-soft);
-  overflow: hidden;
-}
-.mark-plate__dots {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(var(--line-strong) 1px, transparent 1px);
-  background-size: 22px 22px;
-  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 30%, transparent 72%);
-  mask-image: radial-gradient(circle at 50% 50%, #000 30%, transparent 72%);
-  opacity: 0.6;
-}
-.mark-plate__logo {
-  position: relative;
-  width: 62%;
-  height: auto;
-  filter: drop-shadow(0 20px 50px rgba(216, 162, 74, 0.22));
-}
-
-@media (max-width: 860px) {
-  .hero__inner {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-  .hero__visual {
-    order: -1;
-  }
-  .mark-plate {
-    max-width: 260px;
-  }
-  .hero__lede {
-    max-width: 46ch;
-  }
-}
-
-/* ------------------------------ modules -------------------------------- */
-.modules {
-  list-style: none;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 12px;
-}
-.module {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 18px 18px;
-  border: 1px solid var(--line);
-  border-radius: var(--r-card);
-  background: var(--surface);
-  color: var(--text);
-  font-weight: 500;
-  font-size: 0.95rem;
-  transition: border-color 0.2s var(--ease), background 0.2s var(--ease),
-    transform 0.2s var(--ease);
-}
-.module .ico {
-  color: var(--gold);
-}
-.module:hover {
-  border-color: var(--line-strong);
-  background: var(--surface-2);
-  transform: translateY(-2px);
-}
-
-/* ------------------------------ bento ---------------------------------- */
-.bento {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: minmax(210px, auto);
-  gap: 16px;
-}
-.bento__cell {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  /* Grid items default to min-width:auto; without this a cell won't shrink
-     below its body's 46ch max-width and overflows on narrow screens. */
-  min-width: 0;
-  padding: 30px;
-  border: 1px solid var(--line);
-  border-radius: var(--r-card);
-  background: var(--surface);
-  transition: border-color 0.25s var(--ease), background 0.25s var(--ease);
-}
-.bento__cell:hover {
-  border-color: var(--line-strong);
-}
-/* lead cell spans 2 cols and 2 rows, with a warm tint for visual variation */
-.bento__cell--lead {
-  grid-column: span 2;
-  grid-row: span 2;
-  background: radial-gradient(
-      130% 120% at 0% 0%,
-      rgba(216, 162, 74, 0.1),
-      transparent 55%
-    ),
-    var(--surface);
-}
-.bento__cell--wide {
-  grid-column: span 2;
-}
-.bento__icon {
-  display: grid;
-  place-items: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
-  border: 1px solid var(--line-strong);
-  background: var(--bg-soft);
-  color: var(--gold);
-  margin-bottom: 20px;
-}
-.bento__icon .ico {
+.tide__card .ico {
   width: 22px;
   height: 22px;
-}
-.bento__title {
-  font-size: 1.3rem;
-  margin-bottom: 10px;
-}
-.bento__cell--lead .bento__title {
-  font-size: 1.7rem;
-}
-.bento__body {
-  color: var(--text-muted);
-  font-size: 0.98rem;
-  max-width: 46ch;
-}
-.path {
-  margin-top: auto;
-  min-width: 0;
-  max-width: 100%;
-  font-family: "Geist Mono", ui-monospace, monospace;
-  font-size: 0.82rem;
-  color: var(--gold-bright);
-  background: var(--bg-soft);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 14px;
-  align-self: stretch;
-  overflow-x: auto;
-  white-space: nowrap;
-}
-.bento__cell--lead .path {
-  margin-top: 28px;
-}
-.bento__link {
-  margin-top: 18px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   color: var(--gold);
-  font-weight: 500;
-  font-size: 0.92rem;
-  transition: gap 0.2s var(--ease);
 }
-.bento__link:hover {
-  gap: 10px;
-}
-
-@media (max-width: 860px) {
-  .bento {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .bento__cell--lead {
-    grid-column: span 2;
-    grid-row: auto;
-  }
-  .bento__cell--wide {
-    grid-column: span 2;
-  }
-}
-@media (max-width: 560px) {
-  .bento {
-    grid-template-columns: 1fr;
-  }
-  .bento__cell--lead,
-  .bento__cell--wide {
-    grid-column: auto;
-  }
-  .module {
-    padding: 16px;
-  }
-}
-
-/* --------------------------- privacy statement ------------------------- */
-.statement__inner {
-  max-width: 720px;
-  margin-inline: auto;
-  text-align: center;
-}
-.statement__title {
-  font-size: clamp(2rem, 5vw, 3.2rem);
+.tide__card b {
+  font-weight: 600;
+  font-size: 0.9rem;
   letter-spacing: -0.03em;
+  color: var(--ink);
 }
-.statement__body {
-  margin-top: 22px;
-  font-size: 1.15rem;
-  color: var(--text-muted);
+/* Animated path: cards are placed by JS, riding the fluid across the viewport. */
+.anim .tide__viewport {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
-.statement__note {
-  margin-top: 32px;
-  display: inline-block;
-  font-family: "Geist Mono", ui-monospace, monospace;
-  font-size: 0.85rem;
-  line-height: 1.7;
-  color: var(--text-faint);
-  border: 1px solid var(--line);
-  border-radius: var(--r-card);
-  padding: 18px 24px;
-  max-width: 60ch;
+.anim .tide__track {
+  display: block;
+  width: auto;
+  padding: 0;
+}
+.anim .tide__track { visibility: hidden; }
+.anim .tide__card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+.tide__card b {
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+}
+
+/* ---------------------------- the gallery ------------------------------ */
+/* Animated path: every card is centred and offset by JS, so the spotlight card
+   is always exactly at the middle of the viewport. */
+/* The base track carries `will-change: transform`, which makes it a containing
+   block for the absolutely positioned cards. Collapsed to height 0 that turns
+   the cards' `top: 50%` into `0px`, so give it the full box here. */
+.anim .anim /* One shared caption under the carousel; JS cross-fades it to the spotlit screen. */
+.anim .gallery__card {
+  flex: none;
+  width: min(64vw, 940px);
+  /* Matches the 1920x1080 source, so `cover` never crops or resamples oddly.
+     The focused card renders at scale 1 (its natural CSS size) which is what
+     keeps the screenshot sharp; neighbours scale down, never up. */
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line-strong);
+  background: var(--frame);
+  overflow: hidden;
+  position: relative;
+  will-change: transform, opacity;
+}
+.gallery__card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
 }
 
 /* ------------------------------- cta ----------------------------------- */
+/* The flood is blue, so the CTA copy is light. The old dark-gold-on-gold set
+   was calibrated for a gold flood and went nearly unreadable. */
 .cta {
-  border-bottom: 1px solid var(--line);
+  position: relative;
+  padding: 0;
+  background: var(--blue-deep);
+  color: var(--blue-ink);
+  text-align: center;
+}
+/* Grid keeps the copy centred and the footer flush to the bottom (no gap). */
+.cta__pin {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  padding: 0;
 }
 .cta__inner {
-  text-align: center;
-  max-width: 640px;
-  margin-inline: auto;
+  justify-self: center;
+  align-self: center;
+  max-width: 760px;
+  padding: 4rem 1.5rem;
 }
-.cta__title {
-  font-size: clamp(1.9rem, 4.5vw, 2.9rem);
+.cta footer {
+  align-self: end;
 }
-.cta__body {
-  margin-top: 18px;
-  color: var(--text-muted);
-  font-size: 1.08rem;
+.cta .overline {
+  color: var(--blue-overline);
 }
-.cta .btn {
-  margin-top: 34px;
+.cta h2 {
+  margin: 1.5rem 0;
+  font-size: clamp(3.8rem, 8vw, 8.3rem);
 }
-.cta__fineprint {
-  margin-top: 22px;
-  font-size: 0.85rem;
-  color: var(--text-faint);
+.cta h2 {
+  color: var(--blue-ink);
 }
-.cta__fineprint em {
-  color: var(--text-muted);
-  font-style: normal;
-  font-weight: 500;
+.cta h2 em {
+  color: var(--gold);
+}
+.cta__inner > p:not(.overline) {
+  color: var(--blue-ink-soft);
+  margin-bottom: 2rem;
+}
+.cta small {
+  display: block;
+  margin-top: 1.2rem;
+  color: var(--blue-ink-soft);
+  font:
+    400 0.6rem "DM Mono",
+    ui-monospace,
+    monospace;
+}
+/* In the animated path the shader floods the gold; the section itself is
+   transparent so the fluid shows, and copy fades in over the flood. */
+.anim .cta {
+  background: transparent;
 }
 
 /* ------------------------------ footer --------------------------------- */
-.footer {
-  padding-block: 64px 40px;
-  background: var(--bg-soft);
-}
-.footer__inner {
-  display: grid;
-  grid-template-columns: 1.6fr 1fr 1fr;
-  gap: 40px;
-  padding-bottom: 48px;
-  border-bottom: 1px solid var(--line);
-}
-.footer__tag {
-  margin-top: 16px;
-  color: var(--text-faint);
-  font-size: 0.9rem;
-  max-width: 30ch;
-}
-.footer__col {
+footer {
+  position: relative;
+  z-index: 1;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 2rem max(1.5rem, calc((100vw - var(--maxw)) / 2));
+  background: var(--footer-bg);
+  color: var(--muted);
+  font:
+    400 0.65rem "DM Mono",
+    ui-monospace,
+    monospace;
 }
-.footer__heading {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--text-faint);
-  font-weight: 500;
-  margin-bottom: 4px;
+footer .brand {
+  font-family: Manrope;
+  color: var(--ink);
 }
-.footer__col a {
-  color: var(--text-muted);
-  font-size: 0.92rem;
-  width: fit-content;
-  transition: color 0.15s var(--ease);
+footer .brand img {
+  width: 24px;
+  height: 24px;
 }
-.footer__col a:hover {
+footer > a:last-child {
   color: var(--gold);
 }
-.footer__bottom {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding-top: 28px;
-  color: var(--text-faint);
-  font-size: 0.85rem;
-  font-family: "Geist Mono", ui-monospace, monospace;
+/* Footer integrated at the bottom of the flooded CTA (dark on the flood). */
+.cta footer {
+  background: transparent;
+  color: var(--blue-ink-dim);
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
 }
-@media (max-width: 720px) {
-  .footer__inner {
-    grid-template-columns: 1fr 1fr;
+.cta footer .brand {
+  color: var(--blue-ink);
+}
+.cta footer > a:last-child {
+  color: var(--gold-soft);
+}
+.anim .cta footer {
+  opacity: 0;
+}
+
+/* =========================================================================
+   Animated-path initial states (html.anim only). Fallback shows everything
+   and turns the tide/gallery into touch scroll-snap carousels.
+   ========================================================================= */
+.anim .hero .reveal,
+.anim .anim-head,
+.anim .anim-card {
+  opacity: 0;
+  transform: translateY(24px);
+  will-change: transform, opacity;
+}
+.anim .cta__inner {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Fallback scroll-reveal (JS adds .reveal-fb only when the shader is off). */
+.reveal-fb {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.7s var(--ease),
+    transform 0.7s var(--ease);
+}
+.reveal-fb.in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Fallback: the tide becomes a touch carousel rather than a fluid-driven train. */
+html:not(.anim) .tide__viewport {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+html:not(.anim) .tide__viewport::-webkit-scrollbar {
+  display: none;
+}
+html:not(.anim) .tide__card {
+  scroll-snap-align: center;
+  transform: none;
+}
+html:not(.anim) .modules__pin {
+  display: block;
+  min-height: 0;
+  overflow: visible;
+}
+html:not(.anim) .tide__pin,
+html:not(.anim) .gallery__pin {
+  min-height: 0;
+  overflow: visible;
+}
+html:not(.anim) .cta__pin {
+  min-height: 0;
+  padding: 0;
+  display: block;
+}
+html:not(.anim) .cta__inner {
+  padding: 9rem 1.5rem 5rem;
+}
+
+/* ------------------------- responsive collapse ------------------------- */
+@media (max-width: 900px) {
+  .nav {
+    height: 60px;
+    padding: 0 1.25rem;
   }
-  .footer__brand {
-    grid-column: span 2;
+  .nav__links > a:not(.nav__download) {
+    display: none;
+  }
+  .hero {
+    padding: 3rem 0;
+  }
+  .hero__grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .hero__logo-wrap {
+    order: -1;
+  }
+  .hero__logo img {
+    width: min(56vw, 240px);
+  }
+  .hero h1 {
+    font-size: clamp(3.4rem, 14vw, 5rem);
+  }
+  .hero__actions {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .section {
+    padding: 6rem 0;
+  }
+  .module-grid {
+    grid-template-columns: repeat(2, 1fr);
+    margin-top: 2rem;
+  }
+  .module-card {
+    height: 170px;
+  }
+  .feature-grid {
+    grid-template-columns: 1fr;
+    margin-top: 3rem;
+  }
+  .feature-card {
+    min-height: 190px;
+  }
+  .gallery__card {
+    width: min(80vw, 520px);
+  }
+  footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* ---------------------- the views: InfiniteMenu ------------------------ */
+/* Sphere stage. Styles adapted from the component's reference CSS: the
+   title/description sit under the sphere rather than at the sides, and the
+   original's 1500px hide-breakpoint is dropped so they read on laptops. */
+.menu-stage {
+  position: relative;
+  width: min(1100px, calc(100% - 3rem));
+  height: min(70vh, 620px);
+  margin: 3rem auto 0;
+}
+/* Pinned: the section itself is the sphere's container, edge to edge. */
+.anim .gallery__pin {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+.anim .menu-stage {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  opacity: 0;
+  z-index: 1;
+}
+.drag-hint {
+  margin: 1.6rem auto 0;
+  text-align: center;
+  font:
+    500 0.66rem "DM Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.anim .drag-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1.1rem;
+  margin: 0;
+  opacity: 0;
+  z-index: 3;
+}
+.is-expanded ~ .drag-hint {
+  opacity: 0 !important;
+}
+
+/* Tapping a disc opens the original file at full resolution. */
+.view-expand {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  padding: 2.2vh 2vw;
+  background: rgba(9, 10, 10, 0.94);
+  opacity: 0;
+  transition: opacity 0.25s var(--ease);
+}
+.view-expand[hidden] {
+  display: none;
+}
+.view-expand.is-open {
+  opacity: 1;
+}
+.view-expand__img {
+  max-width: 100%;
+  /* Reserve just the close ring and its gap; the screen takes the rest. */
+  max-height: calc(100% - 88px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.7);
+}
+/* Gold ring below the image, separated by the page background. */
+.view-expand__close {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--gold);
+  cursor: pointer;
+  position: relative;
+  transition:
+    transform 0.2s var(--ease),
+    background 0.2s var(--ease);
+}
+.view-expand__close::before,
+.view-expand__close::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 15px;
+  height: 2px;
+  background: var(--ink-dark);
+  border-radius: 2px;
+}
+.view-expand__close::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.view-expand__close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+.view-expand__close:hover {
+  transform: scale(1.08);
+  background: var(--gold-soft);
+}
+#infinite-grid-menu-canvas {
+  cursor: grab;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  outline: none;
+}
+#infinite-grid-menu-canvas:active {
+  cursor: grabbing;
+}
+.face-title,
+.face-description {
+  user-select: none;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  width: max-content;
+  max-width: 90%;
+  margin: 0;
+}
+.face-title {
+  bottom: 5.6rem;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  color: var(--ink);
+}
+.face-description {
+  bottom: 3.6rem;
+  font:
+    500 0.7rem "DM Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.face-title.active,
+.face-description.active {
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+.face-title.inactive,
+.face-description.inactive {
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+/* Static grid of the same screens, shown when the sphere cannot run. */
+.shot-grid {
+  width: min(var(--maxw), calc(100% - 3rem));
+  margin: 3.5rem auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.has-sphere .shot-grid {
+  display: none;
+}
+.shot-grid .gallery__card {
+  width: auto;
+  margin: 0;              /* <figure> carries a 40px UA margin */
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--frame);
+}
+.shot-grid .gallery__card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+.shot-grid figcaption {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  font:
+    500 0.6rem "DM Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: linear-gradient(0deg, rgba(9, 10, 10, 0.8), transparent);
+}
+@media (max-width: 900px) {
+  .menu-stage {
+    height: 62vh;
+  }
+  .shot-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 /* =========================================================================
-   Reveal animation states.
-   Hidden ONLY when JS is present (.js). GSAP clears them; if GSAP fails to
-   load, main.js reveals them manually. Reduced-motion shows everything at once.
+   Responsive pass. Everything below 900px runs the static path, so these
+   rules assume no shader, no pins, and no sphere.
    ========================================================================= */
-.js .reveal {
-  opacity: 0;
-  transform: translateY(22px);
-  will-change: transform, opacity;
-}
-@media (prefers-reduced-motion: reduce) {
-  .js .reveal {
-    opacity: 1;
+@media (max-width: 900px) {
+  /* An empty stage is a tall blank gap when the sphere cannot run. */
+  .menu-stage:empty {
+    display: none;
+  }
+  /* `1fr` keeps a min-content floor, and the captions were forcing the columns
+     wider than the grid itself. */
+  .shot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 2.5rem;
+    gap: 10px;
+  }
+
+  /* Headings, copy and controls all read centred on a narrow screen. */
+  .hero__grid,
+  .hero__copy,
+  .section-head,
+  .pin-head {
+    text-align: center;
+  }
+  .hero__lede,
+  .section-head > p,
+  .pin-head__sub {
+    margin-inline: auto;
+  }
+  .hero__actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .hero__logo-wrap {
+    order: -1;
+  }
+  /* The docking transform belongs to the pinned path only. */
+  html:not(.anim) .pin-head {
+    position: static;
+    width: auto;
+    max-width: 100%;
     transform: none;
-    will-change: auto;
+  }
+  html:not(.anim) .pin-head .overline {
+    transform: none;
+  }
+
+  .section {
+    padding: 4.5rem 0;
+  }
+  .section-head h2 {
+    font-size: clamp(2.4rem, 9vw, 3.4rem);
+    margin: 1rem 0 1.2rem;
+  }
+  .drag-hint {
+    margin-top: 1.2rem;
+  }
+
+  /* The tide keeps its carousel, with room to swipe from the edge. */
+  .tide__viewport {
+    padding-block: 0.5rem;
+  }
+  .tide__track {
+    gap: 12px;
+    padding-inline: 1.25rem;
+  }
+
+  footer {
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    gap: 0.9rem;
+    padding-inline: 1.25rem;
+  }
+}
+
+@media (max-width: 620px) {
+  .module-grid {
+    grid-template-columns: 1fr;
+  }
+  .module-card {
+    height: auto;
+    min-height: 132px;
+    gap: 0.8rem;
+  }
+  .shot-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hero h1 {
+    font-size: clamp(2.8rem, 12vw, 3.8rem);
+  }
+  .section-head h2 {
+    font-size: clamp(2.1rem, 10vw, 2.8rem);
+  }
+  .cta h2 {
+    font-size: clamp(2.4rem, 12vw, 3.4rem);
+  }
+  .button {
+    justify-content: space-between;
+    width: min(320px, 100%);
+  }
+}
+
+/* =========================================================================
+   Lite fluid (small screens): the shader runs behind the hero mark and as the
+   closing section's background only, with no pins or sweeps.
+   ========================================================================= */
+.has-fluid .hero__logo::before {
+  display: none;              /* the shader supplies the glow */
+}
+.has-fluid .cta {
+  background: transparent;    /* the flood is the background */
+}
+
+@media (max-width: 900px) {
+  /* The views slide sideways, matching the tide above them. */
+  .shot-grid {
+    display: flex;
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    gap: 12px;
+    padding-inline: 1.25rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .shot-grid::-webkit-scrollbar {
+    display: none;
+  }
+  .shot-grid .gallery__card {
+    flex: none;
+    width: min(78vw, 340px);
+    scroll-snap-align: center;
+  }
+}
+
+@media (max-width: 620px) {
+  /* Six cards read better as 2x3 than as one long column. */
+  .module-grid,
+  .modules__pin .module-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 2.75rem auto 0;   /* auto sides: the pin rule had zeroed them */
+  }
+  .module-card {
+    min-height: 148px;
+    padding: 1rem;
+    gap: 0.6rem;
+  }
+  .module-card h3 {
+    font-size: 0.98rem;
+  }
+  .module-card p {
+    font-size: 0.7rem;
+    line-height: 1.5;
   }
 }
