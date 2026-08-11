@@ -4,6 +4,33 @@ Change log for the PraxisOS landing page (`landing/`). Newest round on top.
 
 ---
 
+## Round: hero lag, stranded tide card, black icons
+
+### Hero fluid trailed the logo
+Tracking the logo's live position was only half the fix. The render loop eases
+every uniform toward its target (`k = dt * 7`), which is what gives the sweeps
+their liquid drag, and that same easing left the body behind the logo and then
+dragged it back, about 45px of trail at a steady scroll. The target now carries
+a `lock` flag: while the hero owns the fluid the centre is assigned directly
+with no easing, and every other phase releases it.
+
+Putting the canvas inside the logo container would not have fixed this. It is
+one fixed full-screen WebGL surface and the same body has to sweep the whole
+viewport later; the lag was in the interpolation, not the element tree.
+
+### A tide card could strand on screen
+The tide cards are placed by the scroll handler, so if the section stopped
+updating while pinned the last painted card kept its transform and sat there
+until a reload. Their visibility is now tied to the trigger being active, for
+both the tide and the gallery, so nothing can be left behind.
+
+### Icons rendered black
+The base `.ico` rule was lost in the layout rewrite. Nothing set
+`fill: none; stroke: currentColor`, so the Lucide paths took the default black
+fill and `color: var(--gold)` had nothing to act on. Rule restored.
+
+---
+
 ## Round: colour tokens, hero pinning, gallery entry and step feel
 
 ### Colour

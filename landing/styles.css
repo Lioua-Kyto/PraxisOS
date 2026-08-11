@@ -524,6 +524,16 @@ html:not(.anim) .pin-head {
   gap: 0.75rem;
   padding: 1.05rem;
 }
+.ico {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
 .tide__card .ico {
   width: 22px;
   height: 22px;

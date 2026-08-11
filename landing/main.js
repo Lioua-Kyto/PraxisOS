@@ -236,7 +236,10 @@
   resize();
 
   /* ---- target + eased render loop (with off-screen teleport snap) ------ */
-  var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, opacity: 1, flood: 0 };
+  // `lock` pins the centre to the target with no easing. The smoothing that
+// gives the sweeps their liquid drag is exactly what made the body trail the
+// logo and then catch up, so the hero turns it off.
+var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, opacity: 1, flood: 0, lock: false };
   var SMOOTH = 7;
   gsap.ticker.add(function (time, deltaMS) {
     if (document.hidden) return;
@@ -247,8 +250,11 @@
     // Ease normally, but snap the center across huge jumps: that only happens
     // at an off-screen wrap, so it must not be dragged across the viewport.
     var dx = target.cx - cen.x, dy = target.cy - cen.y;
-    cen.x += Math.abs(dx) > 3.5 ? dx : dx * k;
-    cen.y += Math.abs(dy) > 3.5 ? dy : dy * k;
+    if (target.lock) { cen.x = target.cx; cen.y = target.cy; }
+    else {
+      cen.x += Math.abs(dx) > 3.5 ? dx : dx * k;
+      cen.y += Math.abs(dy) > 3.5 ? dy : dy * k;
+    }
     var st = u.u_blob_stretch.value;
     st.x += (target.sx - st.x) * k;
     st.y += (target.sy - st.y) * k;
@@ -325,12 +331,13 @@
      ===================================================================== */
   ScrollTrigger.create({
     trigger: "#top", start: "top top", end: "bottom top",
-    onRefresh: function () { measureLogo(); target.cx = heroRest[0]; target.cy = heroRest[1]; },
+    onRefresh: function () { measureLogo(); target.lock = true; target.cx = heroRest[0]; target.cy = heroRest[1]; },
     onUpdate: function (self) {
       var p = self.progress;
       // Track the logo's live position so the body stays pinned behind it as
       // the hero scrolls, instead of being left behind at its load position.
       measureLogo();
+      target.lock = true;                        // sit exactly on the logo
       target.cx = heroRest[0]; target.cy = heroRest[1];
       target.sx = 1; target.sy = 1; target.rot = 0; target.flood = 0;
       target.radius = lerp(0.42, 0.34, p);
@@ -418,9 +425,14 @@
   ScrollTrigger.create({
     trigger: "#tide", start: "top top", end: "+=200%", pin: ".tide__pin", scrub: 1, anticipatePin: 1,
     onRefresh: measureTide,
+    // The cards are absolutely placed by this handler, so if the section ever
+    // stops updating while pinned one can linger on screen. Tie their
+    // visibility to the trigger being active.
+    onToggle: function (self) { tideTrack.style.visibility = self.isActive ? "visible" : "hidden"; },
     onUpdate: function (self) {
       var p = self.progress;
-      target.cx = lerp(OFF_R, OFF_L, p); target.cy = 0;
+      target.lock = false;
+        target.cx = lerp(OFF_R, OFF_L, p); target.cy = 0;
       target.sx = 3.0; target.sy = 1.25; target.radius = 0.7; target.edge = 0.04; target.rot = 0; target.flood = 0;
       target.opacity = smoothstep(0, 0.08, p) * (1 - smoothstep(0.9, 1, p)); // no lingering edge at boundaries
       var vw = window.innerWidth, vh = window.innerHeight;
@@ -495,6 +507,7 @@
   ScrollTrigger.create({
     trigger: "#gallery", start: "top top", end: "+=" + (gSteps * 48) + "%",
     pin: ".gallery__pin", anticipatePin: 1,
+    onToggle: function (self) { galleryTrack.style.visibility = self.isActive ? "visible" : "hidden"; },
     // A short scrub plus a quick snap: long scrub smoothing was what made a
     // single wheel tick nudge the row, pause, then drift to the next slot.
     scrub: 0.25,
@@ -505,6 +518,7 @@
     onUpdate: function (self) {
       var p = self.progress;
       galleryLayout(-1 + p * gSteps);
+      target.lock = false;
       target.opacity = 0; // shader hidden through the gallery
       placeHead(galHead, p);
     }
@@ -520,6 +534,7 @@
       trigger: "#download", start: "top top", end: "+=130%", pin: ".cta__pin", scrub: 1, anticipatePin: 1,
       onUpdate: function (self) {
         var p = self.progress;
+        target.lock = false;
         target.rot = 0; target.cx = lerp(OFF_L, 0, smoothstep(0, 0.6, p)); target.cy = 0;
         target.sx = 1.8; target.sy = 1.6;
         target.radius = lerp(0.4, 2.6, p);
