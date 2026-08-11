@@ -4,6 +4,49 @@ Change log for the PraxisOS landing page (`landing/`). Newest round on top.
 
 ---
 
+## Round: headers, gallery spotlight, tide scatter, CTA contrast
+
+### Pinned section headers
+- The overline is the only part that travels, and it now docks to the **top
+  left** rather than the right. The heading and its sub-line stay exactly where
+  they are and fade out, so nothing slides across the middle while the section
+  content is moving through it.
+- The overline box is `width: max-content`. As a full-width block its text
+  stayed optically centred no matter where the box was moved.
+
+### Section 4 — The Views
+- Screenshots were blurry because the card was `16/10` against a `16/9` source
+  (so it cropped) and, worse, the focused card was scaled **up** to 1.3 from a
+  563px box. The card is now `16/9` at 819px and the focused state renders at
+  scale 1.0, i.e. a straight downscale from the 1920x1080 original. Sharp at 2x
+  DPR too.
+- The label moved out of the image. One shared caption sits under the carousel
+  and cross-fades to whichever screen holds the spotlight, fading out once the
+  last one passes.
+- The spotlight card is much larger: 1.0 against 0.62 for its neighbours,
+  falling away to 0.42 further out.
+- Scrolling now advances the carousel one screen per tick (ScrollTrigger
+  `snap`), swapping the centred image with its neighbour, instead of drifting
+  the whole row by a few pixels.
+- Cards are centred on the viewport. The track carries `will-change: transform`,
+  which makes it a containing block; collapsed to height 0 that silently turned
+  the cards' `top: 50%` into `0px` and pinned them to the top of the screen.
+
+### Section 3 — In Motion
+- Cards no longer travel along one line. Each is assigned a shuffled vertical
+  lane over a ~430px spread, with neighbouring lanes forced apart, plus X jitter
+  and tilt, so cards genuinely sit above and below one another.
+- Card redesigned: the index number is gone, leaving the module icon and its
+  label. Icons are the Lucide set the desktop app uses in its own sidebar.
+
+### Section 5 — CTA
+- The copy was dark gold on a light blue flood and close to unreadable. The
+  flood is deeper now (`#35619f` in CSS, matched by the shader's colours) and
+  the copy is light. Every string was measured against the real flooded colour
+  and clears WCAG AA: heading 5.9, overline 4.9, body 5.6, footer 5.4.
+
+---
+
 ## Round: verification pass — two defects found and fixed
 
 The previous round's changes were verified one by one against the running page.

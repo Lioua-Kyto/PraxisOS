@@ -23,8 +23,30 @@
   var THREE = window.THREE;
 
   /* ---- card content --------------------------------------------------- */
-  var TIDE = ["Nexus", "Tasks", "Discipline", "Mastery", "Workout", "Nutrition",
-    "Flow", "Ledger", "Journal", "Codex", "Food", "Settings"];
+  // Lucide glyphs, matching the icons the desktop app uses in its sidebar.
+  var ICONS = {
+    nexus: '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+    tasks: '<rect x="3" y="5" width="6" height="6" rx="1"/><path d="m3 17 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>',
+    flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+    cap: '<path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>',
+    dumbbell: '<path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/>',
+    apple: '<path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06z"/><path d="M10 2c1 .5 2 2 2 5"/>',
+    timer: '<line x1="10" x2="14" y1="2" y2="2"/><path d="M12 14v-4"/><circle cx="12" cy="14" r="8"/>',
+    wallet: '<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+    book: '<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+    library: '<path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/>',
+    utensils: '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Z"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
+  };
+  function svg(key) {
+    return '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[key] || "") + "</svg>";
+  }
+
+  var TIDE = [
+    ["Nexus", "nexus"], ["Tasks", "tasks"], ["Discipline", "flame"], ["Mastery", "cap"],
+    ["Workout", "dumbbell"], ["Nutrition", "apple"], ["Flow", "timer"], ["Ledger", "wallet"],
+    ["Journal", "book"], ["Codex", "library"], ["Food Library", "utensils"], ["Settings", "gear"]
+  ];
   var GALLERY = [
     ["Nexus", "Nexus.png"], ["Tasks", "Tasks.png"], ["Discipline", "Discipline.png"],
     ["Flow", "Flow.png"], ["Ledger", "Ledger.png"], ["Nutrition", "Nutrition.png"],
@@ -34,17 +56,18 @@
   (function buildCards() {
     var tt = document.getElementById("tide-track");
     if (tt) {
-      tt.innerHTML = TIDE.map(function (name, i) {
-        var n = ("0" + (i + 1)).slice(-2);
-        return '<div class="tide__card"><span class="i">' + n + '</span><b>' + name + "</b></div>";
+      tt.innerHTML = TIDE.map(function (c) {
+        return '<div class="tide__card">' + svg(c[1]) + "<b>" + c[0] + "</b></div>";
       }).join("");
     }
     var gt = document.getElementById("gallery-track");
     if (gt) {
+      // No caption inside the frame: one shared label sits under the carousel
+      // and cross-fades to whichever screen holds the spotlight.
       gt.innerHTML = GALLERY.map(function (c) {
         var src = "assets/images/" + encodeURIComponent(c[1]);
         return '<figure class="gallery__card"><img loading="lazy" decoding="async" src="' +
-          src + '" alt="PraxisOS ' + c[0] + ' screen" /><figcaption>' + c[0] + "</figcaption></figure>";
+          src + '" alt="PraxisOS ' + c[0] + ' screen" /></figure>';
       }).join("");
     }
   })();
@@ -185,8 +208,8 @@
     u_blob_rot: { value: 0 },
     u_opacity: { value: 1 },
     u_flood: { value: 0 },
-    u_colorA: { value: new THREE.Color(0.2, 0.34, 0.6) },
-    u_colorB: { value: new THREE.Color(0.357, 0.549, 0.847) }
+    u_colorA: { value: new THREE.Color(0.141, 0.251, 0.435) },
+    u_colorB: { value: new THREE.Color(0.247, 0.427, 0.71) }
   };
   scene.add(new THREE.Mesh(
     new THREE.PlaneGeometry(2, 2),
@@ -267,15 +290,24 @@
 
   /* ---- header choreography: centred + large before the pin, shrinks into
          the top-right corner while pinned so content owns the middle. ------ */
-  function measureHead(el) { return { w: el.offsetWidth, h: el.offsetHeight }; }
-  function placeHead(el, dims, p) {
-    var hk = smoothstep(0.0, 0.16, p);
-    var vw = window.innerWidth, vh = window.innerHeight, M = 44, s = 0.48;
-    var tcx = vw - M - dims.w * s / 2;
-    var tcy = Math.max(58, vh * 0.11) + dims.h * s / 2;
-    var dx = (tcx - vw / 2) * hk, dy = (tcy - vh / 2) * hk;
-    el.style.transform = "translate(-50%,-50%) translate(" + dx.toFixed(1) + "px," + dy.toFixed(1) +
-      "px) scale(" + (1 - (1 - s) * hk).toFixed(3) + ")";
+  // Only the overline travels, and it goes to the TOP-LEFT corner. The heading
+  // and its sub-line stay put and fade out, so nothing slides across the middle
+  // while the section content is moving through it.
+  function placeHead(head, p) {
+    var over = head.querySelector(".overline");
+    if (!over) return;
+    var hk = smoothstep(0.0, 0.18, p);
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var padX = Math.max(24, Math.min(72, vw * 0.035));
+    var padY = 108; // clears the 76px nav
+    // offsetTop/offsetHeight are layout values, so they stay valid under transforms.
+    var dyOff = over.offsetTop + over.offsetHeight / 2 - head.offsetHeight / 2;
+    var tx = (padX + over.offsetWidth / 2) - vw / 2;
+    var ty = (padY + over.offsetHeight / 2) - (vh / 2 + dyOff);
+    over.style.transform = "translate(" + (tx * hk).toFixed(1) + "px," + (ty * hk).toFixed(1) + "px)";
+    var fade = (1 - smoothstep(0.0, 0.12, p)).toFixed(3);
+    var rest = head.querySelectorAll("h2, .pin-head__sub");
+    for (var i = 0; i < rest.length; i++) rest[i].style.opacity = fade;
   }
 
   /* =======================================================================
@@ -300,14 +332,12 @@
      ===================================================================== */
   var moduleCards = document.querySelectorAll(".module-card");
   var modHead = document.querySelector("#modules .section-head");
-  var modDims = { w: 620, h: 200 };
   var colFx = [0.2, 0.5, 0.8];
   function measureModules() {
     var vw = window.innerWidth;
     var gridW = Math.min(1100, vw - 48);
     var gridLeft = (vw - gridW) / 2;
     colFx = [0, 1, 2].map(function (c) { return (gridLeft + (c + 0.5) * gridW / 3) / vw; });
-    modDims = measureHead(modHead);
   }
   function moduleReact(p) {
     var waveFx = lerp(-0.4, 1.4, p);
@@ -337,7 +367,7 @@
       target.sx = 2.6; target.sy = 0.78; target.radius = 0.5; target.edge = 0.03; target.rot = 0; target.flood = 0;
       target.opacity = smoothstep(0, 0.1, p) * (1 - smoothstep(0.94, 1, p)); // gone at both edges
       moduleReact(p);
-      placeHead(modHead, modDims, p);
+      placeHead(modHead, p);
     }
   });
 
@@ -348,11 +378,28 @@
   var tideTrack = document.getElementById("tide-track");
   var tideCards = tideTrack.children;
   var tideHead = document.querySelector("#tide .section-head");
-  var tideDims = { w: 620, h: 200 };
-  function measureTide() { tideDims = measureHead(tideHead); }
-  var tideScatter = [].map.call(tideCards, function () {
-    return { y: (Math.random() * 2 - 1) * 30, r: (Math.random() * 2 - 1) * 5 };
-  });
+  function measureTide() {}
+  // Scatter inside the liquid body. Y is the dominant axis so neighbours sit
+  // clearly above/below one another rather than sliding along one line; the
+  // lane shuffle stops any two adjacent cards sharing a height, and X jitter
+  // breaks the even spacing. Normalised here, scaled to the viewport at draw.
+  var tideScatter = (function () {
+    var n = tideCards.length, lanes = [], out = [];
+    for (var i = 0; i < n; i++) lanes.push(-1 + 2 * (i / (n - 1)));   // -1 .. 1
+    for (var j = lanes.length - 1; j > 0; j--) {                      // shuffle
+      var k = Math.floor(Math.random() * (j + 1)), t = lanes[j]; lanes[j] = lanes[k]; lanes[k] = t;
+    }
+    for (var m = 0; m < n; m++) {
+      // Nudge a lane if it landed too close to its neighbour's height.
+      if (m && Math.abs(lanes[m] - lanes[m - 1]) < 0.45) lanes[m] += lanes[m] > lanes[m - 1] ? 0.45 : -0.45;
+      out.push({
+        y: Math.max(-1, Math.min(1, lanes[m] + (Math.random() * 2 - 1) * 0.12)),
+        x: (Math.random() * 2 - 1) * 70,
+        r: (Math.random() * 2 - 1) * 6
+      });
+    }
+    return out;
+  })();
   ScrollTrigger.create({
     trigger: "#tide", start: "top top", end: "+=200%", pin: ".tide__pin", scrub: 1, anticipatePin: 1,
     onRefresh: measureTide,
@@ -364,13 +411,15 @@
       var vw = window.innerWidth, vh = window.innerHeight;
       var cx = ((target.cx / uniforms.u_aspect.value) + 1) / 2 * vw;
       var n = tideCards.length;
+      var spreadY = Math.min(230, vh * 0.30);
       for (var i = 0; i < n; i++) {
-        var x = cx + (i - (n - 1) / 2) * 150 - 90;
-        var y = vh * 0.5 - 68 + tideScatter[i].y; // vertically centred
+        var s = tideScatter[i];
+        var x = cx + (i - (n - 1) / 2) * 178 - 90 + s.x;
+        var y = vh * 0.5 - 68 + s.y * spreadY;
         tideCards[i].style.transform =
-          "translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px) rotate(" + tideScatter[i].r.toFixed(2) + "deg)";
+          "translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px) rotate(" + s.r.toFixed(2) + "deg)";
       }
-      placeHead(tideHead, tideDims, p);
+      placeHead(tideHead, p);
     }
   });
 
@@ -381,55 +430,58 @@
   var galleryTrack = document.getElementById("gallery-track");
   var galleryCards = galleryTrack.children;
   var galHead = document.querySelector("#gallery .section-head");
-  var galDims = { w: 620, h: 200 };
-  var gOff = [], gCardW = 0, gStride = 0, gTrackLeft0 = 0;
+  var galLabel = document.getElementById("gallery-label");
+  var gCardW = 0, gStride = 0;
   function measureGallery() {
     if (!galleryCards.length) return;
     gCardW = galleryCards[0].offsetWidth;
-    // Read the real laid-out centres. Modelling them as width+gap is wrong the
-    // moment a card carries a margin, and the error compounds down the row
-    // until "centre" lands off-screen.
-    var prev = galleryTrack.style.transform;
-    galleryTrack.style.transform = "none";
-    gTrackLeft0 = galleryTrack.getBoundingClientRect().left;
-    galleryTrack.style.transform = prev;
-    gOff = [];
-    for (var i = 0; i < galleryCards.length; i++) {
-      gOff.push(galleryCards[i].offsetLeft + galleryCards[i].offsetWidth / 2);
-    }
-    gStride = gOff.length > 1 ? (gOff[gOff.length - 1] - gOff[0]) / (gOff.length - 1) : gCardW;
-    galDims = measureHead(galHead);
+    // Neighbours tuck in behind the focused card, so the step is a fraction of
+    // the card width rather than card + gap.
+    gStride = gCardW * 0.64;
   }
-  function galleryLayout(p) {
-    if (!gOff.length) measureGallery();
-    var vw = window.innerWidth, n = galleryCards.length;
-    var margin = gCardW / 2 + 80;
-    // p=0: last card just past the left edge. p=1: first card just past the right.
-    var txStart = -margin - gTrackLeft0 - gOff[n - 1];
-    var txEnd = vw + margin - gTrackLeft0 - gOff[0];
-    var tx = txStart + (txEnd - txStart) * p;
-    galleryTrack.style.transform = "translate3d(" + tx.toFixed(1) + "px,0,0)";
+  // pos is a floating card index: 0 = first screen centred, n-1 = last. The
+  // ScrollTrigger snaps it to whole numbers, so one scroll tick swaps the
+  // centred screen with its neighbour instead of nudging the whole row along.
+  function galleryLayout(pos) {
+    if (!gCardW) measureGallery();
+    var n = galleryCards.length;
     for (var i = 0; i < n; i++) {
-      var cx = gTrackLeft0 + tx + gOff[i];
-      var bell = 1 - smoothstep(0, gStride * 0.92, Math.abs(cx - vw / 2));
-      var focused = bell > 0.55;
+      var d = i - pos;                       // signed distance in cards
+      var ad = Math.abs(d);
+      var near = Math.min(1, ad);
       var card = galleryCards[i];
-      card.style.transform = "scale(" + (0.6 + 0.7 * bell).toFixed(4) + ")"; // 0.6 .. 1.3, big contrast
-      card.style.opacity = (0.2 + 0.8 * bell).toFixed(3);
-      card.style.zIndex = Math.round(bell * 100);
-      card.style.filter = focused ? "none" : "blur(2px)";
-      card.style.boxShadow = focused ? "0 24px 60px rgba(0,0,0,0.85)" : "none";
-      card.style.borderColor = focused ? "#5B8CD8" : "";
+      // Focused card sits at full size and full opacity; the rest drop back.
+      var scale = 1 - 0.38 * near - 0.04 * Math.max(0, ad - 1);
+      card.style.transform =
+        "translate3d(" + (d * gStride).toFixed(1) + "px,0,0) scale(" + scale.toFixed(4) + ")";
+      card.style.opacity = (1 - 0.72 * near - 0.12 * Math.max(0, ad - 1)).toFixed(3);
+      card.style.filter = ad > 0.5 ? "blur(2px)" : "none";
+      card.style.zIndex = String(200 - Math.round(ad * 10));
+      card.style.borderColor = ad < 0.5 ? "#5B8CD8" : "";
+      card.style.boxShadow = ad < 0.5 ? "0 26px 70px rgba(0,0,0,0.8)" : "none";
+    }
+    // One shared label under the carousel, cross-fading to whichever screen
+    // holds the spotlight, and fading out once the last one passes.
+    if (galLabel) {
+      var idx = Math.max(0, Math.min(n - 1, Math.round(pos)));
+      var frac = Math.abs(pos - idx);                  // 0 on a card, 0.5 between
+      if (galLabel.textContent !== GALLERY[idx][0]) galLabel.textContent = GALLERY[idx][0];
+      galLabel.style.opacity = Math.max(0, 1 - frac * 2.4).toFixed(3);
     }
   }
+  var gN = galleryCards.length;
   ScrollTrigger.create({
-    trigger: "#gallery", start: "top top", end: "+=280%", pin: ".gallery__pin", scrub: 1, anticipatePin: 1,
+    trigger: "#gallery", start: "top top", end: "+=" + (gN * 55) + "%",
+    pin: ".gallery__pin", scrub: 1, anticipatePin: 1,
+    snap: gN > 1
+      ? { snapTo: 1 / (gN - 1), duration: { min: 0.15, max: 0.4 }, delay: 0.02, ease: "power2.inOut" }
+      : false,
     onRefresh: measureGallery,
     onUpdate: function (self) {
       var p = self.progress;
-      galleryLayout(p);
+      galleryLayout(p * (gN - 1));
       target.opacity = 0; // shader hidden through the gallery
-      placeHead(galHead, galDims, p);
+      placeHead(galHead, p);
     }
   });
   galleryLayout(0);

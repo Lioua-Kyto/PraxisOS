@@ -10,8 +10,14 @@
     />
     <meta name="theme-color" content="#090a0a" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="PraxisOS — A local-first personal management OS" />
-    <meta property="og:description" content="One quiet home for the moving parts of your life. Local-first, open source." />
+    <meta
+      property="og:title"
+      content="PraxisOS — A local-first personal management OS"
+    />
+    <meta
+      property="og:description"
+      content="One quiet home for the moving parts of your life. Local-first, open source."
+    />
     <meta property="og:image" content="logo.png" />
     <meta name="twitter:card" content="summary" />
 
@@ -41,8 +47,10 @@
           var gl = false;
           try {
             var c = document.createElement("canvas");
-            gl = !!(window.WebGLRenderingContext &&
-              (c.getContext("webgl") || c.getContext("experimental-webgl")));
+            gl = !!(
+              window.WebGLRenderingContext &&
+              (c.getContext("webgl") || c.getContext("experimental-webgl"))
+            );
           } catch (e) {}
           if (!reduced && wide && gl) d.classList.add("anim");
         } catch (e) {}
@@ -54,7 +62,11 @@
     <canvas id="bg" aria-hidden="true"></canvas>
 
     <header class="nav" id="nav">
-      <a class="brand" href="#top"><img src="logo.png" alt="" width="28" height="28" /><span>PraxisOS</span></a>
+      <a class="brand" href="#top"
+        ><img src="logo.png" alt="" width="28" height="28" /><span
+          >PraxisOS</span
+        ></a
+      >
       <nav class="nav__links" aria-label="Primary">
         <a href="#modules">Modules</a>
         <a href="#features">Why Praxis</a>
@@ -74,10 +86,16 @@
               private desktop space.
             </p>
             <div class="hero__actions reveal">
-              <a class="button button--light js-download" href="#download">Download for Windows <span>↘</span></a>
-              <a class="text-link" href="#modules">Explore system <span>↓</span></a>
+              <a class="button button--light js-download" href="#download"
+                >Download for Windows <span>↘</span></a
+              >
+              <a class="text-link" href="#modules"
+                >Explore system <span>↓</span></a
+              >
             </div>
-            <p class="hero__meta reveal js-meta">Free and open source. Windows 10 and later.</p>
+            <p class="hero__meta reveal js-meta">
+              Free and open source. Windows 10 and later.
+            </p>
           </div>
           <div class="hero__logo-wrap reveal">
             <div class="hero__logo" id="logo-frame">
@@ -93,15 +111,54 @@
           <div class="section-head pin-head">
             <p class="overline">01 · The system</p>
             <h2>Every moving part,<br /><em>in its place.</em></h2>
-            <p class="pin-head__sub">Praxis gives your days a shared surface. No accounts, no sync layer.</p>
+            <p class="pin-head__sub">
+              Praxis gives your days a shared surface. No accounts, no sync
+              layer.
+            </p>
           </div>
           <div class="module-grid">
-          <article class="module-card"><span>01</span><div><h3>Tasks</h3><p>Put momentum behind the work that matters.</p></div></article>
-          <article class="module-card"><span>02</span><div><h3>Habits</h3><p>Build a history of promises you keep.</p></div></article>
-          <article class="module-card"><span>03</span><div><h3>Focus</h3><p>Make room for undivided attention.</p></div></article>
-          <article class="module-card"><span>04</span><div><h3>Money</h3><p>Know where your resources are going.</p></div></article>
-          <article class="module-card"><span>05</span><div><h3>Health</h3><p>Keep your routines close to hand.</p></div></article>
-          <article class="module-card"><span>06</span><div><h3>Notes</h3><p>Hold on to ideas worth returning to.</p></div></article>
+            <article class="module-card">
+              <span>01</span>
+              <div>
+                <h3>Tasks</h3>
+                <p>Put momentum behind the work that matters.</p>
+              </div>
+            </article>
+            <article class="module-card">
+              <span>02</span>
+              <div>
+                <h3>Habits</h3>
+                <p>Build a history of promises you keep.</p>
+              </div>
+            </article>
+            <article class="module-card">
+              <span>03</span>
+              <div>
+                <h3>Focus</h3>
+                <p>Make room for undivided attention.</p>
+              </div>
+            </article>
+            <article class="module-card">
+              <span>04</span>
+              <div>
+                <h3>Money</h3>
+                <p>Know where your resources are going.</p>
+              </div>
+            </article>
+            <article class="module-card">
+              <span>05</span>
+              <div>
+                <h3>Health</h3>
+                <p>Keep your routines close to hand.</p>
+              </div>
+            </article>
+            <article class="module-card">
+              <span>06</span>
+              <div>
+                <h3>Notes</h3>
+                <p>Hold on to ideas worth returning to.</p>
+              </div>
+            </article>
           </div>
         </div>
       </section>
@@ -114,7 +171,9 @@
             <h2>Everything moves<br /><em>together.</em></h2>
           </div>
           <div class="tide__viewport" aria-hidden="true">
-            <div class="tide__track" id="tide-track"><!-- injected by JS --></div>
+            <div class="tide__track" id="tide-track">
+              <!-- injected by JS -->
+            </div>
           </div>
         </div>
       </section>
@@ -127,8 +186,11 @@
             <h2>One current,<br /><em>twelve views.</em></h2>
           </div>
           <div class="gallery__viewport">
-            <div class="gallery__track" id="gallery-track"><!-- injected by JS --></div>
+            <div class="gallery__track" id="gallery-track">
+              <!-- injected by JS -->
+            </div>
           </div>
+          <p class="gallery__label" id="gallery-label"></p>
         </div>
       </section>
 
@@ -136,13 +198,43 @@
       <section class="section" id="features">
         <div class="section-head">
           <p class="overline anim-head">04 · Your rules</p>
-          <h2 class="anim-head">Designed to stay<br /><em>out of the way.</em></h2>
+          <h2 class="anim-head">
+            Built for privacy, longevity,<br /><em>and absolute control.</em>
+          </h2>
         </div>
         <div class="feature-grid">
-          <article class="feature-card anim-card"><span>01</span><h3>Local by default</h3><p>Your data lives in a single SQLite file on your own machine. No account is required.</p></article>
-          <article class="feature-card anim-card"><span>02</span><h3>Calm by design</h3><p>A considered interface that makes returning to your day feel like a reset, not another task.</p></article>
-          <article class="feature-card anim-card"><span>03</span><h3>Open source</h3><p>Read the code, make it yours, and always know where your information is going.</p></article>
-          <article class="feature-card anim-card"><span>04</span><h3>Built to last</h3><p>Portable data and ordinary file formats mean your system remains yours for the long haul.</p></article>
+          <article class="feature-card anim-card">
+            <span>01</span>
+            <h3>Local by default</h3>
+            <p>
+              Zero external dependencies. Everything lives in a local SQLite
+              file, requiring no cloud handshake.
+            </p>
+          </article>
+          <article class="feature-card anim-card">
+            <span>02</span>
+            <h3>Calm by design</h3>
+            <p>
+              High signal, low noise. A minimalist interface engineered to
+              reduce cognitive load and prevent context switching.
+            </p>
+          </article>
+          <article class="feature-card anim-card">
+            <span>03</span>
+            <h3>Open source</h3>
+            <p>
+              Fully auditable. Open architecture means you can verify the code,
+              fork it, and completely trust it.
+            </p>
+          </article>
+          <article class="feature-card anim-card">
+            <span>04</span>
+            <h3>Built to last</h3>
+            <p>
+              Permanent access. Portable data formats ensure you are never
+              locked into a proprietary ecosystem.
+            </p>
+          </article>
         </div>
       </section>
 
@@ -153,21 +245,48 @@
             <p class="overline">Your system is waiting</p>
             <h2>Make space for<br /><em>what matters.</em></h2>
             <p>One quiet home for the moving parts of your life.</p>
-            <a class="button button--dark js-download" href="https://github.com/Lioua-Kyto/PraxisOS/releases/latest">Download PraxisOS <span>↘</span></a>
-            <small class="js-meta">Free and open source · Windows 10 and later</small>
+            <a
+              class="button button--dark js-download"
+              href="https://github.com/Lioua-Kyto/PraxisOS/releases/latest"
+              >Download PraxisOS <span>↘</span></a
+            >
+            <small class="js-meta"
+              >Free and open source · Windows 10 and later</small
+            >
           </div>
           <footer>
-            <a class="brand" href="#top"><img src="logo.png" alt="" width="24" height="24" /><span>PraxisOS</span></a>
-            <span>&copy; <span class="js-year">2026</span> · Local-first by design</span>
-            <a href="https://github.com/Lioua-Kyto/PraxisOS" target="_blank" rel="noopener">GitHub ↗</a>
+            <a class="brand" href="#top"
+              ><img src="logo.png" alt="" width="24" height="24" /><span
+                >PraxisOS</span
+              ></a
+            >
+            <span
+              >&copy; <span class="js-year">2026</span> · Local-first by
+              design</span
+            >
+            <a
+              href="https://github.com/Lioua-Kyto/PraxisOS"
+              target="_blank"
+              rel="noopener"
+              >GitHub ↗</a
+            >
           </footer>
         </div>
       </section>
     </main>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+      defer
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"
+      defer
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"
+      defer
+    ></script>
     <script src="main.js" defer></script>
   </body>
 </html>
