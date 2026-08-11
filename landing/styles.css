@@ -286,7 +286,7 @@ body::after {
 .pin-head h2 { margin: 1rem 0 0; }
 .pin-head__sub { margin-top: 1rem; color: var(--muted); font-size: 0.9rem; }
 /* Fallback: header flows normally, no corner move. */
-:not(.anim) .pin-head {
+html:not(.anim) .pin-head {
   position: static;
   transform: none;
   width: auto;
@@ -426,21 +426,21 @@ footer > a:last-child { color: var(--gold); }
 .reveal-fb { opacity: 0; transform: translateY(24px); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
 .reveal-fb.in { opacity: 1; transform: none; }
 
-:not(.anim) .tide__viewport,
-:not(.anim) .gallery__viewport {
+html:not(.anim) .tide__viewport,
+html:not(.anim) .gallery__viewport {
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
-:not(.anim) .tide__viewport::-webkit-scrollbar,
-:not(.anim) .gallery__viewport::-webkit-scrollbar { display: none; }
-:not(.anim) .tide__card, :not(.anim) .gallery__card { scroll-snap-align: center; }
-:not(.anim) .tide__card { transform: none; }
-:not(.anim) .modules__pin { display: block; min-height: 0; overflow: visible; }
-:not(.anim) .tide__pin, :not(.anim) .gallery__pin { min-height: 0; }
-:not(.anim) .cta__pin { min-height: 0; padding: 0; display: block; }
-:not(.anim) .cta__inner { padding: 9rem 1.5rem 5rem; }
+html:not(.anim) .tide__viewport::-webkit-scrollbar,
+html:not(.anim) .gallery__viewport::-webkit-scrollbar { display: none; }
+html:not(.anim) .tide__card, html:not(.anim) .gallery__card { scroll-snap-align: center; }
+html:not(.anim) .tide__card { transform: none; }
+html:not(.anim) .modules__pin { display: block; min-height: 0; overflow: visible; }
+html:not(.anim) .tide__pin, html:not(.anim) .gallery__pin { min-height: 0; }
+html:not(.anim) .cta__pin { min-height: 0; padding: 0; display: block; }
+html:not(.anim) .cta__inner { padding: 9rem 1.5rem 5rem; }
 
 /* ------------------------- responsive collapse ------------------------- */
 @media (max-width: 900px) {

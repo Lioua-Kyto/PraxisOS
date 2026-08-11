@@ -382,24 +382,36 @@
   var galleryCards = galleryTrack.children;
   var galHead = document.querySelector("#gallery .section-head");
   var galDims = { w: 620, h: 200 };
-  var gStride = 0, gCardW = 0, gPadL = 0;
+  var gOff = [], gCardW = 0, gStride = 0, gTrackLeft0 = 0;
   function measureGallery() {
     if (!galleryCards.length) return;
     gCardW = galleryCards[0].offsetWidth;
-    var cs = getComputedStyle(galleryTrack);
-    gPadL = parseFloat(cs.paddingLeft) || 42;
-    gStride = gCardW + (parseFloat(cs.columnGap || cs.gap) || 34);
+    // Read the real laid-out centres. Modelling them as width+gap is wrong the
+    // moment a card carries a margin, and the error compounds down the row
+    // until "centre" lands off-screen.
+    var prev = galleryTrack.style.transform;
+    galleryTrack.style.transform = "none";
+    gTrackLeft0 = galleryTrack.getBoundingClientRect().left;
+    galleryTrack.style.transform = prev;
+    gOff = [];
+    for (var i = 0; i < galleryCards.length; i++) {
+      gOff.push(galleryCards[i].offsetLeft + galleryCards[i].offsetWidth / 2);
+    }
+    gStride = gOff.length > 1 ? (gOff[gOff.length - 1] - gOff[0]) / (gOff.length - 1) : gCardW;
     galDims = measureHead(galHead);
   }
   function galleryLayout(p) {
-    if (!gStride) measureGallery();
+    if (!gOff.length) measureGallery();
     var vw = window.innerWidth, n = galleryCards.length;
-    var startTx = -(n * gStride), endTx = vw + gStride;
-    var tx = startTx + (endTx - startTx) * p;
-    galleryTrack.style.transform = "translate3d(" + tx + "px,0,0)";
+    var margin = gCardW / 2 + 80;
+    // p=0: last card just past the left edge. p=1: first card just past the right.
+    var txStart = -margin - gTrackLeft0 - gOff[n - 1];
+    var txEnd = vw + margin - gTrackLeft0 - gOff[0];
+    var tx = txStart + (txEnd - txStart) * p;
+    galleryTrack.style.transform = "translate3d(" + tx.toFixed(1) + "px,0,0)";
     for (var i = 0; i < n; i++) {
-      var cx = tx + gPadL + i * gStride + gCardW / 2;
-      var bell = 1 - smoothstep(0, vw * 0.4, Math.abs(cx - vw / 2));
+      var cx = gTrackLeft0 + tx + gOff[i];
+      var bell = 1 - smoothstep(0, gStride * 0.92, Math.abs(cx - vw / 2));
       var focused = bell > 0.55;
       var card = galleryCards[i];
       card.style.transform = "scale(" + (0.6 + 0.7 * bell).toFixed(4) + ")"; // 0.6 .. 1.3, big contrast
