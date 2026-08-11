@@ -243,7 +243,13 @@
     "  float rim = 1.0 - smoothstep(0.0, aa*7.0, abs(sdf));",
     "  float drift = fbm(q*2.1 + vec2(t, -t*0.7))*0.12;",
     "  vec3 col = mix(u_colorA, u_colorB, clamp(0.32 + core*0.42 + drift, 0.0, 1.0));",
-    "  col += u_colorB * rim * 0.25;",
+    // Depth: shadowy patches drifting through the body, and a darker shoulder
+    // near the boundary, so it reads as volume rather than a flat fill.
+    "  float shade = fbm(q*2.4 - vec2(t*0.5, t*0.35));",
+    "  col *= 0.74 + 0.36 * smoothstep(-0.7, 0.7, shade);",
+    "  float depth = smoothstep(0.0, max(rr*0.85, 0.001), rr - len);",
+    "  col *= 0.66 + 0.44 * depth;",
+    "  col += u_colorB * rim * 0.3;",
     "  float alpha = clamp(body, 0.0, 1.0) * u_opacity;",
     // Nothing paints above u_clipTop, so the flood can be held inside its section.
     "  alpha *= 1.0 - smoothstep(u_clipTop - 0.015, u_clipTop + 0.015, p.y);",
@@ -304,10 +310,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
     var cen = u.u_blob_center.value;
     // Ease normally, but snap the center across huge jumps: that only happens
     // at an off-screen wrap, so it must not be dragged across the viewport.
-    if (target.lock) {
-      measureLogo();
-      target.cx = heroRest[0]; target.cy = heroRest[1];
-    }
+    heroFluid();
     var dx = target.cx - cen.x, dy = target.cy - cen.y;
     if (target.lock) { cen.x = target.cx; cen.y = target.cy; }
     else {
@@ -356,6 +359,32 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
     px = Math.round(px); py = Math.round(py);
     heroRest = [((px / w) * 2 - 1) * (w / h), 1 - (py / h) * 2];
   }
+  var heroSpan = 1;
+  function measureHeroSpan() {
+    var el = document.getElementById("top");
+    heroSpan = el ? Math.max(1, el.offsetHeight) : 1;
+  }
+  measureHeroSpan();
+
+  // The hero owns the fluid whenever it is the section on screen. This is
+  // driven by scrollY rather than a trigger's active flag: ScrollTrigger
+  // reports the hero inactive at exactly scrollY 0, which released the anchor
+  // at the very place the reader comes to rest, and a refresh could sample the
+  // logo mid-reveal and leave a stale offset behind it.
+  function heroFluid() {
+    if (window.scrollY >= heroSpan) return false;
+    var hp = Math.min(1, Math.max(0, window.scrollY / heroSpan));
+    measureLogo();
+    target.lock = true;
+    target.cx = heroRest[0]; target.cy = heroRest[1];
+    target.sx = 1; target.sy = 1; target.rot = 0; target.flood = 0;
+    target.calm = 0.2; target.clip = 2;
+    target.radius = lerp(0.42, 0.34, hp);
+    target.edge = lerp(0.03, 0.16, hp);
+    target.opacity = 1 - smoothstep(0.12, 0.7, hp);
+    return true;
+  }
+
   measureLogo();
   // Start the blob behind the logo on first paint (before any scroll update),
   // live value included, so there is no opening catch-up drift.
@@ -405,20 +434,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
     // A full-screen noise shader is expensive on a phone; cap the pixel count.
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     resize();                                   // re-size the buffer to the new ratio
-    ScrollTrigger.create({
-      trigger: "#top", start: "top top", end: "bottom top",
-      onToggle: function (self) { target.lock = self.isActive; },
-      onUpdate: function (self) {
-        var p = self.progress;
-        target.lock = true;                       // stays glued to the mark
-        measureLogo();
-        target.cx = heroRest[0]; target.cy = heroRest[1];
-        target.sx = 1; target.sy = 1; target.rot = 0; target.flood = 0;
-        target.calm = 0.2; target.clip = 2;
-        target.radius = 0.42; target.edge = 0.03;
-        target.opacity = 1 - smoothstep(0.4, 0.95, p);
-      }
-    });
+    // The hero's fluid lives in the ticker; see heroFluid().
     ScrollTrigger.create({
       trigger: "#download", start: "top 85%", end: "bottom top",
       onUpdate: function (self) {
@@ -431,7 +447,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
         target.opacity = smoothstep(0, 0.25, p);
       }
     });
-    window.addEventListener("resize", function () { resize(); measureLogo(); });
+    window.addEventListener("resize", function () { resize(); measureLogo(); measureHeroSpan(); });
     return;
   }
 
@@ -439,25 +455,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
      PHASE 1 — HERO: the aura dissolves in place (no travel down), fully gone
      before the modules section pins.
      ===================================================================== */
-  ScrollTrigger.create({
-    trigger: "#top", start: "top top", end: "bottom top",
-    onRefresh: function () { measureLogo(); target.lock = true; target.cx = heroRest[0]; target.cy = heroRest[1]; },
-    onToggle: function (self) { target.lock = self.isActive; },
-    onUpdate: function (self) {
-      var p = self.progress;
-      // Track the logo's live position so the body stays pinned behind it as
-      // the hero scrolls, instead of being left behind at its load position.
-      target.lock = true;                        // the ticker keeps it on the logo
-      measureLogo();                             // and re-anchor on every update
-      target.cx = heroRest[0]; target.cy = heroRest[1];
-      target.sx = 1; target.sy = 1; target.rot = 0; target.flood = 0;
-      target.calm = 0.2;   // the positional noise is what made it drift off-centre
-      target.clip = 2;
-      target.radius = lerp(0.42, 0.34, p);
-      target.edge = lerp(0.03, 0.16, p);              // soften as it dissolves
-      target.opacity = 1 - smoothstep(0.12, 0.7, p);  // dissolve into nothing
-    }
-  });
+  // The hero's fluid lives in the ticker; see heroFluid().
 
   /* =======================================================================
      PHASE 2 — MODULES: wave delivers the orange cards through the centred
@@ -615,7 +613,7 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
   /* ---- resize + refresh ----------------------------------------------- */
   var resizeTO;
   window.addEventListener("resize", function () {
-    resize(); measureLogo();
+    resize(); measureLogo(); measureHeroSpan();
     clearTimeout(resizeTO);
     resizeTO = setTimeout(function () {
       measureModules(); measureTide(); ScrollTrigger.refresh();

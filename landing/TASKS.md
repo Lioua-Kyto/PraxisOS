@@ -4,6 +4,34 @@ Change log for the PraxisOS landing page (`landing/`). Newest round on top.
 
 ---
 
+## Round: the hero jump at scroll zero, and depth in the liquid
+
+### Why it only ever jumped at the very top
+Two faults stacked, and both were invisible anywhere except scroll position 0.
+
+ScrollTrigger reports the hero as `isActive: false` at exactly `scrollY: 0`, so
+`onToggle` released the lock at precisely the place the reader comes to rest.
+The ticker stopped re-anchoring there, leaving whatever position was last
+written. Separately, `onRefresh` sampled the logo while the hero's entrance
+animation still held it at `translateY(24px)`, so the anchor it captured was
+24px out; measured at load, the body sat 24px off the mark and nothing at the
+top corrected it.
+
+The hero's fluid is no longer a ScrollTrigger at all. `heroFluid()` runs in the
+ticker and derives everything from `window.scrollY / heroSpan`, so scroll 0 is
+just another value of the same expression and the anchor is re-measured every
+frame. Measured at six positions including the return to the top: the body sits
+exactly on the logo centre at all of them, and the claim is released once past
+the hero so the later phases keep control.
+
+### Depth in the body
+It was a flat fill. Two terms now give it volume: a slow noise field drifting
+through the interior for shadowed patches, and a darker shoulder toward the
+boundary derived from the distance field, with the rim highlight lifted a
+little to keep the edge reading as a surface.
+
+---
+
 ## Round: calm hero body, flood clipped to its section, centred grid
 
 ### The hero body drifting off the mark
