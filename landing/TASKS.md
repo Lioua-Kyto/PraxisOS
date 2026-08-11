@@ -4,6 +4,27 @@ Change log for the PraxisOS landing page (`landing/`). Newest round on top.
 
 ---
 
+## Round: pointer wake in the fluid
+
+A chain of five points follows the cursor, each lagging the one ahead of it, and
+the shader reads them twice: subtracted from the distance field so the body
+swells and sheds droplets toward the cursor, and added to the colour so the wake
+still reads once the closing section floods and the shape term is saturated.
+
+Measured while sweeping the pointer: the gaps down the chain grow 0.048, 0.077,
+0.125, 0.209, so it trails rather than moving as one piece, and it collapses to
+zero when the pointer stops. The points are parked off-screen until the first
+pointer event, so nothing appears before the reader has moved anything.
+
+It is confined to the two sections that asked for it. Rather than let whichever
+phase ran last leave its value behind, the amount is derived every frame: the
+hero claims it while it owns the fluid, the closing section reports its own
+active state, and anything else is zero. Verified on both paths: hero 1, modules
+0, tide 0, views 0, closing section 1, and mid-page 0 on mobile where those
+middle triggers do not exist.
+
+---
+
 ## Round: the hero jump at scroll zero, and depth in the liquid
 
 ### Why it only ever jumped at the very top
