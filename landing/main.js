@@ -163,7 +163,22 @@
 
   var animReady = root.classList.contains("anim") && gsap && ScrollTrigger && THREE;
   if (root.classList.contains("anim") && !animReady) root.classList.remove("anim");
-  if (!animReady) { initNav(); initFallbackReveals(); return; }
+
+  // Small screens skip the pins and sweeps, but can still carry the fluid in
+  // the two places it is purely decorative: behind the hero mark, and as the
+  // closing section's background.
+  var liteFluid = false;
+  if (!animReady && gsap && ScrollTrigger && THREE) {
+    try {
+      var probe = document.createElement("canvas");
+      liteFluid =
+        !matchMedia("(prefers-reduced-motion: reduce)").matches &&
+        !!(window.WebGLRenderingContext &&
+          (probe.getContext("webgl") || probe.getContext("experimental-webgl")));
+    } catch (e) { liteFluid = false; }
+  }
+  if (!animReady && !liteFluid) { initNav(); initFallbackReveals(); return; }
+  if (liteFluid) { initFallbackReveals(); root.classList.add("has-fluid"); }
 
   gsap.registerPlugin(ScrollTrigger);
   initNav();
@@ -370,6 +385,38 @@ var target = { cx: 0, cy: 0.1, sx: 1, sy: 1, radius: 0.42, edge: 0.03, rot: 0, o
     var fade = (1 - smoothstep(0.0, 0.12, p)).toFixed(3);
     var rest = head.querySelectorAll("h2, .pin-head__sub");
     for (var i = 0; i < rest.length; i++) rest[i].style.opacity = fade;
+  }
+
+  if (liteFluid) {
+    // A full-screen noise shader is expensive on a phone; cap the pixel count.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+    resize();                                   // re-size the buffer to the new ratio
+    ScrollTrigger.create({
+      trigger: "#top", start: "top top", end: "bottom top",
+      onToggle: function (self) { target.lock = self.isActive; },
+      onUpdate: function (self) {
+        var p = self.progress;
+        target.lock = true;                       // stays glued to the mark
+        measureLogo();
+        target.cx = heroRest[0]; target.cy = heroRest[1];
+        target.sx = 1; target.sy = 1; target.rot = 0; target.flood = 0;
+        target.radius = 0.42; target.edge = 0.03;
+        target.opacity = 1 - smoothstep(0.4, 0.95, p);
+      }
+    });
+    ScrollTrigger.create({
+      trigger: "#download", start: "top 85%", end: "bottom top",
+      onUpdate: function (self) {
+        var p = self.progress;
+        target.lock = false;
+        target.cx = 0; target.cy = 0; target.rot = 0;
+        target.sx = 1.8; target.sy = 1.6; target.radius = 2.6; target.edge = 0.05;
+        target.flood = 1;
+        target.opacity = smoothstep(0, 0.25, p);
+      }
+    });
+    window.addEventListener("resize", function () { resize(); measureLogo(); });
+    return;
   }
 
   /* =======================================================================

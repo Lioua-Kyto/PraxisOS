@@ -40,7 +40,8 @@
         var d = document.documentElement;
         // Scrollytelling relies on pinned sections, so a restored mid-page
         // scroll position lands the reader inside a half-built pin.
-        if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+        if ("scrollRestoration" in history)
+          history.scrollRestoration = "manual";
         d.classList.remove("no-js");
         d.classList.add("js");
         try {
@@ -189,12 +190,14 @@
         <div class="gallery__pin">
           <div class="section-head pin-head">
             <p class="overline">03 · The views</p>
-            <h2>One current,<br /><em>fourteen views.</em></h2>
+            <h2>One current,<br /><em>ten views.</em></h2>
             <p class="pin-head__sub">Every screen in the app, on one sphere.</p>
           </div>
           <!-- The sphere mounts here; the grid below is the no-WebGL2 fallback. -->
           <div class="menu-stage" id="menu-stage" aria-hidden="true"></div>
-          <p class="drag-hint" id="drag-hint">Drag to explore · click a screen to open it</p>
+          <p class="drag-hint" id="drag-hint">
+            Drag to explore · click a screen to open it
+          </p>
           <div class="shot-grid" id="shot-grid"><!-- injected by JS --></div>
         </div>
       </section>
@@ -292,7 +295,10 @@
       src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"
       defer
     ></script>
-    <script src="https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/gl-matrix-min.js" defer></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/gl-matrix-min.js"
+      defer
+    ></script>
     <script src="infinite-menu.js" defer></script>
     <script src="main.js" defer></script>
   </body>

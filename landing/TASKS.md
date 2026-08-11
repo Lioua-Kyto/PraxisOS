@@ -4,6 +4,31 @@ Change log for the PraxisOS landing page (`landing/`). Newest round on top.
 
 ---
 
+## Round: mobile gets the fluid back
+
+### A lite fluid path for small screens
+The shader was gated off entirely below 1024px. It now runs in a reduced mode
+where it is purely decorative and costs nothing structural: glued behind the
+hero mark, and flooding the closing section's background. No pins, no sweeps,
+no card choreography, and the pixel ratio is capped at 1.25 rather than 1.75
+because a full-screen noise shader is expensive on a phone.
+
+Two supporting changes: the CSS aura behind the logo is hidden when the shader
+is supplying it, and the closing section's solid background becomes transparent
+so the flood shows through.
+
+Measured on a 375px viewport: two triggers (`top`, `download`), zero pins,
+buffer 468x1015 against an expected 469x1015. Desktop is unchanged: four pins,
+five triggers, sphere mounted.
+
+### Layout
+- The six module cards sit 2x3 instead of one long column, with 44px between
+  the section copy and the grid.
+- The views slide sideways as a scroll-snap carousel, matching the tide above
+  them, rather than stacking vertically.
+
+---
+
 ## Round: responsive overhaul, tide speeds, crisp overline
 
 ### Mobile was badly broken, and the cause was a mangled selector
