@@ -3,8 +3,8 @@
 **Application:** PraxisOS
 **Publisher:** Lioua-Kyto ("we", "us")
 **Contact:** liwaazeddam@gmail.com
-**Effective date:** 5 August 2026
-**Version:** 1.0
+**Effective date:** 12 August 2026
+**Version:** 1.1
 
 By installing or using PraxisOS ("the Software") you agree to these Terms. If
 you do not agree, do not install or use it.
@@ -65,6 +65,15 @@ You are solely responsible for:
 - securing the device the data sits on.
 
 We cannot recover your data. We have no copy of it.
+
+**The website is separate from the application.** Our public website,
+`praxisos.deviumx.com`, collects anonymized site-visit analytics, heatmaps and
+session navigation data through Google Analytics and Microsoft Clarity, and
+tracks specific interface interactions such as clicks on the **Download**
+buttons. All of this collection relies on cookies managed through our Consent
+Mode v2 banner, which lets you opt out of tracking storage; storage is denied
+until you accept. This applies to the website only, not to the desktop
+application, and is set out in full in [PRIVACY.md](PRIVACY.md).
 
 ## 5. Not professional advice
 

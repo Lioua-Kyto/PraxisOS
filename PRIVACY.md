@@ -3,8 +3,8 @@
 **Application:** PraxisOS
 **Publisher:** Lioua-Kyto ("we", "us")
 **Contact:** liwaazeddam@gmail.com
-**Effective date:** 5 August 2026
-**Version:** 1.0
+**Effective date:** 12 August 2026
+**Version:** 1.1
 
 ---
 
@@ -50,6 +50,10 @@ have no ability to access, recover or delete them for you.
 There is no analytics, no telemetry, no crash reporting, no advertising
 identifier, no usage statistics, and no account system. The application does not
 transmit your content anywhere.
+
+This section is about the **desktop application**. Our public website,
+`praxisos.deviumx.com`, is a separate thing and does use analytics; it is
+described on its own in section 10.
 
 ## 4. Network connections
 
@@ -121,12 +125,43 @@ SQLite and others). These run locally as part of the application and do not
 transmit your data. No third party receives information about you from us,
 because we have none to give.
 
-## 10. Changes to this policy
+## 10. The PraxisOS website (praxisos.deviumx.com)
+
+This section applies **only to the marketing website** at
+`praxisos.deviumx.com`. It changes nothing above: the desktop application still
+collects nothing and still transmits none of your content.
+
+The website uses two analytics services to understand how visitors use the page
+so we can improve it:
+
+- **Google Analytics 4** (Google) provides anonymized site-visit analytics and
+  session navigation data.
+- **Microsoft Clarity** (Microsoft) provides heatmaps and anonymized session
+  navigation data.
+
+Through these services the website collects:
+
+- anonymized site-visit analytics, heatmaps and session navigation data;
+- specific UI interactions, such as clicks on the application **Download**
+  buttons.
+
+All of this relies on cookies, and every cookie is governed by the Consent Mode
+v2 banner shown on your first visit. Storage is **denied by default**: nothing
+is stored and no analytics cookie is set until you press **Accept**. Press
+**Decline**, or ignore the banner, and tracking storage stays off. You can
+withdraw consent at any time by clearing this site's data in your browser, which
+brings the banner back.
+
+Whatever these services do receive (such as your IP address and a generic user
+agent) is handled under Google's and Microsoft's own privacy terms, not this
+policy.
+
+## 11. Changes to this policy
 
 If this policy changes, the revised version will be published in the project
 repository with a new effective date, and material changes will be noted in the
 release notes. Continued use after a change means you accept the revised policy.
 
-## 11. Contact
+## 12. Contact
 
 Questions about this policy: **liwaazeddam@gmail.com**
