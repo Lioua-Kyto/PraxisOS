@@ -3,23 +3,89 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Google Consent Mode v2 (Default: Denied) -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("consent", "default", {
+        ad_personalization: "denied",
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        analytics_storage: "denied",
+        wait_for_update: 500,
+      });
+    </script>
+
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-3DPQCW09JN"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-3DPQCW09JN");
+    </script>
+
+    <!-- Microsoft Clarity -->
+    <!-- REPLACE THIS COMMENT WITH THE EXACT MICROSOFT CLARITY SCRIPT SNIPPET -->
+
     <title>PraxisOS — A local-first personal management app</title>
     <meta
       name="description"
-      content="Your work, health, learning, and money, quietly organized in one private local-first desktop space. Free and open source."
+      content="PraxisOS is a free, open-source, local-first desktop app that keeps your tasks, habits, focus, workouts, nutrition, budget, journal and notes in one private place. Your data stays on your machine."
     />
+    <meta
+      name="keywords"
+      content="PraxisOS, local-first, personal management app, productivity, open source, desktop app, habit tracker, task manager, focus timer, budget, journal, notes, privacy, Windows"
+    />
+    <meta name="author" content="Lioua-Kyto" />
     <meta name="theme-color" content="#090a0a" />
+    <link rel="canonical" href="https://praxisos.deviumx.com/" />
+
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PraxisOS" />
+    <meta property="og:url" content="https://praxisos.deviumx.com/" />
     <meta
       property="og:title"
       content="PraxisOS — A local-first personal management app"
     />
     <meta
       property="og:description"
-      content="One quiet home for the moving parts of your life. Local-first, open source."
+      content="Your work, health, learning and money, quietly organized in one private desktop space. Free, open source, and local-first."
     />
-    <meta property="og:image" content="logo.png" />
-    <meta name="twitter:card" content="summary" />
+    <meta
+      property="og:image"
+      content="https://praxisos.deviumx.com/preview-banner.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="PraxisOS — a local-first personal management app"
+    />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="PraxisOS — A local-first personal management app"
+    />
+    <meta
+      name="twitter:description"
+      content="Your work, health, learning and money, quietly organized in one private desktop space. Free, open source, and local-first."
+    />
+    <meta
+      name="twitter:image"
+      content="https://praxisos.deviumx.com/preview-banner.png"
+    />
 
     <link rel="icon" type="image/png" href="logo.png" />
     <link rel="apple-touch-icon" href="logo.png" />
@@ -282,6 +348,19 @@
         </div>
       </section>
     </main>
+
+    <!-- Cookie consent banner -->
+    <div class="cookie-banner" id="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie consent" hidden>
+      <p class="cookie-banner__text">
+        We use analytics and heatmaps to improve PraxisOS. By clicking
+        &lsquo;Accept&rsquo;, you agree to our use of cookies as detailed in our
+        <a href="https://github.com/Lioua-Kyto/PraxisOS/blob/main/PRIVACY.md" target="_blank" rel="noopener">Privacy Policy</a>.
+      </p>
+      <div class="cookie-banner__actions">
+        <button type="button" class="cookie-banner__btn cookie-decline">Decline</button>
+        <button type="button" class="cookie-banner__btn cookie-banner__btn--primary cookie-accept">Accept</button>
+      </div>
+    </div>
 
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"

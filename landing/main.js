@@ -181,6 +181,74 @@
       .catch(function () {});
   })();
 
+  /* ---- cookie consent (Consent Mode v2) ------------------------------- */
+  (function initConsent() {
+    var KEY = "praxis_consent";
+    var banner = document.getElementById("cookie-banner");
+    var choice = null;
+    try {
+      choice = localStorage.getItem(KEY);
+    } catch (e) {}
+
+    function grant() {
+      if (typeof window.gtag === "function") {
+        window.gtag("consent", "update", {
+          analytics_storage: "granted",
+          ad_storage: "granted",
+          ad_user_data: "granted",
+          ad_personalization: "granted",
+        });
+      }
+      // Clarity, once its snippet is present, is asked to store as well.
+      if (window.clarity) window.clarity("consent");
+    }
+    function remember(value) {
+      try {
+        localStorage.setItem(KEY, value);
+      } catch (e) {}
+    }
+
+    // Returning visitor who already accepted: re-apply so tracking resumes.
+    if (choice === "granted") grant();
+    // Any prior choice (granted or declined) means the banner stays away.
+    if (choice) {
+      if (banner) banner.hidden = true;
+      return;
+    }
+    if (!banner) return;
+
+    banner.hidden = false;
+    var accept = banner.querySelector(".cookie-accept");
+    var decline = banner.querySelector(".cookie-decline");
+    if (accept)
+      accept.addEventListener("click", function () {
+        grant();
+        remember("granted");
+        banner.hidden = true;
+      });
+    if (decline)
+      decline.addEventListener("click", function () {
+        remember("denied"); // default state is already denied; just record it
+        banner.hidden = true;
+      });
+  })();
+
+  /* ---- download event tracking (always) ------------------------------- */
+  (function initDownloadTracking() {
+    document.querySelectorAll(".js-download").forEach(function (el) {
+      el.addEventListener("click", function () {
+        if (window.dataLayer)
+          window.dataLayer.push({ event: "download_clicked" });
+        if (typeof window.gtag === "function")
+          window.gtag("event", "download_clicked", {
+            event_category: "App",
+            event_label: "PraxisOS",
+          });
+        if (window.clarity) window.clarity("set", "action", "download_click");
+      });
+    });
+  })();
+
   /* ---- nav scrolled state --------------------------------------------- */
   function initNav() {
     var nav = document.getElementById("nav");
