@@ -34,7 +34,22 @@
     </script>
 
     <!-- Microsoft Clarity -->
-    <!-- REPLACE THIS COMMENT WITH THE EXACT MICROSOFT CLARITY SCRIPT SNIPPET -->
+    <head>
+      <script type="text/javascript">
+        (function (c, l, a, r, i, t, y) {
+          c[a] =
+            c[a] ||
+            function () {
+              (c[a].q = c[a].q || []).push(arguments);
+            };
+          t = l.createElement(r);
+          t.async = 1;
+          t.src = "https://www.clarity.ms/tag/" + i;
+          y = l.getElementsByTagName(r)[0];
+          y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", "y1bz238s2f");
+      </script>
+    </head>
 
     <title>PraxisOS — A local-first personal management app</title>
     <meta
@@ -350,15 +365,34 @@
     </main>
 
     <!-- Cookie consent banner -->
-    <div class="cookie-banner" id="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie consent" hidden>
+    <div
+      class="cookie-banner"
+      id="cookie-banner"
+      role="dialog"
+      aria-live="polite"
+      aria-label="Cookie consent"
+      hidden
+    >
       <p class="cookie-banner__text">
         We use analytics and heatmaps to improve PraxisOS. By clicking
         &lsquo;Accept&rsquo;, you agree to our use of cookies as detailed in our
-        <a href="https://github.com/Lioua-Kyto/PraxisOS/blob/main/PRIVACY.md" target="_blank" rel="noopener">Privacy Policy</a>.
+        <a
+          href="https://github.com/Lioua-Kyto/PraxisOS/blob/main/PRIVACY.md"
+          target="_blank"
+          rel="noopener"
+          >Privacy Policy</a
+        >.
       </p>
       <div class="cookie-banner__actions">
-        <button type="button" class="cookie-banner__btn cookie-decline">Decline</button>
-        <button type="button" class="cookie-banner__btn cookie-banner__btn--primary cookie-accept">Accept</button>
+        <button type="button" class="cookie-banner__btn cookie-decline">
+          Decline
+        </button>
+        <button
+          type="button"
+          class="cookie-banner__btn cookie-banner__btn--primary cookie-accept"
+        >
+          Accept
+        </button>
       </div>
     </div>
 
