@@ -7,6 +7,20 @@ All notable changes to PraxisOS are recorded here. The format follows
 The section for the running version is shown in-app the first time you open a
 new release, so entries here are written for users, not for the commit log.
 
+## 0.1.3 — 2026-08-12
+
+### Changed
+
+- Entertainment now has its own colour instead of one close to Deep Work, so
+  every focus category is distinct on the charts and timeline.
+- The category picker's outline takes the colour of the selected category, so
+  you can see which colour it'll be before clocking in.
+
+### Fixed
+
+- Today's timeline now fills in live as a session runs, instead of only
+  updating when you clock out.
+
 ## 0.1.2 — 2026-08-08
 
 ### Added

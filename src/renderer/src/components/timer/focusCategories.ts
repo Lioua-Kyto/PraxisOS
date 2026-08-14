@@ -14,7 +14,7 @@ export const FOCUS_CATEGORIES: FocusCategoryMeta[] = [
   { key: "meeting", label: "Meeting", color: "hsl(172 60% 45%)" },
   { key: "admin", label: "Admin & Chores", color: "hsl(215 15% 55%)" },
   { key: "side_project", label: "Side Project", color: "hsl(340 75% 65%)" },
-  { key: "entertainment", label: "Entertainment", color: "hsl(20 85% 60%)" },
+  { key: "entertainment", label: "Entertainment", color: "hsl(235 78% 66%)" },
   { key: "rest", label: "Rest & Recovery", color: "hsl(90 55% 50%)" },
   { key: "other", label: "Other", color: "hsl(var(--muted-foreground))" }
 ];

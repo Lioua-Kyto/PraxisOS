@@ -123,12 +123,24 @@ export function TimerPanel() {
     setShowManual(false);
   };
 
+  // A running session has no end yet, so its timeline segment should grow to
+  // "now". Re-render every half-minute while one runs — on a 24h bar a second
+  // is a sub-pixel, so 30s is plenty and cheap.
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    if (active?.status !== "running") return;
+    const id = setInterval(() => setNowTick(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, [active?.status]);
+  const now = new Date(nowTick);
+  const nowHour = now.getHours() + now.getMinutes() / 60;
+
   const todaySessions = recent.filter((s) => s.date === today());
   const segments: TimelineSegment[] = todaySessions
     .filter((s) => s.startTime)
     .map((s) => ({
       startHour: timeToHour(s.startTime),
-      endHour: s.endTime ? timeToHour(s.endTime) : timeToHour(s.startTime) + 0.15,
+      endHour: s.endTime ? timeToHour(s.endTime) : Math.max(timeToHour(s.startTime) + 0.05, nowHour),
       color: catMeta(s.category).color,
       label: `${catMeta(s.category).label}${s.label ? " — " + s.label : ""}`
     }));
@@ -158,7 +170,7 @@ export function TimerPanel() {
             {!active && (
               <>
                 <Select value={category} onValueChange={(v) => { touchedCategory.current = true; setCategory(v); }}>
-                  <SelectTrigger className="w-[150px]">
+                  <SelectTrigger className="w-[150px] border-2" style={{ borderColor: catMeta(category).color }}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
