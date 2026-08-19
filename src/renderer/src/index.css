@@ -34,6 +34,22 @@
     --ring: 24 62% 52%;
     --sunken: 30 15% 6%;
     --radius: 0.6rem;
+
+    /* Category palette. The semantic tokens above cover accent / success /
+       warning / danger; charts and habit colours need more hues than that.
+       They live here so a theme can retune them and so a colour is defined
+       once — two components previously kept their own copy of this list and
+       drifted apart. Named by hue, not by role, because focus categories and
+       habits draw from the same set. Tuned for dark surfaces; the light theme
+       overrides them, where a 65%-lightness bar washes out. */
+    --cat-violet: 265 70% 65%;
+    --cat-sky: 200 80% 55%;
+    --cat-amber: 45 85% 55%;
+    --cat-teal: 172 60% 45%;
+    --cat-slate: 215 15% 55%;
+    --cat-rose: 340 75% 65%;
+    --cat-indigo: 235 78% 66%;
+    --cat-lime: 90 55% 50%;
   }
 
   [data-theme="light"] {
@@ -63,6 +79,16 @@
     --ring: 140 26% 30%;
     --sunken: 42 30% 99%;
     --radius: 0.6rem;
+
+    /* Darker than the dark-theme set: these sit on a 93%-lightness page. */
+    --cat-violet: 265 55% 50%;
+    --cat-sky: 200 70% 38%;
+    --cat-amber: 38 75% 40%;
+    --cat-teal: 172 50% 32%;
+    --cat-slate: 215 12% 42%;
+    --cat-rose: 340 60% 46%;
+    --cat-indigo: 235 55% 52%;
+    --cat-lime: 90 45% 34%;
   }
 
   [data-theme="solarized"] {

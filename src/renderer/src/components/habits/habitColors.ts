@@ -3,12 +3,12 @@ export const HABIT_COLORS: Array<{ key: string; label: string; css: string }> = 
   { key: "success", label: "Green", css: "hsl(var(--success))" },
   { key: "warning", label: "Amber", css: "hsl(var(--warning))" },
   { key: "destructive", label: "Red", css: "hsl(var(--destructive))" },
-  { key: "sky", label: "Sky", css: "hsl(200 80% 55%)" },
-  { key: "violet", label: "Violet", css: "hsl(265 70% 65%)" },
-  { key: "teal", label: "Teal", css: "hsl(172 60% 45%)" },
-  { key: "rose", label: "Rose", css: "hsl(340 75% 65%)" },
-  { key: "lime", label: "Lime", css: "hsl(90 60% 50%)" },
-  { key: "slate", label: "Slate", css: "hsl(215 15% 55%)" }
+  { key: "sky", label: "Sky", css: "hsl(var(--cat-sky))" },
+  { key: "violet", label: "Violet", css: "hsl(var(--cat-violet))" },
+  { key: "teal", label: "Teal", css: "hsl(var(--cat-teal))" },
+  { key: "rose", label: "Rose", css: "hsl(var(--cat-rose))" },
+  { key: "lime", label: "Lime", css: "hsl(var(--cat-lime))" },
+  { key: "slate", label: "Slate", css: "hsl(var(--cat-slate))" }
 ];
 
 export function habitColorCss(key: string): string {
