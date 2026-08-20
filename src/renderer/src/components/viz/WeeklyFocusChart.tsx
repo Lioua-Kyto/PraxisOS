@@ -1,21 +1,7 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { localDateString } from "@shared/datetime";
 import type { FocusDayCategoryTotal } from "@shared/types";
-
-const CATEGORY_COLOR: Record<string, string> = {
-  deep_work: "hsl(var(--primary))",
-  training: "hsl(var(--destructive))",
-  learning: "hsl(var(--success))",
-  reading: "hsl(265 70% 65%)",
-  writing: "hsl(200 80% 55%)",
-  planning: "hsl(45 85% 55%)",
-  meeting: "hsl(172 60% 45%)",
-  admin: "hsl(215 15% 55%)",
-  side_project: "hsl(340 75% 65%)",
-  entertainment: "hsl(20 85% 60%)",
-  rest: "hsl(90 55% 50%)",
-  other: "hsl(var(--muted-foreground))"
-};
+import { focusCategoryMeta } from "../timer/focusCategories";
 
 function dayLabel(date: string): string {
   return new Date(date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short" });
@@ -70,10 +56,10 @@ export function WeeklyFocusChart({ data }: { data: FocusDayCategoryTotal[] }) {
             borderRadius: 8,
             fontSize: 12
           }}
-          formatter={(value: number, name: string) => [`${value}h`, name.replace(/_/g, " ")]}
+          formatter={(value: number, name: string) => [`${value}h`, focusCategoryMeta(name).label]}
         />
         {categories.map((cat) => (
-          <Bar key={cat} dataKey={cat} stackId="focus" fill={CATEGORY_COLOR[cat] ?? "hsl(var(--primary))"} radius={[2, 2, 0, 0]} />
+          <Bar key={cat} dataKey={cat} stackId="focus" fill={focusCategoryMeta(cat).color} radius={[2, 2, 0, 0]} />
         ))}
       </BarChart>
     </ResponsiveContainer>

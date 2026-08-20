@@ -3,13 +3,7 @@ import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { TimerDisplay } from "../timer/TimerDisplay";
 import { useActiveFocusSession, usePauseFocusSession, useResumeFocusSession, useStopFocusSession } from "../../queries/focusTimer";
-
-const CATEGORY_LABEL: Record<string, string> = {
-  deep_work: "Deep Work",
-  training: "Training",
-  learning: "Learning",
-  other: "Other"
-};
+import { focusCategoryMeta } from "../timer/focusCategories";
 
 export function FocusWidget({ onNavigate }: { onNavigate: () => void }) {
   const { data: active } = useActiveFocusSession();
@@ -29,7 +23,7 @@ export function FocusWidget({ onNavigate }: { onNavigate: () => void }) {
           <div className="mt-3 flex items-center justify-between">
             <span className="text-xs text-muted-foreground">
               {active.status === "paused" ? "Paused — " : "Tracking "}
-              {CATEGORY_LABEL[active.category] ?? active.category}
+              {focusCategoryMeta(active.category).label}
             </span>
             <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
               {active.status === "running" ? (

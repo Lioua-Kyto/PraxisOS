@@ -1,13 +1,19 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import type { BudgetTransaction } from "@shared/types";
 
+// --accent used to sit in this list, which on most themes is a surface tone a
+// few percent off the card — that slice was effectively invisible.
 const PALETTE = [
   "hsl(var(--primary))",
   "hsl(var(--destructive))",
   "hsl(var(--success))",
   "hsl(var(--warning))",
-  "hsl(var(--accent))",
-  "hsl(var(--muted-foreground))"
+  "hsl(var(--cat-sky))",
+  "hsl(var(--cat-violet))",
+  "hsl(var(--cat-teal))",
+  "hsl(var(--cat-rose))",
+  "hsl(var(--cat-lime))",
+  "hsl(var(--cat-slate))"
 ];
 
 export function SpendByCategoryChart({ transactions }: { transactions: BudgetTransaction[] }) {
