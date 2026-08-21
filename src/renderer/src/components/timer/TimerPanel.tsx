@@ -95,6 +95,7 @@ export function TimerPanel() {
 
   const isRunning = active?.status === "running";
   const isPaused = active?.status === "paused";
+  const catColor = catMeta(category).color;
 
   const startEdit = (s: FocusSession) => {
     setEditingId(s.id);
@@ -170,7 +171,14 @@ export function TimerPanel() {
             {!active && (
               <>
                 <Select value={category} onValueChange={(v) => { touchedCategory.current = true; setCategory(v); }}>
-                  <SelectTrigger className="w-[150px] border-2" style={{ borderColor: catMeta(category).color }}>
+                  <SelectTrigger
+                    className="w-[150px] border-2"
+                    // The trigger's focus ring is --ring (the accent), which sat
+                    // outside the category-coloured border as a second outline in
+                    // a clashing colour. Tint it to match, so focus reads as the
+                    // same outline getting stronger.
+                    style={{ borderColor: catColor, "--tw-ring-color": catColor } as React.CSSProperties}
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
