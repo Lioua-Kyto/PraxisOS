@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, Dumbbell, FolderGit2, GraduationCap, Sparkles } from "lucide-react";
+import { BookOpen, Dumbbell, FolderGit2, GraduationCap, Pencil, Sparkles } from "lucide-react";
 import { PageHeader } from "../layout/PageHeader";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
@@ -9,7 +9,7 @@ import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useAddCourse, useCourses, useRemoveCourse, useUpdateCourse } from "../../queries/courses";
-import type { CourseKind, CourseStatus } from "@shared/types";
+import type { Course, CourseKind, CourseStatus } from "@shared/types";
 
 const KIND_META: Record<CourseKind, { label: string; icon: typeof GraduationCap }> = {
   course: { label: "Course", icon: GraduationCap },
@@ -29,6 +29,84 @@ const STATUS_VARIANT: Record<CourseStatus, "secondary" | "warning" | "success"> 
 
 const UNGROUPED = "General";
 const emptyForm = { title: "", kind: "course" as CourseKind, provider: "", category: "", url: "", notes: "" };
+type ItemDraft = typeof emptyForm;
+
+/** Shared by the add form at the top and the inline edit form on a row. */
+function ItemForm({
+  form,
+  setForm,
+  onSubmit,
+  onCancel,
+  submitLabel
+}: {
+  form: ItemDraft;
+  setForm: (next: ItemDraft) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onCancel?: () => void;
+  submitLabel: string;
+}) {
+  return (
+    <form className="mt-4 grid grid-cols-2 gap-3" onSubmit={onSubmit}>
+      <div className="flex flex-col gap-1.5">
+        <Label>Title</Label>
+        <Input
+          value={form.title}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+          placeholder="What you're learning or building"
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label>Type</Label>
+        <Select value={form.kind} onValueChange={(v) => setForm({ ...form, kind: v as CourseKind })}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {KINDS.map((k) => (
+              <SelectItem key={k} value={k}>
+                {KIND_META[k].label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label>Skill area</Label>
+        <Input
+          value={form.category}
+          onChange={(e) => setForm({ ...form, category: e.target.value })}
+          placeholder="e.g. Backend, Design, Spanish"
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label>Source</Label>
+        <Input
+          value={form.provider}
+          onChange={(e) => setForm({ ...form, provider: e.target.value })}
+          placeholder="Platform, author, repo…"
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label>Link</Label>
+        <Input value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="Optional" />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label>Notes</Label>
+        <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Optional" />
+      </div>
+      <div className="col-span-2 flex gap-2">
+        <Button type="submit" className="flex-1">
+          {submitLabel}
+        </Button>
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+      </div>
+    </form>
+  );
+}
 
 export function CoursesPanel() {
   const { data: courses = [] } = useCourses();
@@ -37,14 +115,43 @@ export function CoursesPanel() {
   const removeCourse = useRemoveCourse();
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState<ItemDraft>(emptyForm);
+
+  const startAdd = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setShowForm((s) => !s);
+  };
+
+  const startEdit = (c: Course) => {
+    setShowForm(false);
+    setEditingId(c.id);
+    setForm({
+      title: c.title,
+      kind: c.kind,
+      provider: c.provider ?? "",
+      category: c.category ?? "",
+      url: c.url ?? "",
+      notes: c.notes ?? ""
+    });
+  };
+
+  const close = () => {
+    setForm(emptyForm);
+    setEditingId(null);
+    setShowForm(false);
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim()) return;
-    addCourse.mutate({ ...form, category: form.category.trim(), status: "planned" });
-    setForm(emptyForm);
-    setShowForm(false);
+    const fields = { ...form, title: form.title.trim(), category: form.category.trim() };
+    // Status stays out of the form — it's edited in place on the row, and
+    // sending it here would knock an in-progress item back to planned.
+    if (editingId === null) addCourse.mutate({ ...fields, status: "planned" });
+    else updateCourse.mutate({ id: editingId, fields });
+    close();
   };
 
   // Group by the user's own skill area rather than a fixed roadmap. Anything
@@ -72,64 +179,11 @@ export function CoursesPanel() {
             </span>
           </div>
           <Progress value={courses.length ? (completed / courses.length) * 100 : 0} />
-          <Button variant="outline" size="sm" className="mt-3.5" onClick={() => setShowForm((s) => !s)}>
+          <Button variant="outline" size="sm" className="mt-3.5" onClick={startAdd}>
             {showForm ? "Cancel" : "+ Add a learning item"}
           </Button>
 
-          {showForm && (
-            <form className="mt-4 grid grid-cols-2 gap-3" onSubmit={submit}>
-              <div className="flex flex-col gap-1.5">
-                <Label>Title</Label>
-                <Input
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="What you're learning or building"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label>Type</Label>
-                <Select value={form.kind} onValueChange={(v) => setForm({ ...form, kind: v as CourseKind })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {KINDS.map((k) => (
-                      <SelectItem key={k} value={k}>
-                        {KIND_META[k].label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label>Skill area</Label>
-                <Input
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  placeholder="e.g. Backend, Design, Spanish"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label>Source</Label>
-                <Input
-                  value={form.provider}
-                  onChange={(e) => setForm({ ...form, provider: e.target.value })}
-                  placeholder="Platform, author, repo…"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label>Link</Label>
-                <Input value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="Optional" />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label>Notes</Label>
-                <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Optional" />
-              </div>
-              <Button type="submit" className="col-span-2">
-                Save
-              </Button>
-            </form>
-          )}
+          {showForm && <ItemForm form={form} setForm={setForm} onSubmit={submit} submitLabel="Save" />}
         </CardContent>
       </Card>
 
@@ -150,39 +204,53 @@ export function CoursesPanel() {
               {items.map((c) => {
                 const Icon = KIND_META[c.kind]?.icon ?? Sparkles;
                 return (
-                  <div key={c.id} className="flex items-center justify-between border-b border-border-soft py-2.5 last:border-none">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        <strong className="truncate text-[13px] font-medium">{c.title}</strong>
-                        <Badge variant={STATUS_VARIANT[c.status]}>{c.status.replace("_", " ")}</Badge>
+                  <div key={c.id} className="border-b border-border-soft py-2.5 last:border-none">
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          <strong className="truncate text-[13px] font-medium">{c.title}</strong>
+                          <Badge variant={STATUS_VARIANT[c.status]}>{c.status.replace("_", " ")}</Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {KIND_META[c.kind]?.label ?? "Item"}
+                          {c.provider ? ` · ${c.provider}` : ""}
+                        </div>
+                        {c.notes && <div className="mt-1 text-xs">{c.notes}</div>}
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {KIND_META[c.kind]?.label ?? "Item"}
-                        {c.provider ? ` · ${c.provider}` : ""}
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Select
+                          value={c.status}
+                          onValueChange={(v) => updateCourse.mutate({ id: c.id, fields: { status: v as CourseStatus } })}
+                        >
+                          <SelectTrigger className="w-[130px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUSES.map((s) => (
+                              <SelectItem key={s} value={s}>
+                                {s.replace("_", " ")}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          aria-label={editingId === c.id ? "Close editor" : "Edit item"}
+                          onClick={() => (editingId === c.id ? close() : startEdit(c))}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeCourse.mutate(c.id)}>
+                          ✕
+                        </Button>
                       </div>
-                      {c.notes && <div className="mt-1 text-xs">{c.notes}</div>}
                     </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <Select
-                        value={c.status}
-                        onValueChange={(v) => updateCourse.mutate({ id: c.id, fields: { status: v as CourseStatus } })}
-                      >
-                        <SelectTrigger className="w-[130px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STATUSES.map((s) => (
-                            <SelectItem key={s} value={s}>
-                              {s.replace("_", " ")}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeCourse.mutate(c.id)}>
-                        ✕
-                      </Button>
-                    </div>
+
+                    {editingId === c.id && (
+                      <ItemForm form={form} setForm={setForm} onSubmit={submit} onCancel={close} submitLabel="Save changes" />
+                    )}
                   </div>
                 );
               })}
