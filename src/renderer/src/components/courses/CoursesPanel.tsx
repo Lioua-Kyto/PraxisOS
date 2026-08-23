@@ -31,6 +31,10 @@ const UNGROUPED = "General";
 const emptyForm = { title: "", kind: "course" as CourseKind, provider: "", category: "", url: "", notes: "" };
 type ItemDraft = typeof emptyForm;
 
+// The Title field offers the titles already in use. `list` is the platform's
+// own combobox: still free text, with the existing entries one click away.
+const TITLE_LIST_ID = "mastery-titles";
+
 /** Shared by the add form at the top and the inline edit form on a row. */
 function ItemForm({
   form,
@@ -50,6 +54,7 @@ function ItemForm({
       <div className="flex flex-col gap-1.5">
         <Label>Title</Label>
         <Input
+          list={TITLE_LIST_ID}
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
           placeholder="What you're learning or building"
@@ -118,6 +123,8 @@ export function CoursesPanel() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ItemDraft>(emptyForm);
 
+  const titles = [...new Set(courses.map((c) => c.title))].sort((a, b) => a.localeCompare(b));
+
   const startAdd = () => {
     setEditingId(null);
     setForm(emptyForm);
@@ -169,6 +176,12 @@ export function CoursesPanel() {
         title="Mastery"
         description="Everything you're doing to build skills — courses, books, projects and deliberate practice — grouped by area. It's about the skill, not just finishing the material."
       />
+
+      <datalist id={TITLE_LIST_ID}>
+        {titles.map((t) => (
+          <option key={t} value={t} />
+        ))}
+      </datalist>
 
       <Card className="mb-5">
         <CardContent className="pt-5">
