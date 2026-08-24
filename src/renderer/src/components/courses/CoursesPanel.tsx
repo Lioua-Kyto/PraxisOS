@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BookOpen, Dumbbell, FolderGit2, GraduationCap, Pencil, Sparkles } from "lucide-react";
 import { PageHeader } from "../layout/PageHeader";
 import { Card, CardContent } from "../ui/card";
@@ -8,6 +8,7 @@ import { Label } from "../ui/label";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { cn } from "../../lib/utils";
 import { useAddCourse, useCourses, useRemoveCourse, useUpdateCourse } from "../../queries/courses";
 import type { Course, CourseKind, CourseStatus } from "@shared/types";
 
@@ -31,20 +32,115 @@ const UNGROUPED = "General";
 const emptyForm = { title: "", kind: "course" as CourseKind, provider: "", category: "", url: "", notes: "" };
 type ItemDraft = typeof emptyForm;
 
-// The Title field offers the titles already in use. `list` is the platform's
-// own combobox: still free text, with the existing entries one click away.
-const TITLE_LIST_ID = "mastery-titles";
+interface AreaOption {
+  name: string;
+  count: number;
+}
+
+/**
+ * Skill-area field with the areas already in use one click away — the same
+ * shape as the food picker in Nutrition. Click to see them all, type to filter,
+ * and it stays free text, so a brand new area is simply typed in.
+ *
+ * Built here rather than with a datalist: the native popup is drawn by the
+ * platform and ignores the app's theme entirely, which on a dark theme came
+ * out as a black box.
+ */
+function AreaInput({
+  value,
+  onChange,
+  options
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: AreaOption[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [highlight, setHighlight] = useState(0);
+  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const query = value.trim().toLowerCase();
+  const matches = (query ? options.filter((o) => o.name.toLowerCase().includes(query)) : options).slice(0, 8);
+
+  const choose = (name: string) => {
+    onChange(name);
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <Input
+        value={value}
+        placeholder="e.g. Backend, Design, Spanish"
+        autoComplete="off"
+        onChange={(e) => {
+          onChange(e.target.value);
+          setOpen(true);
+          setHighlight(0);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => {
+          // Delay so a click on a suggestion lands before the list unmounts.
+          blurTimer.current = setTimeout(() => setOpen(false), 120);
+        }}
+        onKeyDown={(e) => {
+          if (!open || matches.length === 0) return;
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setHighlight((h) => (h + 1) % matches.length);
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setHighlight((h) => (h - 1 + matches.length) % matches.length);
+          } else if (e.key === "Enter" && matches[highlight]) {
+            e.preventDefault();
+            choose(matches[highlight].name);
+          } else if (e.key === "Escape") {
+            setOpen(false);
+          }
+        }}
+      />
+
+      {open && matches.length > 0 && (
+        <div className="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-border-soft bg-popover p-1 shadow-lg">
+          {matches.map((option, i) => (
+            <button
+              key={option.name}
+              type="button"
+              onMouseEnter={() => setHighlight(i)}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                if (blurTimer.current) clearTimeout(blurTimer.current);
+                choose(option.name);
+              }}
+              className={cn(
+                "flex w-full items-center justify-between gap-3 rounded-sm px-2 py-1.5 text-left text-[13px]",
+                i === highlight && "bg-accent text-accent-foreground"
+              )}
+            >
+              <span className="min-w-0 truncate">{option.name}</span>
+              <span className="tabular shrink-0 text-[11px] text-muted-foreground">
+                {option.count} {option.count === 1 ? "item" : "items"}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** Shared by the add form at the top and the inline edit form on a row. */
 function ItemForm({
   form,
   setForm,
+  areaOptions,
   onSubmit,
   onCancel,
   submitLabel
 }: {
   form: ItemDraft;
   setForm: (next: ItemDraft) => void;
+  areaOptions: AreaOption[];
   onSubmit: (e: React.FormEvent) => void;
   onCancel?: () => void;
   submitLabel: string;
@@ -54,7 +150,6 @@ function ItemForm({
       <div className="flex flex-col gap-1.5">
         <Label>Title</Label>
         <Input
-          list={TITLE_LIST_ID}
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
           placeholder="What you're learning or building"
@@ -77,11 +172,7 @@ function ItemForm({
       </div>
       <div className="flex flex-col gap-1.5">
         <Label>Skill area</Label>
-        <Input
-          value={form.category}
-          onChange={(e) => setForm({ ...form, category: e.target.value })}
-          placeholder="e.g. Backend, Design, Spanish"
-        />
+        <AreaInput value={form.category} onChange={(v) => setForm({ ...form, category: v })} options={areaOptions} />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label>Source</Label>
@@ -123,7 +214,11 @@ export function CoursesPanel() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ItemDraft>(emptyForm);
 
-  const titles = [...new Set(courses.map((c) => c.title))].sort((a, b) => a.localeCompare(b));
+  // Suggestions come from the areas the user has actually typed, so "General"
+  // — the bucket for items with no area — is not offered as one to pick.
+  const areaOptions: AreaOption[] = [...new Set(courses.map((c) => c.category?.trim()).filter((a): a is string => Boolean(a)))]
+    .sort((a, b) => a.localeCompare(b))
+    .map((name) => ({ name, count: courses.filter((c) => c.category?.trim() === name).length }));
 
   const startAdd = () => {
     setEditingId(null);
@@ -177,12 +272,6 @@ export function CoursesPanel() {
         description="Everything you're doing to build skills — courses, books, projects and deliberate practice — grouped by area. It's about the skill, not just finishing the material."
       />
 
-      <datalist id={TITLE_LIST_ID}>
-        {titles.map((t) => (
-          <option key={t} value={t} />
-        ))}
-      </datalist>
-
       <Card className="mb-5">
         <CardContent className="pt-5">
           <div className="mb-2 flex items-center justify-between">
@@ -196,7 +285,9 @@ export function CoursesPanel() {
             {showForm ? "Cancel" : "+ Add a learning item"}
           </Button>
 
-          {showForm && <ItemForm form={form} setForm={setForm} onSubmit={submit} submitLabel="Save" />}
+          {showForm && (
+            <ItemForm form={form} setForm={setForm} areaOptions={areaOptions} onSubmit={submit} submitLabel="Save" />
+          )}
         </CardContent>
       </Card>
 
@@ -262,7 +353,14 @@ export function CoursesPanel() {
                     </div>
 
                     {editingId === c.id && (
-                      <ItemForm form={form} setForm={setForm} onSubmit={submit} onCancel={close} submitLabel="Save changes" />
+                      <ItemForm
+                        form={form}
+                        setForm={setForm}
+                        areaOptions={areaOptions}
+                        onSubmit={submit}
+                        onCancel={close}
+                        submitLabel="Save changes"
+                      />
                     )}
                   </div>
                 );
