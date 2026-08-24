@@ -7,6 +7,29 @@ All notable changes to PraxisOS are recorded here. The format follows
 The section for the running version is shown in-app the first time you open a
 new release, so entries here are written for users, not for the commit log.
 
+## 0.1.4 — 2026-08-24
+
+### Added
+
+- Mastery items can be edited. Open an entry to change its title, type, skill
+  area, source, link or notes instead of deleting it and adding it again.
+- The Title field on a Mastery item now offers the titles you already use, so
+  related entries stay spelled the same way.
+
+### Fixed
+
+- The focus category picker drew two outlines at once — the category's colour
+  and a second one in the accent colour. It now draws one.
+- Nexus's "Focus hours this week" chart kept its own copy of the category
+  colours, so Entertainment still looked like Deep Work there. Every chart now
+  reads the same list.
+- The dashboard's focus card showed a raw name like `side_project` for most
+  categories instead of "Side Project".
+- One slice of the budget spend chart was drawn in a surface colour that was
+  nearly invisible against the card behind it.
+- Chart colours are tuned for the light theme instead of staying at the
+  brightness picked for the dark ones.
+
 ## 0.1.3 — 2026-08-12
 
 ### Changed
