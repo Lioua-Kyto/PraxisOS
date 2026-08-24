@@ -7,6 +7,18 @@ All notable changes to PraxisOS are recorded here. The format follows
 The section for the running version is shown in-app the first time you open a
 new release, so entries here are written for users, not for the commit log.
 
+## 0.1.5 — 2026-08-24
+
+### Fixed
+
+- The suggestion list in Mastery sat on the Title field; it belongs on Skill
+  area, which is what decides how items are grouped. Clicking Skill area now
+  shows the areas you already use, with how many items each holds.
+- That list was drawn by Windows rather than by the app, so it ignored the
+  theme and appeared as a black box. It is the app's own list now, matching the
+  food picker in Nutrition — click to see everything, type to filter, arrow
+  keys and Enter to pick.
+
 ## 0.1.4 — 2026-08-24
 
 ### Added
